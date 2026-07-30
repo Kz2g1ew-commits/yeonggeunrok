@@ -1,4 +1,4 @@
-import { Activity, Gauge, Layers3, ShieldCheck, Sparkles, Trophy } from "lucide-react";
+import { Activity, Gauge, GitBranch, Layers3, ShieldCheck, Sparkles, Trophy } from "lucide-react";
 import type { SpiritualRootResult } from "@/types/spiritualRoot";
 import { ELEMENT_META } from "@/lib/bazi/elementMeta";
 import { ElementBadge } from "./ElementBadge";
@@ -38,6 +38,9 @@ export function SpiritualRootResultCard({ result }: { result: SpiritualRootResul
           [Activity, "주영근", primary ? ELEMENT_META[primary].label : "미성립"],
           [Layers3, "부·잠재 영근", secondary ? ELEMENT_META[secondary].label : result.potentialElements[0] ? `${ELEMENT_META[result.potentialElements[0]].label}(잠재)` : "없음"],
           [Gauge, "수련 흐름", result.classification.cultivationSpeed],
+          ...(result.classification.multiRootProfile
+            ? [[GitBranch, "세부 구조", result.classification.multiRootProfile.subtype] as const]
+            : []),
         ].map(([Icon, label, value]) => { const C = Icon as typeof Sparkles; return <div key={String(label)} className="bg-[#0d1d25] p-4"><span className="flex items-center gap-1.5 text-[11px] font-bold text-[#758b94]"><C size={13} />{String(label)}</span><strong className="mt-2 block text-sm text-[#dce3e3]">{String(value)}</strong></div>; })}
       </div>
       <p className="relative mt-4 text-xs leading-6 text-[#7f939b]">{result.awakening.explanation} 품질 서열은 오행 수가 적을수록 기맥 순도가 높다는 선협 창작 규칙을 따릅니다.</p>

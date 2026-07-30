@@ -4,6 +4,8 @@ export type RootCount = "none" | "single" | "dual" | "triple" | "quadruple" | "f
 export type RootGrade = "low" | "middle" | "high" | "supreme";
 export type RootQualityTier = "none" | "heavenly" | "mutation" | "dual" | "triple" | "quadruple" | "five";
 export type DaoPath = "natural" | "defiant";
+export type RootConflictLevel = "stable" | "mixed" | "turbulent";
+export type RootCycleState = "broken" | "partial" | "strong" | "complete";
 
 export interface DaoContribution {
   path: DaoPath;
@@ -111,6 +113,23 @@ export interface MutationCandidate {
   description: string;
 }
 
+export interface MultiRootProfile {
+  subtype: string;
+  dominantElement: Element;
+  weakestElement: Element;
+  scoreSpread: number;
+  generatingLinks: string[];
+  cycleState: RootCycleState;
+  cycleLabel: string;
+  conflictCount: number;
+  conflictLevel: RootConflictLevel;
+  conflictLabel: string;
+  formationSupport: boolean;
+  summary: string;
+  strengths: string[];
+  cautions: string[];
+}
+
 export interface RootClassification {
   rootCount: RootCount;
   displayName: string;
@@ -119,6 +138,7 @@ export interface RootClassification {
   originalElements: Element[];
   workingElements: string[];
   missingElement?: Element;
+  multiRootProfile?: MultiRootProfile;
   cultivationSpeed: string;
   adaptability: string;
   qualityTier: RootQualityTier;

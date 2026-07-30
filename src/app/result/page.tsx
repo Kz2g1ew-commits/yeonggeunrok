@@ -11,6 +11,7 @@ import { MutationAnalysis } from "@/components/MutationAnalysis";
 import { RuleBreakdown } from "@/components/RuleBreakdown";
 import { Disclaimer } from "@/components/Disclaimer";
 import { ResultShareButton } from "@/components/ResultShareButton";
+import { MultiRootProfileCard } from "@/components/MultiRootProfileCard";
 
 export default function ResultPage() {
   const [data] = useState(() => getCurrentAnalysis());
@@ -26,6 +27,7 @@ export default function ResultPage() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3"><Link href="/" className="ghost-button"><ArrowLeft size={15} /> 다시 판정</Link><ResultShareButton result={result} /></div>
       <div className="grid gap-6">
         <SpiritualRootResultCard result={result} />
+        <MultiRootProfileCard classification={result.classification} />
 
         {calculation.boundary.nearBoundary && <div role="alert" className="flex gap-3 rounded-xl border border-[#d8b66a]/30 bg-[#d8b66a]/8 p-4 text-sm text-[#e4d4a9]"><AlertTriangle className="mt-0.5 size-5 shrink-0" /><div><strong>경계 시각 주의</strong><p className="mt-1 text-[#bdb391]">절기 또는 시진 경계에 가까워 설정에 따라 사주팔자가 달라질 수 있습니다.</p></div></div>}
 
