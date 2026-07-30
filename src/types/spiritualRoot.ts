@@ -17,7 +17,6 @@ export interface DaoAffinityResult {
   naturalScore: number;
   defiantScore: number;
   score: number;
-  tieBreaker: number;
   contributions: DaoContribution[];
   reasons: string[];
 }
@@ -25,23 +24,14 @@ export interface DaoAffinityResult {
 export interface AwakeningResult {
   mode: RootJudgmentMode;
   passed: boolean;
-  roll: number;
   threshold: number;
+  apertureScore: number;
   populationRate: number;
   label: string;
   explanation: string;
+  completeChannels: Element[];
+  potentialChannels: Element[];
   dao: DaoAffinityResult;
-}
-
-export interface QualityDistributionResult {
-  roll: number;
-  targetTier: Exclude<RootQualityTier, "none">;
-  targetShare: number;
-  desiredCount: number;
-  label: string;
-  eligibleCount?: number;
-  appliedCount?: number;
-  limitedByStructure?: boolean;
 }
 
 export interface ScoreContribution {
@@ -56,6 +46,26 @@ export interface RootEvidence {
   role: "main" | "middle" | "residual";
   strength: number;
   damaged: boolean;
+}
+
+export type RootChannelState = "complete" | "latent" | "hidden" | "floating" | "external" | "sealed" | "dormant";
+
+export interface RootChannelGate {
+  score: number;
+  passed: boolean;
+  reasons: string[];
+}
+
+export interface RootChannelEvidence {
+  heaven: RootChannelGate;
+  earth: RootChannelGate;
+  human: RootChannelGate;
+  integrity: number;
+  completion: number;
+  state: RootChannelState;
+  complete: boolean;
+  potential: boolean;
+  reasons: string[];
 }
 
 export interface ElementEvidence {
@@ -84,7 +94,8 @@ export interface ElementEvidence {
   structuralEligible: boolean;
   eligibilityReasons: string[];
   potentialReasons: string[];
-  qualitySelected: boolean;
+  selectedRoot: boolean;
+  channel: RootChannelEvidence;
 }
 
 export interface MutationCandidate {
@@ -148,7 +159,6 @@ export interface SpiritualRootResult {
   disclaimer: string;
   classification: RootClassification;
   awakening: AwakeningResult;
-  qualityDistribution?: QualityDistributionResult;
 }
 
 export interface AnalysisContext {

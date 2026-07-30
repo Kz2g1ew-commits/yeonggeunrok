@@ -1,5 +1,5 @@
 import type { Element, FourPillars } from "@/types/bazi";
-import type { ElementEvidence, RootEvidence, ScoreContribution } from "@/types/spiritualRoot";
+import type { ElementEvidence, RootChannelEvidence, RootEvidence, ScoreContribution } from "@/types/spiritualRoot";
 import { branchKorean } from "@/lib/bazi/branches";
 import { HIDDEN_STEMS } from "@/lib/bazi/hiddenStems";
 import { STEMS, stemKorean } from "@/lib/bazi/stems";
@@ -12,6 +12,7 @@ import {
 import { CONTROLS, ELEMENT_META, ELEMENTS, GENERATES, controllerOf, generatorOf } from "@/lib/bazi/elementMeta";
 import { seasonFromMonthBranch } from "@/lib/calendar/solarTerms";
 import { SEASON_DOMINANT, SPIRITUAL_ROOT_RULES } from "./spiritualRootRules";
+import { calculateRootChannels } from "./calculateRootChannels";
 
 const rules = SPIRITUAL_ROOT_RULES;
 const PILLAR_KEYS = ["year", "month", "day", "hour"] as const;
@@ -50,6 +51,20 @@ function rounded(value: number): number {
 
 function contribution(label: string, value: number): ScoreContribution {
   return { label, value, kind: value < 0 ? "penalty" : value > 0 ? "bonus" : "base" };
+}
+
+function emptyRootChannel(): RootChannelEvidence {
+  return {
+    heaven: { score: 0, passed: false, reasons: [] },
+    earth: { score: 0, passed: false, reasons: [] },
+    human: { score: 0, passed: false, reasons: [] },
+    integrity: 0,
+    completion: 0,
+    state: "dormant",
+    complete: false,
+    potential: false,
+    reasons: [],
+  };
 }
 
 function branchIsClashed(branch: string, branches: string[]): boolean {
@@ -388,33 +403,10 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
       structuralEligible,
       eligibilityReasons,
       potentialReasons,
-      qualitySelected: false,
+      selectedRoot: false,
+      channel: emptyRootChannel(),
     } satisfies ElementEvidence];
   })) as Record<Element, ElementEvidence>;
 
-  const scores = ELEMENTS.map((element) => preliminary[element].score);
-  const maximumScore = Math.max(...scores);
-  const scoreSpread = maximumScore - Math.min(...scores);
-
-  return Object.fromEntries(ELEMENTS.map((element) => {
-    const item = preliminary[element];
-    const hasTrace = item.visibleStems.length > 0 || item.rootStrength > 0 || item.monthCommand ||
-      item.combinations.length > 0;
-    const dominantGap = maximumScore - item.score;
-    const sealedBelowPotential = item.score < rules.structure.potentialScore &&
-      scoreSpread > rules.structure.collectiveBuriedMaximumSpread &&
-      (item.visibleStems.length === 0 || item.controlPenalty < 0 || item.combinations.includes("천간합·불화"));
-    const collectiveEligible = !item.structuralEligible && hasTrace &&
-      item.score >= rules.structure.collectiveMinimumScore &&
-      dominantGap < rules.structure.collectiveMaximumSpread &&
-      !sealedBelowPotential;
-    return [element, collectiveEligible ? {
-      ...item,
-      structuralEligible: true,
-      eligibilityReasons: [
-        ...item.eligibilityReasons,
-        `최강 오행과의 차가 ${dominantGap.toFixed(1)}점으로 극단적 이탈이 아니어서 전체 유통에 참여함`,
-      ],
-    } : item];
-  })) as Record<Element, ElementEvidence>;
+  return calculateRootChannels(pillars, preliminary);
 }

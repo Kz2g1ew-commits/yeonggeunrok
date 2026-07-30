@@ -38,7 +38,15 @@ export function evidenceSet(scores: Partial<Record<Element, number>>, potentials
       hiddenStems: [], seasonalStrength: 0, supportScore: score >= 7 ? 1 : 0, controlPenalty: 0,
       combinations: [], clashes: [], effective: score >= 4, potential: potentials.includes(element),
       reasons: [], contributions: [], monthCommand: false, structuralEligible: score >= 4,
-      eligibilityReasons: score >= 4 ? ["테스트용 투간통근"] : [], potentialReasons: [], qualitySelected: false,
+      eligibilityReasons: score >= 4 ? ["테스트용 투간통근"] : [], potentialReasons: [], selectedRoot: false,
+      channel: {
+        heaven: { score: score >= 4 ? 4 : 0, passed: score >= 4, reasons: [] },
+        earth: { score: score >= 4 ? 4 : 0, passed: score >= 4, reasons: [] },
+        human: { score: score >= 4 ? 4 : 0, passed: score >= 4, reasons: [] },
+        integrity: 1, completion: score >= 4 ? Math.min(100, score * 7) : 0,
+        state: score >= 4 ? "complete" : potentials.includes(element) ? "latent" : "dormant",
+        complete: score >= 4, potential: potentials.includes(element), reasons: [],
+      },
     } satisfies ElementEvidence];
   })) as unknown as Record<Element, ElementEvidence>;
 }
