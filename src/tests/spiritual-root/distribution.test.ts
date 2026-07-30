@@ -3,7 +3,7 @@ import type { BirthInput } from "@/types/bazi";
 import type { RootQualityTier } from "@/types/spiritualRoot";
 import { calculateFourPillars } from "@/lib/calendar/calculateFourPillars";
 import { analyzeSpiritualRoots } from "@/lib/spiritual-root/analyzeSpiritualRoots";
-import { awakeningSeed, determineAwakening } from "@/lib/spiritual-root/determineAwakening";
+import { determineAwakening } from "@/lib/spiritual-root/determineAwakening";
 
 describe("spiritual-root population balance", () => {
   it("keeps generous results ordered from common five-roots to rare heavenly roots", { timeout: 15_000 }, () => {
@@ -16,6 +16,8 @@ describe("spiritual-root population balance", () => {
       none: 0, heavenly: 0, mutation: 0, dual: 0, triple: 0, quadruple: 0, five: 0,
     };
     let strictComparisons = 0;
+    let balancedPasses = 0;
+    let strictPasses = 0;
 
     for (let index = 0; index < 5_000; index += 1) {
       const input: BirthInput = {
@@ -30,11 +32,13 @@ describe("spiritual-root population balance", () => {
       const calculation = calculateFourPillars(input);
       const result = analyzeSpiritualRoots(input, calculation).result;
       counts[result.classification.qualityTier] += 1;
-      if (determineAwakening("strict", awakeningSeed(input, calculation)).passed) {
+      if (determineAwakening("balanced", result.awakening.dao).passed) balancedPasses += 1;
+      if (determineAwakening("strict", result.awakening.dao).passed) {
         const strictResult = analyzeSpiritualRoots({ ...input, judgmentMode: "strict" }, calculation).result;
         expect(strictResult.classification.qualityTier).toBe(result.classification.qualityTier);
         expect(strictResult.primaryElements).toEqual(result.primaryElements);
         strictComparisons += 1;
+        strictPasses += 1;
       }
     }
 
@@ -52,6 +56,10 @@ describe("spiritual-root population balance", () => {
     expect(share("quadruple")).toBeLessThan(0.31);
     expect(share("five")).toBeGreaterThan(0.3);
     expect(share("five")).toBeLessThan(0.36);
+    expect(balancedPasses / 5_000).toBeGreaterThan(0.13);
+    expect(balancedPasses / 5_000).toBeLessThan(0.17);
+    expect(strictPasses / 5_000).toBeGreaterThan(0.005);
+    expect(strictPasses / 5_000).toBeLessThan(0.015);
     expect(strictComparisons).toBeGreaterThan(35);
   });
 });

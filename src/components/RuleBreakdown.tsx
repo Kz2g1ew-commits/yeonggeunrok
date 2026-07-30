@@ -6,6 +6,8 @@ function signed(value: number | string): string { const numeric = Number(value);
 
 export function RuleBreakdown({ data }: { data: StoredAnalysis }) {
   const { calculation, analysis } = data;
+  const dao = analysis.result.awakening.dao;
+  const daoLabel = dao.path === "natural" ? "순천도맥" : "역천도맥";
   return (
     <section className="surface overflow-hidden">
       <details className="group">
@@ -17,8 +19,16 @@ export function RuleBreakdown({ data }: { data: StoredAnalysis }) {
           <div className="surface-soft p-4 text-sm leading-7 text-[#aab9bf]">
             <strong className="block text-[#e2d4ae]">영근 발현 관문 · {analysis.result.awakening.label}</strong>
             <p>{analysis.result.awakening.explanation}</p>
-            <p className="text-xs text-[#748991]">내부 결정값 {analysis.result.awakening.roll.toString().padStart(4, "0")} / 통과선 {analysis.result.awakening.threshold} · 이 값은 세계관용 결정적 분배값이며 전통 명리 판정이 아닙니다.</p>
+            <p className="text-xs text-[#8fa2a9]">{daoLabel} {dao.score.toFixed(1)}점 / 통과선 {analysis.result.awakening.threshold.toFixed(1)}점 · 순천 {dao.naturalScore.toFixed(1)} · 역천 {dao.defiantScore.toFixed(1)}</p>
+            <p className="text-[11px] text-[#748991]">해시값 {analysis.result.awakening.roll.toString().padStart(4, "0")}은 같은 점수대의 동점 보정에만 사용됩니다.</p>
             {analysis.result.qualityDistribution && <p className="mt-2 border-t border-white/6 pt-2 text-xs text-[#8fa2a9]">순도 배분값 {analysis.result.qualityDistribution.roll.toString().padStart(4, "0")} · {analysis.result.qualityDistribution.label} · 구조 조건에 따라 최종 결과가 한 단계 조정될 수 있습니다.</p>}
+          </div>
+          <div>
+            <h3 className="font-bold text-[#e7dcc0]">도맥 판정 근거</h3>
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+              <div className="surface-soft p-4"><strong className="text-[#9fc0e8]">핵심 근거</strong><ul className="mt-3 grid gap-2 text-xs leading-6 text-[#aab9bf]">{dao.reasons.map((reason) => <li key={reason}>· {reason}</li>)}</ul></div>
+              <div className="surface-soft p-4"><strong className="text-[#dfc57f]">전체 가감</strong><ul className="mt-3 grid gap-1.5 text-xs text-[#aab9bf]">{dao.contributions.map((item, index) => <li key={`${item.path}-${item.label}-${index}`} className="flex justify-between gap-3"><span><b>{item.path === "natural" ? "순천" : "역천"}</b> · {item.label}</span><b className={item.value < 0 ? "text-[#e39188]" : "text-[#79c9b0]"}>{signed(item.value)}</b></li>)}</ul></div>
+            </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[

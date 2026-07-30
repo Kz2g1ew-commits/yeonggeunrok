@@ -3,6 +3,24 @@ import type { BranchRelations, Element, FourPillars, RootJudgmentMode, ShenshaRe
 export type RootCount = "none" | "single" | "dual" | "triple" | "quadruple" | "five";
 export type RootGrade = "low" | "middle" | "high" | "supreme";
 export type RootQualityTier = "none" | "heavenly" | "mutation" | "dual" | "triple" | "quadruple" | "five";
+export type DaoPath = "natural" | "defiant";
+
+export interface DaoContribution {
+  path: DaoPath;
+  label: string;
+  value: number;
+  reason: string;
+}
+
+export interface DaoAffinityResult {
+  path: DaoPath;
+  naturalScore: number;
+  defiantScore: number;
+  score: number;
+  tieBreaker: number;
+  contributions: DaoContribution[];
+  reasons: string[];
+}
 
 export interface AwakeningResult {
   mode: RootJudgmentMode;
@@ -12,6 +30,7 @@ export interface AwakeningResult {
   populationRate: number;
   label: string;
   explanation: string;
+  dao: DaoAffinityResult;
 }
 
 export interface QualityDistributionResult {

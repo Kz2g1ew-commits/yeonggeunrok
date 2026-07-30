@@ -12,6 +12,7 @@ import { calculateConfidence } from "./calculateConfidence";
 import { generateExplanation } from "./generateExplanation";
 import { awakeningSeed, determineAwakening } from "./determineAwakening";
 import { determineRootQuality } from "./determineRootQuality";
+import { calculateDaoAffinity } from "./calculateDaoAffinity";
 
 const PATHS: Record<Element, string[]> = {
   wood: ["목계 생장공", "치유·진법", "풍계 신법"],
@@ -37,9 +38,10 @@ function distinct<T>(items: T[]): T[] {
 export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillarsCalculation): AnalysisBundle {
   const relations = analyzeRelations(calculation.pillars);
   const seed = awakeningSeed(input, calculation);
-  const awakening = determineAwakening(input.judgmentMode, seed);
-  const qualityDistribution = awakening.passed ? determineRootQuality(seed) : undefined;
   const rawEvidence = calculateElementScores(calculation.pillars);
+  const dao = calculateDaoAffinity(calculation.pillars, rawEvidence, relations, seed);
+  const awakening = determineAwakening(input.judgmentMode, dao);
+  const qualityDistribution = awakening.passed ? determineRootQuality(seed) : undefined;
   const roots = determineEffectiveRoots(rawEvidence, awakening.passed, qualityDistribution);
   const evidence = roots.evidence;
   const shensha = detectShensha(calculation.pillars, input.shensha);
@@ -97,7 +99,7 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
     element,
     absorbedElements.includes(element as Element) ? { ...item, effective: false, potential: true } : item,
   ])) as typeof evidence;
-  const confidence = calculateConfidence(input, calculation, resolvedEvidence, mutations, conflictCount);
+  const confidence = calculateConfidence(input, calculation, resolvedEvidence, mutations, conflictCount, awakening);
   const primary = resolvedEffective.length ? resolvedEffective : resolvedPotential.slice(0, 1);
   const strongest = primary[0];
   const weakestEffective = resolvedEffective.at(-1);
