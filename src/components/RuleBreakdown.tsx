@@ -17,11 +17,10 @@ export function RuleBreakdown({ data }: { data: StoredAnalysis }) {
         </summary>
         <div className="grid gap-6 border-t border-white/6 p-5 sm:p-7">
           <div className="surface-soft p-4 text-sm leading-7 text-[#aab9bf]">
-            <strong className="block text-[#e2d4ae]">영근 발현 관문 · {analysis.result.awakening.label}</strong>
+            <strong className="block text-[#e2d4ae]">영규 발현 관문 · {analysis.result.awakening.label}</strong>
             <p>{analysis.result.awakening.explanation}</p>
-            <p className="text-xs text-[#8fa2a9]">{daoLabel} {dao.score.toFixed(1)}점 / 통과선 {analysis.result.awakening.threshold.toFixed(1)}점 · 순천 {dao.naturalScore.toFixed(1)} · 역천 {dao.defiantScore.toFixed(1)}</p>
-            <p className="text-[11px] text-[#748991]">해시값 {analysis.result.awakening.roll.toString().padStart(4, "0")}은 같은 점수대의 동점 보정에만 사용됩니다.</p>
-            {analysis.result.qualityDistribution && <p className="mt-2 border-t border-white/6 pt-2 text-xs text-[#8fa2a9]">순도 배분값 {analysis.result.qualityDistribution.roll.toString().padStart(4, "0")} · {analysis.result.qualityDistribution.label} · 구조 유효 {analysis.result.qualityDistribution.eligibleCount}개 중 {analysis.result.qualityDistribution.appliedCount}개 작동{analysis.result.qualityDistribution.limitedByStructure ? " · 응축·융합 조건과 맞지 않아 원 구조를 보존함" : ""}</p>}
+            <p className="text-xs text-[#8fa2a9]">최고 삼관 완성도 {analysis.result.awakening.apertureScore.toFixed(1)} / 통과선 {analysis.result.awakening.threshold.toFixed(1)} · 완성 기맥 {analysis.result.awakening.completeChannels.length}개 · 잠재 기맥 {analysis.result.awakening.potentialChannels.length}개</p>
+            <p className="mt-2 border-t border-white/6 pt-2 text-xs text-[#8fa2a9]">{daoLabel}은 영근 유무가 아니라 발현 뒤의 수련 성향입니다. 순천 {dao.naturalScore.toFixed(1)} · 역천 {dao.defiantScore.toFixed(1)}</p>
           </div>
           <div>
             <h3 className="font-bold text-[#e7dcc0]">도맥 판정 근거</h3>
@@ -49,7 +48,7 @@ export function RuleBreakdown({ data }: { data: StoredAnalysis }) {
             <div className="mt-3 grid gap-3 md:grid-cols-2">
               {ELEMENTS.map((element) => { const item = analysis.result.elementEvidence[element]; return <details key={element} className="surface-soft p-4">
                 <summary className="flex cursor-pointer list-none items-center justify-between"><strong style={{ color: ELEMENT_META[element].color }}>{ELEMENT_META[element].label} {ELEMENT_META[element].hanja}</strong><span className="font-bold">{item.score.toFixed(1)}점 · {item.effective ? "최종 유효" : item.structuralEligible ? "구조 유효·미선택" : item.potential ? "잠재" : "미성립"}</span></summary>
-                <div className="mt-3 border-t border-white/6 pt-3 text-xs leading-6 text-[#84989f]"><p>원국 구성 {item.presenceScore.toFixed(1)}/240 ({item.presenceRatio.toFixed(1)}%) · 기초 활성 {item.baseScore.toFixed(1)}점 · 가중 통근 {item.rootStrength.toFixed(1)}</p><p>{item.structuralEligible ? item.eligibilityReasons.join(" · ") : item.potentialReasons.length ? item.potentialReasons.join(" · ") : "구조 관문 미통과"}</p></div>
+                <div className="mt-3 border-t border-white/6 pt-3 text-xs leading-6 text-[#84989f]"><p>원국 구성 {item.presenceScore.toFixed(1)}/240 ({item.presenceRatio.toFixed(1)}%) · 기초 활성 {item.baseScore.toFixed(1)}점 · 가중 통근 {item.rootStrength.toFixed(1)}</p><p>천문 {item.channel.heaven.score.toFixed(1)} · 지근 {item.channel.earth.score.toFixed(1)} · 인맥 {item.channel.human.score.toFixed(1)} · 보존성 {(item.channel.integrity * 100).toFixed(0)}% · 삼관 완성도 {item.channel.completion.toFixed(1)}</p><p>{item.effective ? item.eligibilityReasons.join(" · ") : item.potential ? [...item.eligibilityReasons, ...item.potentialReasons].join(" · ") : "삼관 미통과"}</p></div>
                 <ul className="mt-2 grid gap-1.5 text-xs text-[#aab9bf]">{item.contributions.map((part, index) => <li key={`${part.label}-${index}`} className="flex justify-between gap-3"><span>{part.label}</span><b className={part.value < 0 ? "text-[#e39188]" : "text-[#79c9b0]"}>{signed(part.value)}</b></li>)}</ul>
               </details>; })}
             </div>

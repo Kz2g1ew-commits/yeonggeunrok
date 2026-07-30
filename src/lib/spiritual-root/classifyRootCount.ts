@@ -78,7 +78,7 @@ export function classifyRootCount(
         workingElements: [activeMutation.name],
         relationship: `${activeMutation.sourceElements.map((element) => ELEMENT_META[element].label).join("·")} 완전 융합`,
         cultivationSpeed: "특수 공법에서 매우 빠름", adaptability: `${activeMutation.name}계 전용 공법에 특화`,
-        qualityTier: "mutation", qualityRank: 2, qualityLabel: "특수 최상급", rarityLabel: "보유자 약 4~6%",
+        qualityTier: "mutation", qualityRank: 2, qualityLabel: "특수 최상급", rarityLabel: "유연 표본 약 2~3%",
       };
     }
     const relationship = dualRelationship(ordered, evidence);
@@ -86,14 +86,14 @@ export function classifyRootCount(
     return {
       ...base, displayName: `${labelElements(ordered)} 이영근 — ${relationship}${mutationSuffix}`, relationship,
       cultivationSpeed: "빠름", adaptability: "두 속성 연계 공법에 유리",
-      qualityTier: "dual", qualityRank: 3, qualityLabel: "상급", rarityLabel: "보유자 약 10~14%",
+      qualityTier: "dual", qualityRank: 3, qualityLabel: "상급", rarityLabel: "유연 표본 약 4~7%",
     };
   }
   if (count === 3) {
     const relationship = isGeneratingTriple(ordered) ? "순생 삼영근" : "혼합 삼영근";
     return {
       ...base, displayName: `${labelElements(ordered)} ${relationship}`, relationship, cultivationSpeed: relationship.startsWith("순생") ? "보통 이상" : "보통", adaptability: "복합 공법 운용 가능",
-      qualityTier: "triple", qualityRank: 4, qualityLabel: "중급", rarityLabel: "보유자 약 18~22%",
+      qualityTier: "triple", qualityRank: 4, qualityLabel: "중급", rarityLabel: "유연 표본 약 22~28%",
     };
   }
   if (count === 4) {
@@ -101,7 +101,7 @@ export function classifyRootCount(
     return {
       ...base, missingElement, displayName: `사영근 — ${ELEMENT_META[missingElement].label} 결핍`,
       cultivationSpeed: "느림", adaptability: "넓음",
-      qualityTier: "quadruple", qualityRank: 5, qualityLabel: "하급", rarityLabel: "보유자 약 26~30%",
+      qualityTier: "quadruple", qualityRank: 5, qualityLabel: "하급", rarityLabel: "유연 표본 약 29~35%",
     };
   }
 
@@ -116,6 +116,6 @@ export function classifyRootCount(
   return {
     ...base, displayName, cultivationSpeed: hunyuan ? "초반은 느리나 후반 잠재력이 큼" : "가장 느림",
     adaptability: hunyuan ? "오행공법과 매우 높은 궁합" : "대부분의 오행공법에 적응",
-    qualityTier: "five", qualityRank: 6, qualityLabel: hunyuan ? "오영근 예외형" : "최하급", rarityLabel: hunyuan ? "극히 드문 오영근 예외" : "보유자 약 30~36%",
+    qualityTier: "five", qualityRank: 6, qualityLabel: hunyuan ? "오영근 예외형" : "최하급", rarityLabel: hunyuan ? "극히 드문 오영근 예외" : "유연 표본 약 31~38%",
   };
 }

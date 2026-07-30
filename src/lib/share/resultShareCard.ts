@@ -6,7 +6,7 @@ export interface ResultShareElement {
   element: Element;
   label: string;
   hanja: string;
-  ratio: number;
+  activationScore: number;
   color: string;
 }
 
@@ -17,23 +17,49 @@ export interface ResultShareElement {
 export interface ResultShareCardModel {
   serviceName: "영근록";
   rootName: string;
+  quality: string;
+  primaryRoots: string;
+  potentialRoots: string;
+  mutation: string;
   elements: ResultShareElement[];
-  ratioNote: string;
+  activationNote: string;
   privacyNote: string;
+}
+
+function elementNames(elements: Element[], emptyLabel: string): string {
+  return elements.map((element) => `${ELEMENT_META[element].label}(${ELEMENT_META[element].hanja})`).join(" · ") || emptyLabel;
+}
+
+function mutationSummary(result: SpiritualRootResult): string {
+  const candidate = result.mutations.find(({ status }) => status !== "rejected");
+  if (!candidate) return "뚜렷한 후보 없음";
+
+  const statusLabel = {
+    confirmed: "확정",
+    likely: "유력",
+    possible: "가능성",
+  }[candidate.status as Exclude<typeof candidate.status, "rejected">];
+  return `${candidate.name}영근 · ${statusLabel} ${candidate.confidence}%`;
 }
 
 export function buildResultShareCardModel(result: SpiritualRootResult): ResultShareCardModel {
   return {
     serviceName: "영근록",
     rootName: result.displayName,
+    quality: `${result.classification.qualityLabel} · ${result.classification.rarityLabel}`,
+    primaryRoots: elementNames(result.primaryElements, "미성립"),
+    potentialRoots: elementNames(result.potentialElements, "없음"),
+    mutation: mutationSummary(result),
     elements: ELEMENTS.map((element) => ({
       element,
       label: ELEMENT_META[element].label,
       hanja: ELEMENT_META[element].hanja,
-      ratio: Math.max(0, Math.min(100, result.elementEvidence[element].presenceRatio)),
+      activationScore: Number.isFinite(result.elementEvidence[element].score)
+        ? Math.max(0, result.elementEvidence[element].score)
+        : 0,
       color: ELEMENT_META[element].color,
     })),
-    ratioNote: "오행 비율은 원국 재료의 구성비이며 기맥 활성도와는 다릅니다.",
+    activationNote: "기맥 활성은 월령·통근·생조·극제·합충을 반영한 판정 점수입니다.",
     privacyNote: "출생정보·사주 원문 미포함 · 선협 세계관용 창작 결과",
   };
 }
@@ -135,18 +161,51 @@ export async function renderResultShareImage(result: SpiritualRootResult): Promi
   context.fillText(model.rootName, 104, 422, 872);
 
   context.fillStyle = "rgba(255,255,255,0.032)";
-  roundedRect(context, 88, 492, 904, 590, 26);
+  roundedRect(context, 88, 466, 904, 166, 22);
   context.fill();
   context.strokeStyle = "rgba(155,173,181,0.15)";
   context.lineWidth = 1.5;
   context.stroke();
 
+  const details = [
+    ["품질", model.quality],
+    ["주영근", model.primaryRoots],
+    ["잠재 영근", model.potentialRoots],
+    ["변이 후보", model.mutation],
+  ];
+  details.forEach(([label, value], index) => {
+    const x = index % 2 === 0 ? 124 : 554;
+    const y = index < 2 ? 505 : 574;
+    context.fillStyle = "#7f949c";
+    context.font = '700 18px "Noto Sans KR", "Apple SD Gothic Neo", sans-serif';
+    context.fillText(label, x, y);
+    context.fillStyle = "#dce3e3";
+    context.font = '700 23px "Noto Sans KR", "Apple SD Gothic Neo", sans-serif';
+    context.fillText(value, x, y + 33, 382);
+  });
+
+  context.strokeStyle = "rgba(155,173,181,0.1)";
+  context.beginPath();
+  context.moveTo(520, 486);
+  context.lineTo(520, 612);
+  context.moveTo(108, 552);
+  context.lineTo(972, 552);
+  context.stroke();
+
+  context.fillStyle = "rgba(255,255,255,0.032)";
+  roundedRect(context, 88, 660, 904, 500, 26);
+  context.fill();
+  context.strokeStyle = "rgba(155,173,181,0.15)";
+  context.stroke();
+
   context.fillStyle = "#d8c99f";
   context.font = '700 25px "Noto Sans KR", "Apple SD Gothic Neo", sans-serif';
-  context.fillText("오행 원국 구성비", 128, 557);
+  context.fillText("오행 기맥 활성", 128, 714);
+
+  const activationMax = Math.max(1, ...model.elements.map(({ activationScore }) => activationScore));
 
   model.elements.forEach((item, index) => {
-    const y = 642 + index * 91;
+    const y = 785 + index * 69;
 
     context.fillStyle = item.color;
     context.font = '700 30px "Noto Serif KR", Batang, serif';
@@ -160,37 +219,37 @@ export async function renderResultShareImage(result: SpiritualRootResult): Promi
     roundedRect(context, 242, y - 23, 580, 18, 9);
     context.fill();
 
-    if (item.ratio > 0) {
+    if (item.activationScore > 0) {
       context.fillStyle = item.color;
-      roundedRect(context, 242, y - 23, Math.max(7, 580 * item.ratio / 100), 18, 9);
+      roundedRect(context, 242, y - 23, Math.max(7, 580 * item.activationScore / activationMax), 18, 9);
       context.fill();
     }
 
     context.fillStyle = "#dce3e3";
     context.font = '700 25px "Noto Sans KR", "Apple SD Gothic Neo", sans-serif';
     context.textAlign = "right";
-    context.fillText(`${item.ratio.toFixed(1)}%`, 946, y);
+    context.fillText(`${item.activationScore.toFixed(1)}점`, 946, y);
     context.textAlign = "left";
   });
 
   context.fillStyle = "#8da0a7";
   context.font = '500 20px "Noto Sans KR", "Apple SD Gothic Neo", sans-serif';
-  context.fillText(model.ratioNote, 128, 1030);
+  context.fillText(model.activationNote, 128, 1124);
 
   context.strokeStyle = "rgba(216,182,106,0.2)";
   context.beginPath();
-  context.moveTo(104, 1142);
-  context.lineTo(976, 1142);
+  context.moveTo(104, 1200);
+  context.lineTo(976, 1200);
   context.stroke();
 
   context.fillStyle = "#9eadaf";
   context.font = '600 21px "Noto Sans KR", "Apple SD Gothic Neo", sans-serif';
-  context.fillText(model.privacyNote, 104, 1205);
+  context.fillText(model.privacyNote, 104, 1258);
 
   context.fillStyle = "#d8b66a";
   context.font = '700 24px "Noto Serif KR", Batang, serif';
   context.textAlign = "right";
-  context.fillText("靈根錄", 976, 1205);
+  context.fillText("靈根錄", 976, 1258);
 
   return canvasToPng(canvas);
 }

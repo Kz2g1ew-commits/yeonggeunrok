@@ -1,87 +1,71 @@
 import type { Element } from "@/types/bazi";
-import type { ElementEvidence, QualityDistributionResult } from "@/types/spiritualRoot";
+import type { ElementEvidence } from "@/types/spiritualRoot";
 import { ELEMENTS } from "@/lib/bazi/elementMeta";
-import { MUTATION_RULES } from "./mutationRules";
 import { SPIRITUAL_ROOT_RULES } from "./spiritualRootRules";
 
 function rankedElements(evidence: Record<Element, ElementEvidence>): Element[] {
-  return [...ELEMENTS].sort((a, b) => evidence[b].score - evidence[a].score || ELEMENTS.indexOf(a) - ELEMENTS.indexOf(b));
-}
-
-function bestMutationPair(evidence: Record<Element, ElementEvidence>, eligible: Element[]): Element[] | undefined {
-  const uniquePairs = new Map<string, Element[]>();
-  for (const rule of MUTATION_RULES) {
-    const pair = [...rule.sourceElements].sort((a, b) => ELEMENTS.indexOf(a) - ELEMENTS.indexOf(b));
-    uniquePairs.set(pair.join("-"), pair);
-  }
-  return [...uniquePairs.values()].filter((pair) => pair.every((element) => eligible.includes(element))).sort((left, right) => {
-    const pairScore = ([a, b]: Element[]) => evidence[a].score + evidence[b].score
-      - Math.abs(evidence[a].score - evidence[b].score) * 0.75
-      + (evidence[a].monthCommand || evidence[b].monthCommand ? 2 : 0);
-    return pairScore(right) - pairScore(left);
-  })[0];
-}
-
-function isDirectlyEligible(item: ElementEvidence): boolean {
-  return item.eligibilityReasons.some((reason) => !reason.includes("전체 유통에 참여"));
-}
-
-function canCondenseHeavenly(
-  evidence: Record<Element, ElementEvidence>,
-  structural: Element[],
-): boolean {
-  if (!structural.length) return false;
-  const [primary, ...others] = rankedElements(evidence).filter((element) => structural.includes(element));
-  if (!others.length) return true;
-  const strongestSecondary = Math.max(...others.map((element) => evidence[element].score));
-  return evidence[primary].score >= SPIRITUAL_ROOT_RULES.thresholds.heavenlyPrimaryMin &&
-    strongestSecondary <= SPIRITUAL_ROOT_RULES.thresholds.heavenlySecondaryMax &&
-    evidence[primary].score - strongestSecondary >= SPIRITUAL_ROOT_RULES.thresholds.heavenlyPurityGap;
+  return [...ELEMENTS].sort((a, b) =>
+    evidence[b].channel.completion - evidence[a].channel.completion ||
+    evidence[b].score - evidence[a].score ||
+    ELEMENTS.indexOf(a) - ELEMENTS.indexOf(b));
 }
 
 export function determineEffectiveRoots(
   rawEvidence: Record<Element, ElementEvidence>,
   awakeningPassed = true,
-  quality?: QualityDistributionResult,
 ): {
   evidence: Record<Element, ElementEvidence>;
   effective: Element[];
   potential: Element[];
   structural: Element[];
 } {
-  const structural = rankedElements(rawEvidence).filter((element) => rawEvidence[element].structuralEligible);
-  const mutationPair = quality?.targetTier === "mutation" ? bestMutationPair(rawEvidence, structural) : undefined;
-  const mutationBlocked = mutationPair
-    ? structural.some((element) => !mutationPair.includes(element) && isDirectlyEligible(rawEvidence[element]))
-    : true;
-  const selected = !awakeningPassed || !quality ? []
-    : quality.targetTier === "heavenly"
-      ? canCondenseHeavenly(rawEvidence, structural) ? structural.slice(0, 1) : structural.length >= 2 ? structural : []
-      : quality.targetTier === "mutation"
-        ? mutationPair && !mutationBlocked ? mutationPair : structural.length >= 2 ? structural : []
-        : structural.length >= 2 ? structural : [];
-
+  const ranked = rankedElements(rawEvidence);
+  const direct = ranked.filter((element) => rawEvidence[element].channel.complete);
+  const channelRules = SPIRITUAL_ROOT_RULES.channelGates;
+  const carried = direct.length >= channelRules.mixedNetworkMinimum
+    ? ranked.filter((element) => !direct.includes(element) &&
+      rawEvidence[element].channel.potential &&
+      rawEvidence[element].score >= channelRules.carriedActivationMinimum &&
+      rawEvidence[element].channel.integrity >= channelRules.carriedIntegrityMinimum)
+    : [];
+  const structural = [...direct, ...carried].sort((a, b) => ranked.indexOf(a) - ranked.indexOf(b));
+  const [primary, ...secondary] = structural;
+  const strongestSecondaryScore = secondary.length
+    ? Math.max(...secondary.map((element) => rawEvidence[element].score))
+    : Number.NEGATIVE_INFINITY;
+  const purity = SPIRITUAL_ROOT_RULES.thresholds;
+  const condensesToHeavenly = Boolean(primary) && secondary.length > 0 &&
+    rawEvidence[primary].score >= purity.heavenlyPrimaryMin &&
+    strongestSecondaryScore <= purity.heavenlySecondaryMax &&
+    rawEvidence[primary].score - strongestSecondaryScore >= purity.heavenlyPurityGap;
+  const workingStructural = condensesToHeavenly ? [primary] : structural;
+  const absorbed = condensesToHeavenly ? secondary : [];
+  const effective = awakeningPassed ? workingStructural : [];
+  const potential = ranked.filter((element) =>
+    !effective.includes(element) && (rawEvidence[element].channel.potential || structural.includes(element)));
   const evidence = Object.fromEntries(ELEMENTS.map((element) => {
-    const item = rawEvidence[element];
-    const visibleAndRooted = item.visibleStems.length > 0 &&
-      item.rootStrength >= SPIRITUAL_ROOT_RULES.structure.rootedPotentialMinimum;
-    const hasIndependentChannel = visibleAndRooted || item.monthCommand ||
-      item.rootStrength >= SPIRITUAL_ROOT_RULES.roots.strongRootMinimum ||
-      item.combinations.some((relation) => relation === "삼합" || relation === "방합");
-    const potentialReady = hasIndependentChannel && (
-      item.score >= SPIRITUAL_ROOT_RULES.structure.potentialScore || visibleAndRooted
-    );
-    const effective = awakeningPassed && item.structuralEligible && selected.includes(element);
-    const potential = !effective && (item.structuralEligible || potentialReady);
-    return [element, { ...item, effective, potential, qualitySelected: effective }];
+    const isEffective = effective.includes(element);
+    const isPotential = potential.includes(element);
+    const isCarried = carried.includes(element);
+    const isAbsorbed = absorbed.includes(element);
+    const isPrimary = condensesToHeavenly && element === primary;
+    const eligibilityReasons = isCarried
+      ? [...rawEvidence[element].eligibilityReasons, "세 개 이상의 완성 기맥이 약한 삼관 통로를 혼합 영근으로 운반함"]
+      : rawEvidence[element].eligibilityReasons;
+    return [element, {
+      ...rawEvidence[element],
+      effective: isEffective,
+      potential: isPotential,
+      selectedRoot: isEffective,
+      structuralEligible: rawEvidence[element].structuralEligible || isCarried,
+      eligibilityReasons: isPrimary
+        ? [...eligibilityReasons, "주근의 강도·부근 상한·순도 격차를 모두 충족하여 천영근으로 응축됨"]
+        : eligibilityReasons,
+      potentialReasons: isAbsorbed
+        ? [...rawEvidence[element].potentialReasons, "독립 통로는 있으나 강한 주근의 순도장 안에서 잠재 기맥으로 흡수됨"]
+        : rawEvidence[element].potentialReasons,
+    }];
   })) as Record<Element, ElementEvidence>;
 
-  return {
-    evidence,
-    effective: ELEMENTS.filter((element) => evidence[element].effective)
-      .sort((a, b) => evidence[b].score - evidence[a].score),
-    potential: ELEMENTS.filter((element) => evidence[element].potential)
-      .sort((a, b) => evidence[b].score - evidence[a].score),
-    structural,
-  };
+  return { evidence, effective, potential, structural };
 }

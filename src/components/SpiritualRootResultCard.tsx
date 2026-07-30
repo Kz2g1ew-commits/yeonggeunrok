@@ -18,7 +18,7 @@ export function SpiritualRootResultCard({ result }: { result: SpiritualRootResul
           <h1 className="display-serif text-balance mt-2 text-3xl font-semibold tracking-[-.05em] text-[#f3e6c4] sm:text-5xl">{result.displayName}</h1>
           <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] font-bold">
             <span className="rounded-full border border-[#62c6a5]/20 bg-[#62c6a5]/7 px-3 py-1.5 text-[#8bd5bd]">{result.awakening.label}</span>
-            <span className="rounded-full border border-[#7da6d8]/20 bg-[#7da6d8]/7 px-3 py-1.5 text-[#9fc0e8]">{daoLabel} {result.awakening.dao.score.toFixed(1)}점</span>
+            <span className="rounded-full border border-[#7da6d8]/20 bg-[#7da6d8]/7 px-3 py-1.5 text-[#9fc0e8]">수련 성향 · {daoLabel}</span>
             <span className="rounded-full border border-[#d8b66a]/20 bg-[#d8b66a]/7 px-3 py-1.5 text-[#e5c97f]">품질 {result.classification.qualityLabel}</span>
             <span className="rounded-full border border-white/10 bg-white/[.035] px-3 py-1.5 text-[#aab9bf]">{result.classification.rarityLabel}</span>
           </div>
@@ -34,7 +34,7 @@ export function SpiritualRootResultCard({ result }: { result: SpiritualRootResul
         {[
           [Sparkles, "변이 가능성", mutation ? `${mutation.name}영근 ${mutation.status === "confirmed" ? "확정" : mutation.status === "likely" ? "유력" : "후보"} ${mutation.confidence}%` : "뚜렷한 후보 없음"],
           [Trophy, "품질 서열", `${result.classification.qualityRank}단계 · ${result.classification.qualityLabel}`],
-          [ShieldCheck, "발현 관문", `${daoLabel} · ${result.awakening.passed ? "통과" : "미통과"}`],
+          [ShieldCheck, "영규 관문", `삼관 ${result.awakening.apertureScore.toFixed(1)} · ${result.awakening.passed ? "통과" : "미통과"}`],
           [Activity, "주영근", primary ? ELEMENT_META[primary].label : "미성립"],
           [Layers3, "부·잠재 영근", secondary ? ELEMENT_META[secondary].label : result.potentialElements[0] ? `${ELEMENT_META[result.potentialElements[0]].label}(잠재)` : "없음"],
           [Gauge, "수련 흐름", result.classification.cultivationSpeed],
