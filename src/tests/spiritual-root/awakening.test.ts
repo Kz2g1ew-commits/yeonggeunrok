@@ -19,4 +19,12 @@ describe("determineAwakening", () => {
     expect(passed / sampleSize).toBeGreaterThan(0.008);
     expect(passed / sampleSize).toBeLessThan(0.012);
   });
+
+  it("distributes balanced awakenings at approximately fifteen percent", () => {
+    const sampleSize = 20_000;
+    const passed = Array.from({ length: sampleSize }, (_, index) => `balanced-population-${index}`)
+      .filter((seed) => determineAwakening("balanced", seed).passed).length;
+    expect(passed / sampleSize).toBeGreaterThan(0.14);
+    expect(passed / sampleSize).toBeLessThan(0.16);
+  });
 });

@@ -14,6 +14,14 @@ export interface AwakeningResult {
   explanation: string;
 }
 
+export interface QualityDistributionResult {
+  roll: number;
+  targetTier: Exclude<RootQualityTier, "none">;
+  targetShare: number;
+  desiredCount: number;
+  label: string;
+}
+
 export interface ScoreContribution {
   label: string;
   value: number;
@@ -36,6 +44,7 @@ export interface ElementEvidence {
   reasons: string[];
   contributions: ScoreContribution[];
   monthCommand: boolean;
+  qualitySelected: boolean;
 }
 
 export interface MutationCandidate {
@@ -99,6 +108,7 @@ export interface SpiritualRootResult {
   disclaimer: string;
   classification: RootClassification;
   awakening: AwakeningResult;
+  qualityDistribution?: QualityDistributionResult;
 }
 
 export interface AnalysisContext {

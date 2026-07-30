@@ -2,7 +2,7 @@ export type Element = "wood" | "fire" | "earth" | "metal" | "water";
 export type YinYang = "yang" | "yin";
 export type CalendarType = "solar" | "lunar";
 export type TimeAccuracy = "exact" | "approximate" | "unknown";
-export type RootJudgmentMode = "generous" | "strict";
+export type RootJudgmentMode = "generous" | "balanced" | "strict";
 
 export interface HiddenStem {
   stem: string;

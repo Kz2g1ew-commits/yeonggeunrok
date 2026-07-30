@@ -59,7 +59,7 @@ export function classifyRootCount(
       : potential.length === 1 ? "산맥무근" : "백맥무근";
     return {
       ...base, displayName: `무영근 — ${subtype}`, cultivationSpeed: "기맥 개통 전에는 매우 느림", adaptability: "특수 체질·외부 기연 의존",
-      qualityTier: "none", qualityRank: 7, qualityLabel: "미발현", rarityLabel: "엄격 판정에서 일반적",
+      qualityTier: "none", qualityRank: 7, qualityLabel: "미발현", rarityLabel: "희소 모드에서 일반적",
     };
   }
   if (count === 1) {
@@ -68,7 +68,7 @@ export function classifyRootCount(
     return {
       ...base, grade, displayName: `${GRADE_LABEL[grade]} ${ELEMENT_META[element].label} 천영근`,
       cultivationSpeed: grade === "supreme" || grade === "high" ? "매우 빠름" : "빠름", adaptability: `${ELEMENT_META[element].label}계 공법에 집중`,
-      qualityTier: "heavenly", qualityRank: 1, qualityLabel: "최상급", rarityLabel: "보유자 중 극소수",
+      qualityTier: "heavenly", qualityRank: 1, qualityLabel: "최상급", rarityLabel: "보유자 약 1~2%",
     };
   }
   if (count === 2) {
@@ -88,7 +88,7 @@ export function classifyRootCount(
         workingElements: [ELEMENT_META[element].label],
         relationship: `${ELEMENT_META[element].label} 기맥이 약한 부속 통로를 흡수한 고순도형`,
         cultivationSpeed: "매우 빠름", adaptability: `${ELEMENT_META[element].label}계 공법에 극도로 집중`,
-        qualityTier: "heavenly", qualityRank: 1, qualityLabel: "최상급", rarityLabel: "보유자 중 극소수",
+        qualityTier: "heavenly", qualityRank: 1, qualityLabel: "최상급", rarityLabel: "보유자 약 1~2%",
       };
     }
     if (activeMutation?.status === "confirmed") {
@@ -97,7 +97,7 @@ export function classifyRootCount(
         workingElements: [activeMutation.name],
         relationship: `${activeMutation.sourceElements.map((element) => ELEMENT_META[element].label).join("·")} 완전 융합`,
         cultivationSpeed: "특수 공법에서 매우 빠름", adaptability: `${activeMutation.name}계 전용 공법에 특화`,
-        qualityTier: "mutation", qualityRank: 2, qualityLabel: "특수 최상급", rarityLabel: "천영근 다음으로 희귀",
+        qualityTier: "mutation", qualityRank: 2, qualityLabel: "특수 최상급", rarityLabel: "보유자 약 4~6%",
       };
     }
     const relationship = dualRelationship(ordered, evidence);
@@ -105,14 +105,14 @@ export function classifyRootCount(
     return {
       ...base, displayName: `${labelElements(ordered)} 이영근 — ${relationship}${mutationSuffix}`, relationship,
       cultivationSpeed: "빠름", adaptability: "두 속성 연계 공법에 유리",
-      qualityTier: "dual", qualityRank: 3, qualityLabel: "상급", rarityLabel: "희귀",
+      qualityTier: "dual", qualityRank: 3, qualityLabel: "상급", rarityLabel: "보유자 약 10~14%",
     };
   }
   if (count === 3) {
     const relationship = isGeneratingTriple(ordered) ? "순생 삼영근" : "혼합 삼영근";
     return {
       ...base, displayName: `${labelElements(ordered)} ${relationship}`, relationship, cultivationSpeed: relationship.startsWith("순생") ? "보통 이상" : "보통", adaptability: "복합 공법 운용 가능",
-      qualityTier: "triple", qualityRank: 4, qualityLabel: "중급", rarityLabel: "드문 편",
+      qualityTier: "triple", qualityRank: 4, qualityLabel: "중급", rarityLabel: "보유자 약 18~22%",
     };
   }
   if (count === 4) {
@@ -120,7 +120,7 @@ export function classifyRootCount(
     return {
       ...base, missingElement, displayName: `사영근 — ${ELEMENT_META[missingElement].label} 결핍`,
       cultivationSpeed: "느림", adaptability: "넓음",
-      qualityTier: "quadruple", qualityRank: 5, qualityLabel: "하급", rarityLabel: "흔한 편",
+      qualityTier: "quadruple", qualityRank: 5, qualityLabel: "하급", rarityLabel: "보유자 약 26~30%",
     };
   }
 
@@ -134,6 +134,6 @@ export function classifyRootCount(
   return {
     ...base, displayName, cultivationSpeed: hunyuan ? "초반은 느리나 후반 잠재력이 큼" : "가장 느림",
     adaptability: hunyuan ? "오행공법과 매우 높은 궁합" : "대부분의 오행공법에 적응",
-    qualityTier: "five", qualityRank: 6, qualityLabel: hunyuan ? "오영근 예외형" : "최하급", rarityLabel: hunyuan ? "극히 드문 오영근 예외" : "보유자 중 가장 흔함",
+    qualityTier: "five", qualityRank: 6, qualityLabel: hunyuan ? "오영근 예외형" : "최하급", rarityLabel: hunyuan ? "극히 드문 오영근 예외" : "보유자 약 30~36%",
   };
 }
