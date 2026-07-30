@@ -1,5 +1,5 @@
 import type { BirthInput, Element, FourPillarsCalculation } from "@/types/bazi";
-import type { ConfidenceBreakdown, ElementEvidence, MutationCandidate } from "@/types/spiritualRoot";
+import type { AwakeningResult, ConfidenceBreakdown, ElementEvidence, MutationCandidate } from "@/types/spiritualRoot";
 import { ELEMENTS } from "@/lib/bazi/elementMeta";
 import { SPIRITUAL_ROOT_RULES } from "./spiritualRootRules";
 
@@ -17,6 +17,7 @@ export function calculateConfidence(
   evidence: Record<Element, ElementEvidence>,
   mutations: MutationCandidate[],
   conflictCount: number,
+  awakening?: AwakeningResult,
 ): { confidence: number; label: string; breakdown: ConfidenceBreakdown } {
   const timeAccuracy = input.timeAccuracy === "exact" ? 20 : input.timeAccuracy === "approximate" ? 13 : 6;
   const locationQuality = input.longitude !== undefined
@@ -33,7 +34,11 @@ export function calculateConfidence(
   const closestThreshold = Math.min(...distances);
   const effectiveScores = ELEMENTS.filter((element) => evidence[element].effective).map((element) => evidence[element].score).sort((a, b) => b - a);
   const scoreGap = effectiveScores.length >= 2 ? Math.abs(effectiveScores[0] - effectiveScores[1]) : closestThreshold;
-  const scoreClarity = closestThreshold >= 2 && scoreGap >= 2 ? 20 : closestThreshold >= 1 ? 15 : 9;
+  const structuralClarity = closestThreshold >= 2 && scoreGap >= 2 ? 20 : closestThreshold >= 1 ? 15 : 9;
+  const daoDistance = awakening ? Math.abs(awakening.dao.score - awakening.threshold) : Number.POSITIVE_INFINITY;
+  const scoreClarity = awakening && awakening.mode !== "generous"
+    ? daoDistance >= 6 ? 20 : daoDistance >= 3 ? 15 : 9
+    : structuralClarity;
 
   const activeMutations = mutations.filter((candidate) => candidate.status !== "rejected");
   const mutationClarity = activeMutations.length === 0 ? 12

@@ -4,9 +4,9 @@ import { branchKorean } from "@/lib/bazi/branches";
 import { HIDDEN_STEMS } from "@/lib/bazi/hiddenStems";
 import { STEMS, stemKorean } from "@/lib/bazi/stems";
 import { CLASH_PAIRS, STEM_COMBINATIONS, completedGroupElements } from "@/lib/bazi/relations";
-import { ELEMENT_META, ELEMENTS, GENERATES, controllerOf, generatorOf } from "@/lib/bazi/elementMeta";
+import { CONTROLS, ELEMENT_META, ELEMENTS, GENERATES, controllerOf, generatorOf } from "@/lib/bazi/elementMeta";
 import { seasonFromMonthBranch } from "@/lib/calendar/solarTerms";
-import { SEASON_EXTREME_WEAK, SPIRITUAL_ROOT_RULES } from "./spiritualRootRules";
+import { SEASON_DOMINANT, SPIRITUAL_ROOT_RULES } from "./spiritualRootRules";
 
 const rules = SPIRITUAL_ROOT_RULES;
 
@@ -44,11 +44,20 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
       .filter((hidden) => hidden.element === element)
       .map((hidden) => `${branchKorean(branch)}중 ${stemKorean(hidden.stem)}(${hidden.role})`));
     const monthCommand = pillars.month.branchElement === element;
+    const seasonDominant = SEASON_DOMINANT[season];
+    const seasonalPhase = element === seasonDominant ? { label: "왕(旺)", value: rules.scores.seasonalProsperous }
+      : element === GENERATES[seasonDominant] ? { label: "상(相)", value: rules.scores.seasonalAssistant }
+        : element === generatorOf(seasonDominant) ? { label: "휴(休)", value: 0 }
+          : element === controllerOf(seasonDominant) ? { label: "수(囚)", value: rules.scores.seasonalImprisoned }
+            : { label: "사(死)", value: rules.scores.seasonalDead };
 
     if (pillars.day.stemElement === element) contributions.push(contribution("일간과 같은 오행", rules.scores.dayMaster));
     if (monthCommand) {
       contributions.push(contribution("월지 본기", rules.scores.monthBranchMain));
       contributions.push(contribution("월령을 얻음", rules.scores.monthCommandBonus));
+    }
+    if (seasonalPhase.value !== 0) {
+      contributions.push(contribution(`계절 왕상휴수사 ${seasonalPhase.label}`, seasonalPhase.value));
     }
 
     pillarValues.forEach((pillar, index) => {
@@ -86,13 +95,20 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
       contributions.push(contribution(`${ELEMENT_META[generator].label}의 강한 생조`, supportScore));
     }
 
+    if (rawStrength[generator] >= 1.5 && rawStrength[element] >= 1) {
+      contributions.push(contribution(`${ELEMENT_META[generator].label}생${ELEMENT_META[element].label} 유통`, rules.scores.flowingGeneration));
+    }
+
+    const passageSource = generatorOf(element);
+    const passageDestination = GENERATES[element];
+    if (CONTROLS[passageSource] === passageDestination && rawStrength[passageSource] >= 2 &&
+        rawStrength[passageDestination] >= 2 && rawStrength[element] >= 0.5) {
+      contributions.push(contribution(`${ELEMENT_META[passageSource].label}극${ELEMENT_META[passageDestination].label} 사이 통관`, rules.scores.mediationPassage));
+    }
+
     if (roots.length === 1 && hasRootClash(roots[0], branches)) {
       contributions.push(contribution("유일한 뿌리가 충으로 손상", rules.scores.uniqueRootClash));
     }
-    if (SEASON_EXTREME_WEAK[season] === element) {
-      contributions.push(contribution("계절적으로 극쇠", rules.scores.seasonalExtremeWeakness));
-    }
-
     const controller = controllerOf(element);
     let controlPenalty = 0;
     if (rawStrength[controller] >= rules.rawStrength.strongControl &&
@@ -122,8 +138,7 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
 
     return [element, {
       element, score, visibleStems, roots: [...new Set(roots)], hiddenStems,
-      seasonalStrength: monthCommand ? rules.scores.monthBranchMain + rules.scores.monthCommandBonus
-        : SEASON_EXTREME_WEAK[season] === element ? rules.scores.seasonalExtremeWeakness : 0,
+      seasonalStrength: (monthCommand ? rules.scores.monthBranchMain + rules.scores.monthCommandBonus : 0) + seasonalPhase.value,
       supportScore, controlPenalty, combinations, clashes, effective: false, potential: false,
       reasons, contributions, monthCommand, qualitySelected: false,
     } satisfies ElementEvidence];

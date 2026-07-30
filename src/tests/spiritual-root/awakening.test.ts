@@ -1,30 +1,30 @@
 import { describe, expect, it } from "vitest";
 import { determineAwakening, stableSpiritualRootRoll } from "@/lib/spiritual-root/determineAwakening";
+import type { DaoAffinityResult } from "@/types/spiritualRoot";
+
+function dao(score: number): DaoAffinityResult {
+  return {
+    path: "natural", naturalScore: score, defiantScore: score - 10, score,
+    tieBreaker: 1234, contributions: [], reasons: [],
+  };
+}
 
 describe("determineAwakening", () => {
   it("always opens the gate in generous mode", () => {
-    expect(determineAwakening("generous", "same-birth-seed").passed).toBe(true);
+    expect(determineAwakening("generous", dao(-10)).passed).toBe(true);
   });
 
-  it("returns the same strict result for the same input", () => {
-    const first = determineAwakening("strict", "1995-05-15T12:00+09:00::서울");
-    const second = determineAwakening("strict", "1995-05-15T12:00+09:00::서울");
-    expect(second).toEqual(first);
+  it("uses a calibrated Dao score boundary for balanced mode", () => {
+    expect(determineAwakening("balanced", dao(56.4)).passed).toBe(false);
+    expect(determineAwakening("balanced", dao(56.5)).passed).toBe(true);
   });
 
-  it("distributes strict awakenings at approximately one percent", () => {
-    const sampleSize = 20_000;
-    const passed = Array.from({ length: sampleSize }, (_, index) => `population-${index}`)
-      .filter((seed) => stableSpiritualRootRoll(seed) < 100).length;
-    expect(passed / sampleSize).toBeGreaterThan(0.008);
-    expect(passed / sampleSize).toBeLessThan(0.012);
+  it("uses a calibrated Dao score boundary for strict mode", () => {
+    expect(determineAwakening("strict", dao(68.7)).passed).toBe(false);
+    expect(determineAwakening("strict", dao(68.8)).passed).toBe(true);
   });
 
-  it("distributes balanced awakenings at approximately fifteen percent", () => {
-    const sampleSize = 20_000;
-    const passed = Array.from({ length: sampleSize }, (_, index) => `balanced-population-${index}`)
-      .filter((seed) => determineAwakening("balanced", seed).passed).length;
-    expect(passed / sampleSize).toBeGreaterThan(0.14);
-    expect(passed / sampleSize).toBeLessThan(0.16);
+  it("keeps the hash as a deterministic tie breaker only", () => {
+    expect(stableSpiritualRootRoll("same-birth-seed")).toBe(stableSpiritualRootRoll("same-birth-seed"));
   });
 });

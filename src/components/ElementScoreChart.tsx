@@ -8,7 +8,7 @@ export function ElementScoreChart({ evidence }: { evidence: Record<Element, Elem
   return (
     <section className="surface p-5 sm:p-7">
       <span className="eyebrow">Element flow</span><h2 className="section-title mt-2">오행 기맥 분포</h2>
-      <p className="muted mt-2 text-sm">오행 점수는 어떤 속성이 주근이 되는지 정하고, 세계관용 순도 배분은 그중 몇 개가 작동 영근으로 안정되는지 정합니다. 희소 모드의 발현 관문을 넘지 못하면 통로는 잠재 상태로 남습니다.</p>
+      <p className="muted mt-2 text-sm">월령의 왕·상·휴·수·사, 투출·통근, 지장간, 합충, 상생 유통과 통관을 합산합니다. 이 점수는 주근의 속성을 정하고 세계관용 순도 배분은 작동 영근 개수를 정합니다.</p>
       <div className="mt-7 grid gap-4">
         {ELEMENTS.map((element) => { const item = evidence[element]; return <div key={element} className="surface-soft p-4">
           <div className="flex items-center justify-between gap-3"><ElementBadge element={element} /><div className="text-right"><strong className="text-xl" style={{ color: ELEMENT_META[element].color }}>{item.score.toFixed(1)}</strong><span className="ml-1 text-xs text-[#71858e]">점</span><span className={`ml-2 rounded-full px-2 py-1 text-[10px] font-extrabold ${item.effective ? "bg-[#62c6a5]/12 text-[#7cd3b7]" : item.potential ? "bg-[#d8b66a]/12 text-[#e2c678]" : "bg-white/5 text-[#71858e]"}`}>{item.effective ? "유효" : item.potential ? "잠재" : "미성립"}</span></div></div>
