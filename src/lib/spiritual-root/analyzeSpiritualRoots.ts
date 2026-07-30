@@ -69,15 +69,19 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
   const strongest = primary[0];
   const weakestEffective = resolvedEffective.at(-1);
   const presentShensha = shensha.filter((item) => item.present);
+  const multiRootProfile = classification.multiRootProfile;
   const strengths = [
     strongest ? `${ELEMENT_META[strongest].label} 기맥이 가장 선명함` : "외부 기연에 따라 여러 방향으로 개통 가능",
     classification.relationship?.includes("순생") ? "상생 흐름이 연속됨" : classification.adaptability,
+    ...(multiRootProfile?.strengths ?? []),
     ...presentShensha.flatMap((item) => item.traits.slice(0, 2)),
   ];
   const weaknesses = [
     classification.missingElement ? `${ELEMENT_META[classification.missingElement].label} 속성 결핍` : "상극 속성 간 균형 관리 필요",
     conflictCount > 0 ? `충·형·파·해 ${conflictCount}건으로 기맥 변동성 존재` : "변화 대응력이 낮아질 수 있음",
-    resolvedPotential.length ? `${resolvedPotential.map((element) => ELEMENT_META[element].label).join("·")} 잠재근의 불안정성` : "과도한 단일 속성 운용 주의",
+    ...(multiRootProfile?.cautions ?? [resolvedPotential.length
+      ? `${resolvedPotential.map((element) => ELEMENT_META[element].label).join("·")} 잠재근의 불안정성`
+      : "과도한 단일 속성 운용 주의"]),
   ];
   const recommendedPaths = distinct(primary.flatMap((element) => PATHS[element])).slice(0, 5);
   const risks = [
@@ -111,9 +115,15 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
       recommendedWeapons: distinct(primary.map((element) => WEAPONS[element])).slice(0, 3),
       recommendedTechniques: distinct(primary.map((element) => TECHNIQUES[element])).slice(0, 4),
       risks,
-      growthDirection: resolvedPotential.length
-        ? `${resolvedPotential.map((element) => ELEMENT_META[element].label).join("·")} 잠재근을 보조하되 주영근의 순도를 해치지 않는 방향`
-        : "주영근의 통근을 강화하고 상극 기운을 완충하는 방향",
+      growthDirection: multiRootProfile
+        ? classification.missingElement
+          ? `${ELEMENT_META[classification.missingElement].label} 결핍을 법보·진법으로 보완하고 ${multiRootProfile.generatingLinks.join("·") || "독립 기맥"}의 안정성을 높이는 방향`
+          : multiRootProfile.cycleState === "complete"
+            ? "다섯 기맥의 동시 축적을 유지하며 완성된 상생환을 합국·통관으로 굳히는 방향"
+            : `미성립한 ${5 - multiRootProfile.generatingLinks.length}개 상생 고리를 보완해 오행 순환을 완성하는 방향`
+        : resolvedPotential.length
+          ? `${resolvedPotential.map((element) => ELEMENT_META[element].label).join("·")} 잠재근을 보조하되 주영근의 순도를 해치지 않는 방향`
+          : "주영근의 통근을 강화하고 상극 기운을 완충하는 방향",
       explanations: generateExplanation(resolvedEvidence),
       disclaimer: "이 결과는 전통 명리학의 간지·오행 구조를 바탕으로 만든 선협 세계관용 창작 판정입니다.",
       classification,
