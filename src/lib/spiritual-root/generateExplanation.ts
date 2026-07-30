@@ -10,6 +10,7 @@ export function generateExplanation(evidence: Record<Element, ElementEvidence>):
       const item = evidence[element];
       const label = ELEMENT_META[element].label;
       const facts: string[] = [];
+      if (item.qualitySelected) facts.push("오행 점수 순위와 순도 배분을 거쳐 작동 통로로 선택되고");
       if (item.monthCommand) facts.push("월령을 얻고");
       if (item.visibleStems.length) facts.push(`천간 ${item.visibleStems.length}곳에 투출하며`);
       if (item.roots.length) facts.push(`${item.roots.map(branchKorean).join("·")}에 통근하고`);

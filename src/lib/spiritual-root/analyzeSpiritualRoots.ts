@@ -11,6 +11,7 @@ import { detectMutationRoots } from "./detectMutationRoots";
 import { calculateConfidence } from "./calculateConfidence";
 import { generateExplanation } from "./generateExplanation";
 import { awakeningSeed, determineAwakening } from "./determineAwakening";
+import { determineRootQuality } from "./determineRootQuality";
 
 const PATHS: Record<Element, string[]> = {
   wood: ["목계 생장공", "치유·진법", "풍계 신법"],
@@ -35,9 +36,11 @@ function distinct<T>(items: T[]): T[] {
 
 export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillarsCalculation): AnalysisBundle {
   const relations = analyzeRelations(calculation.pillars);
-  const awakening = determineAwakening(input.judgmentMode, awakeningSeed(input, calculation));
+  const seed = awakeningSeed(input, calculation);
+  const awakening = determineAwakening(input.judgmentMode, seed);
+  const qualityDistribution = awakening.passed ? determineRootQuality(seed) : undefined;
   const rawEvidence = calculateElementScores(calculation.pillars);
-  const roots = determineEffectiveRoots(rawEvidence, awakening.passed);
+  const roots = determineEffectiveRoots(rawEvidence, awakening.passed, qualityDistribution);
   const evidence = roots.evidence;
   const shensha = detectShensha(calculation.pillars, input.shensha);
   const context: AnalysisContext = {
@@ -47,15 +50,35 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
     shensha,
     season: seasonFromMonthBranch(calculation.pillars.month.branch),
   };
-  const mutations = detectMutationRoots(context);
-  const activeMutation = mutations.find((candidate) => candidate.status === "confirmed");
+  let mutations = detectMutationRoots(context);
+  if (qualityDistribution?.targetTier === "mutation") {
+    const promotableIndex = mutations.findIndex((candidate) => candidate.status === "confirmed" || candidate.status === "likely");
+    if (promotableIndex >= 0 && mutations[promotableIndex].status === "likely") {
+      mutations = mutations.map((candidate, index) => index === promotableIndex ? {
+        ...candidate,
+        status: "confirmed" as const,
+        confidence: Math.max(85, candidate.confidence),
+        satisfiedConditions: [...candidate.satisfiedConditions, "희귀 순도 배분값이 최종 융합을 안정시킴"],
+      } : candidate);
+    }
+  } else {
+    mutations = mutations.map((candidate) => candidate.status === "confirmed" ? {
+      ...candidate,
+      status: "likely" as const,
+      confidence: Math.min(84, candidate.confidence),
+      missingConditions: [...candidate.missingConditions, "이번 순도 배분값은 완전 융합을 지지하지 않음"],
+    } : candidate);
+  }
+  const activeMutation = qualityDistribution?.targetTier === "mutation"
+    ? mutations.find((candidate) => candidate.status === "confirmed")
+    : undefined;
   const likelyMutation = mutations.find((candidate) => candidate.status === "likely");
   const classification = classifyRootCount(
     roots.effective,
     roots.potential,
     evidence,
     relations,
-    activeMutation ?? likelyMutation,
+    activeMutation ?? (qualityDistribution?.targetTier === "dual" ? likelyMutation : undefined),
   );
   if (!awakening.passed) {
     classification.displayName = "무영근 — 쇄맥무근";
@@ -128,6 +151,7 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
       disclaimer: "이 결과는 전통 명리학의 간지·오행 구조를 바탕으로 만든 선협 세계관용 창작 판정입니다.",
       classification,
       awakening,
+      qualityDistribution,
     },
   };
 }

@@ -3,6 +3,7 @@ import type { BirthInput } from "@/types/bazi";
 import type { RootQualityTier } from "@/types/spiritualRoot";
 import { calculateFourPillars } from "@/lib/calendar/calculateFourPillars";
 import { analyzeSpiritualRoots } from "@/lib/spiritual-root/analyzeSpiritualRoots";
+import { awakeningSeed, determineAwakening } from "@/lib/spiritual-root/determineAwakening";
 
 describe("spiritual-root population balance", () => {
   it("keeps generous results ordered from common five-roots to rare heavenly roots", { timeout: 15_000 }, () => {
@@ -14,6 +15,7 @@ describe("spiritual-root population balance", () => {
     const counts: Record<RootQualityTier, number> = {
       none: 0, heavenly: 0, mutation: 0, dual: 0, triple: 0, quadruple: 0, five: 0,
     };
+    let strictComparisons = 0;
 
     for (let index = 0; index < 5_000; index += 1) {
       const input: BirthInput = {
@@ -25,15 +27,31 @@ describe("spiritual-root population balance", () => {
         applyTrueSolarTime: false, timeAccuracy: "exact",
         shensha: { enabled: false, huagai: false, guimen: false, yima: false },
       };
-      const result = analyzeSpiritualRoots(input, calculateFourPillars(input)).result;
+      const calculation = calculateFourPillars(input);
+      const result = analyzeSpiritualRoots(input, calculation).result;
       counts[result.classification.qualityTier] += 1;
+      if (determineAwakening("strict", awakeningSeed(input, calculation)).passed) {
+        const strictResult = analyzeSpiritualRoots({ ...input, judgmentMode: "strict" }, calculation).result;
+        expect(strictResult.classification.qualityTier).toBe(result.classification.qualityTier);
+        expect(strictResult.primaryElements).toEqual(result.primaryElements);
+        strictComparisons += 1;
+      }
     }
 
+    const share = (tier: RootQualityTier) => counts[tier] / 5_000;
     expect(counts.none).toBe(0);
-    expect(counts.five).toBeGreaterThan(counts.quadruple);
-    expect(counts.quadruple).toBeGreaterThan(counts.triple);
-    expect(counts.triple).toBeGreaterThan(counts.dual);
-    expect(counts.dual).toBeGreaterThan(counts.mutation);
-    expect(counts.mutation).toBeGreaterThan(counts.heavenly);
+    expect(share("heavenly")).toBeGreaterThan(0.01);
+    expect(share("heavenly")).toBeLessThan(0.025);
+    expect(share("mutation")).toBeGreaterThan(0.04);
+    expect(share("mutation")).toBeLessThan(0.06);
+    expect(share("dual")).toBeGreaterThan(0.1);
+    expect(share("dual")).toBeLessThan(0.14);
+    expect(share("triple")).toBeGreaterThan(0.18);
+    expect(share("triple")).toBeLessThan(0.22);
+    expect(share("quadruple")).toBeGreaterThan(0.26);
+    expect(share("quadruple")).toBeLessThan(0.31);
+    expect(share("five")).toBeGreaterThan(0.3);
+    expect(share("five")).toBeLessThan(0.36);
+    expect(strictComparisons).toBeGreaterThan(35);
   });
 });

@@ -125,7 +125,7 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
       seasonalStrength: monthCommand ? rules.scores.monthBranchMain + rules.scores.monthCommandBonus
         : SEASON_EXTREME_WEAK[season] === element ? rules.scores.seasonalExtremeWeakness : 0,
       supportScore, controlPenalty, combinations, clashes, effective: false, potential: false,
-      reasons, contributions, monthCommand,
+      reasons, contributions, monthCommand, qualitySelected: false,
     } satisfies ElementEvidence];
   })) as Record<Element, ElementEvidence>;
 }

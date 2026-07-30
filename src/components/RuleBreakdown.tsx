@@ -18,6 +18,7 @@ export function RuleBreakdown({ data }: { data: StoredAnalysis }) {
             <strong className="block text-[#e2d4ae]">영근 발현 관문 · {analysis.result.awakening.label}</strong>
             <p>{analysis.result.awakening.explanation}</p>
             <p className="text-xs text-[#748991]">내부 결정값 {analysis.result.awakening.roll.toString().padStart(4, "0")} / 통과선 {analysis.result.awakening.threshold} · 이 값은 세계관용 결정적 분배값이며 전통 명리 판정이 아닙니다.</p>
+            {analysis.result.qualityDistribution && <p className="mt-2 border-t border-white/6 pt-2 text-xs text-[#8fa2a9]">순도 배분값 {analysis.result.qualityDistribution.roll.toString().padStart(4, "0")} · {analysis.result.qualityDistribution.label} · 구조 조건에 따라 최종 결과가 한 단계 조정될 수 있습니다.</p>}
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[

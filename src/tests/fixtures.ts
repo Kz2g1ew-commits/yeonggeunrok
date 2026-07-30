@@ -34,7 +34,7 @@ export function evidenceSet(scores: Partial<Record<Element, number>>, potentials
       element, score, visibleStems: score >= 4 ? ["甲"] : [], roots: score >= 4 ? ["寅"] : [],
       hiddenStems: [], seasonalStrength: 0, supportScore: score >= 7 ? 1 : 0, controlPenalty: 0,
       combinations: [], clashes: [], effective: score >= 4, potential: potentials.includes(element),
-      reasons: [], contributions: [], monthCommand: false,
+      reasons: [], contributions: [], monthCommand: false, qualitySelected: false,
     } satisfies ElementEvidence];
   })) as unknown as Record<Element, ElementEvidence>;
 }

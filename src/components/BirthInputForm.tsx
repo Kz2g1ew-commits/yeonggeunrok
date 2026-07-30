@@ -81,10 +81,11 @@ export function BirthInputForm() {
       <div className="grid gap-6 p-5 sm:p-7">
         <fieldset>
           <legend className="mb-2 text-xs font-bold text-[#9badb5]">영근 발현 기준</legend>
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid gap-2 sm:grid-cols-3">
             {([
               { mode: "generous", title: "유연 판정 · 기본", description: "영근이 있다는 전제로 오행 수와 품질을 판정" },
-              { mode: "strict", title: "엄격 판정 · 세계관", description: "약 1%만 영근 발현, 나머지는 무영근" },
+              { mode: "balanced", title: "균형 판정 · 15%", description: "희소성은 살리면서 결과도 체험하기 좋은 설정" },
+              { mode: "strict", title: "엄격 판정 · 1%", description: "99%가 무영근인 강한 세계관 설정" },
             ] as const).map((option) => (
               <button key={option.mode} type="button" aria-pressed={input.judgmentMode === option.mode}
                 onClick={() => setInput((current) => ({ ...current, judgmentMode: option.mode }))}
@@ -94,7 +95,7 @@ export function BirthInputForm() {
               </button>
             ))}
           </div>
-          <p className="mt-2 text-[11px] leading-5 text-[#728991]">두 모드 모두 천영근 → 변이영근 → 이영근 → 삼영근 → 사영근 → 오영근 순이며, 왼쪽일수록 순도가 높고 희귀합니다.</p>
+          <p className="mt-2 text-[11px] leading-5 text-[#728991]">세 모드 모두 발현 후에는 같은 오행 점수와 품질 분포를 사용합니다. 천영근 → 변이영근 → 이영근 → 삼영근 → 사영근 → 오영근 순으로 왼쪽일수록 순도가 높습니다.</p>
         </fieldset>
 
         <fieldset>

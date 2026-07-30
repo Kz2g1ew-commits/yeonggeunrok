@@ -35,9 +35,21 @@ export const SPIRITUAL_ROOT_RULES = {
     hunyuanSpread: 2.5,
   },
   awakening: {
-    strictPopulationRate: 1,
+    populationRates: {
+      generous: 100,
+      balanced: 15,
+      strict: 1,
+    },
     rollScale: 10_000,
   },
+  qualityDistribution: [
+    { tier: "heavenly", share: 1.5, desiredCount: 1, label: "천영근 배분" },
+    { tier: "mutation", share: 11, desiredCount: 2, label: "변이 융합 시도 배분" },
+    { tier: "dual", share: 6.5, desiredCount: 2, label: "이영근 배분" },
+    { tier: "triple", share: 20, desiredCount: 3, label: "삼영근 배분" },
+    { tier: "quadruple", share: 28, desiredCount: 4, label: "사영근 배분" },
+    { tier: "five", share: 33, desiredCount: 5, label: "오영근 배분" },
+  ],
   grade: {
     lowMax: 6.9,
     middleMax: 9.9,
