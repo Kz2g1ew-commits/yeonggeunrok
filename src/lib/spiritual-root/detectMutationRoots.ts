@@ -34,7 +34,13 @@ function evaluateSpecialConditions(
 
   switch (rule.id) {
     case "ice":
-      points += 8 * addCondition(satisfied, evidence.water.monthCommand || evidence.water.roots.length >= 2, "수가 월령 또는 강한 통근을 얻음", "수의 계절·통근 세력이 부족함", missing);
+      points += 8 * addCondition(
+        satisfied,
+        evidence.water.monthCommand || evidence.water.rootStrength >= 1.6,
+        "수가 월령 또는 강한 가중 통근을 얻음",
+        "수의 계절·가중 통근 세력이 부족함",
+        missing,
+      );
       if (fireStrong || dryHot) blockers.push("강한 화기 또는 조열함이 금수를 제압함");
       break;
     case "lightning":

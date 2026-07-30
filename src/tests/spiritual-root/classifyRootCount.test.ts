@@ -4,7 +4,7 @@ import { classifyRootCount } from "@/lib/spiritual-root/classifyRootCount";
 import { evidenceSet } from "../fixtures";
 import type { MutationCandidate } from "@/types/spiritualRoot";
 
-const relations = { combinations: [], halfCombinations: [], directionalCombinations: [], clashes: [], punishments: [], harms: [], breaks: [], stemCombinations: [], dynamicCount: 0 };
+const relations = { combinations: [], halfCombinations: [], archingCombinations: [], directionalCombinations: [], sixCombinations: [], clashes: [], punishments: [], harms: [], breaks: [], stemCombinations: [], dynamicCount: 0 };
 
 describe("classifyRootCount", () => {
   const cases: Array<[Element[], string]> = [

@@ -39,6 +39,9 @@ export interface QualityDistributionResult {
   targetShare: number;
   desiredCount: number;
   label: string;
+  eligibleCount?: number;
+  appliedCount?: number;
+  limitedByStructure?: boolean;
 }
 
 export interface ScoreContribution {
@@ -47,11 +50,22 @@ export interface ScoreContribution {
   kind: "base" | "bonus" | "penalty";
 }
 
+export interface RootEvidence {
+  branch: string;
+  stem: string;
+  role: "main" | "middle" | "residual";
+  strength: number;
+  damaged: boolean;
+}
+
 export interface ElementEvidence {
   element: Element;
+  baseScore: number;
   score: number;
   visibleStems: string[];
   roots: string[];
+  rootStrength: number;
+  rootDetails: RootEvidence[];
   hiddenStems: string[];
   seasonalStrength: number;
   supportScore: number;
@@ -63,6 +77,8 @@ export interface ElementEvidence {
   reasons: string[];
   contributions: ScoreContribution[];
   monthCommand: boolean;
+  structuralEligible: boolean;
+  eligibilityReasons: string[];
   qualitySelected: boolean;
 }
 

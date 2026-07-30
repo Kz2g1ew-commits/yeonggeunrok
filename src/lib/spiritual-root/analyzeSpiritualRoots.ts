@@ -41,8 +41,14 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
   const rawEvidence = calculateElementScores(calculation.pillars);
   const dao = calculateDaoAffinity(calculation.pillars, rawEvidence, relations, seed);
   const awakening = determineAwakening(input.judgmentMode, dao);
-  const qualityDistribution = awakening.passed ? determineRootQuality(seed) : undefined;
-  const roots = determineEffectiveRoots(rawEvidence, awakening.passed, qualityDistribution);
+  const qualityRoll = awakening.passed ? determineRootQuality(seed) : undefined;
+  const roots = determineEffectiveRoots(rawEvidence, awakening.passed, qualityRoll);
+  const qualityDistribution = qualityRoll ? {
+    ...qualityRoll,
+    eligibleCount: roots.structural.length,
+    appliedCount: roots.effective.length,
+    limitedByStructure: roots.effective.length < qualityRoll.desiredCount,
+  } : undefined;
   const evidence = roots.evidence;
   const shensha = detectShensha(calculation.pillars, input.shensha);
   const context: AnalysisContext = {

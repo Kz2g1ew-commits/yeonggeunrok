@@ -87,7 +87,9 @@ export interface FourPillarsCalculation {
 export interface BranchRelations {
   combinations: string[];
   halfCombinations: string[];
+  archingCombinations: string[];
   directionalCombinations: string[];
+  sixCombinations: string[];
   clashes: string[];
   punishments: string[];
   harms: string[];

@@ -127,7 +127,8 @@ export function classifyRootCount(
   const scores = ELEMENTS.map((element) => evidence[element].score);
   const spread = Math.max(...scores) - Math.min(...scores);
   const severeConflict = relations.clashes.length + relations.punishments.length >= 3;
-  const cycleSupport = relations.combinations.length + relations.directionalCombinations.length + relations.stemCombinations.length > 0;
+  const cycleSupport = relations.combinations.length + relations.directionalCombinations.length > 0 ||
+    ELEMENTS.some((element) => evidence[element].combinations.includes("천간합화"));
   const hunyuan = spread <= SPIRITUAL_ROOT_RULES.thresholds.hunyuanSpread && !severeConflict && cycleSupport;
   const balanced = spread <= SPIRITUAL_ROOT_RULES.thresholds.fiveBalanceSpread && !severeConflict;
   const displayName = hunyuan ? "혼원오행영근" : balanced ? "오행균형영근" : "오행잡영근";
