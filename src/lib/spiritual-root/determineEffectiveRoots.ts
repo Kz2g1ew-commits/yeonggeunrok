@@ -22,6 +22,23 @@ function bestMutationPair(evidence: Record<Element, ElementEvidence>, eligible: 
   })[0];
 }
 
+function isDirectlyEligible(item: ElementEvidence): boolean {
+  return item.eligibilityReasons.some((reason) => !reason.includes("전체 유통에 참여"));
+}
+
+function canCondenseHeavenly(
+  evidence: Record<Element, ElementEvidence>,
+  structural: Element[],
+): boolean {
+  if (!structural.length) return false;
+  const [primary, ...others] = rankedElements(evidence).filter((element) => structural.includes(element));
+  if (!others.length) return true;
+  const strongestSecondary = Math.max(...others.map((element) => evidence[element].score));
+  return evidence[primary].score >= SPIRITUAL_ROOT_RULES.thresholds.heavenlyPrimaryMin &&
+    strongestSecondary <= SPIRITUAL_ROOT_RULES.thresholds.heavenlySecondaryMax &&
+    evidence[primary].score - strongestSecondary >= SPIRITUAL_ROOT_RULES.thresholds.heavenlyPurityGap;
+}
+
 export function determineEffectiveRoots(
   rawEvidence: Record<Element, ElementEvidence>,
   awakeningPassed = true,
@@ -34,17 +51,26 @@ export function determineEffectiveRoots(
 } {
   const structural = rankedElements(rawEvidence).filter((element) => rawEvidence[element].structuralEligible);
   const mutationPair = quality?.targetTier === "mutation" ? bestMutationPair(rawEvidence, structural) : undefined;
+  const mutationBlocked = mutationPair
+    ? structural.some((element) => !mutationPair.includes(element) && isDirectlyEligible(rawEvidence[element]))
+    : true;
   const selected = !awakeningPassed || !quality ? []
     : quality.targetTier === "heavenly"
-      ? structural.slice(0, 1)
+      ? canCondenseHeavenly(rawEvidence, structural) ? structural.slice(0, 1) : structural.length >= 2 ? structural : []
       : quality.targetTier === "mutation"
-        ? mutationPair ?? (structural.length >= 2 ? structural.slice(0, 2) : [])
+        ? mutationPair && !mutationBlocked ? mutationPair : structural.length >= 2 ? structural : []
         : structural.length >= 2 ? structural : [];
 
   const evidence = Object.fromEntries(ELEMENTS.map((element) => {
     const item = rawEvidence[element];
-    const hasChannel = item.visibleStems.length > 0 || item.rootStrength > 0 || item.monthCommand || item.combinations.length > 0;
-    const potentialReady = item.score >= SPIRITUAL_ROOT_RULES.structure.potentialScore && hasChannel;
+    const visibleAndRooted = item.visibleStems.length > 0 &&
+      item.rootStrength >= SPIRITUAL_ROOT_RULES.structure.rootedPotentialMinimum;
+    const hasIndependentChannel = visibleAndRooted || item.monthCommand ||
+      item.rootStrength >= SPIRITUAL_ROOT_RULES.roots.strongRootMinimum ||
+      item.combinations.some((relation) => relation === "삼합" || relation === "방합");
+    const potentialReady = hasIndependentChannel && (
+      item.score >= SPIRITUAL_ROOT_RULES.structure.potentialScore || visibleAndRooted
+    );
     const effective = awakeningPassed && item.structuralEligible && selected.includes(element);
     const potential = !effective && (item.structuralEligible || potentialReady);
     return [element, { ...item, effective, potential, qualitySelected: effective }];

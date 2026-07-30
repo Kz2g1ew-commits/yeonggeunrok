@@ -35,15 +35,15 @@ describe("classifyRootCount", () => {
     expect(classifyRootCount(elements, [], evidenceSet({ wood: 8, fire: 8, earth: 7.5, metal: 7, water: 8 }), supported).displayName).toBe("혼원오행영근");
   });
 
-  it("collapses an overwhelmingly pure channel into a heavenly root", () => {
+  it("does not erase a second effective root without a heavenly condensation result", () => {
     const result = classifyRootCount(
       ["wood", "earth"],
       [],
       evidenceSet({ wood: 19, earth: 3 }),
       relations,
     );
-    expect(result.qualityTier).toBe("heavenly");
-    expect(result.rootCount).toBe("single");
+    expect(result.qualityTier).toBe("dual");
+    expect(result.rootCount).toBe("dual");
   });
 
   it("places a confirmed mutation above a normal dual root", () => {

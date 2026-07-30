@@ -60,7 +60,11 @@ export interface RootEvidence {
 
 export interface ElementEvidence {
   element: Element;
+  /** 계절·생극 전, 4천간+4지지를 240질량으로 환산한 설명용 구성값 */
+  presenceScore: number;
+  presenceRatio: number;
   baseScore: number;
+  /** 월령·통근·생조·극제·합충을 적용한 기맥 활성도 */
   score: number;
   visibleStems: string[];
   roots: string[];
@@ -79,6 +83,7 @@ export interface ElementEvidence {
   monthCommand: boolean;
   structuralEligible: boolean;
   eligibilityReasons: string[];
+  potentialReasons: string[];
   qualitySelected: boolean;
 }
 

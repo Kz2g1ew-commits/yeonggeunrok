@@ -20,6 +20,8 @@ type PillarKey = typeof PILLAR_KEYS[number];
 
 interface BaseProfile {
   element: Element;
+  presenceScore: number;
+  presenceRatio: number;
   contributions: ScoreContribution[];
   visibleStems: string[];
   roots: string[];
@@ -33,6 +35,13 @@ interface BaseProfile {
   baseScore: number;
   fullFormation: boolean;
   directionalFormation: boolean;
+  combinationPenalty: number;
+}
+
+interface StemCombinationEvaluation {
+  sourceElements: Element[];
+  targetElement: Element;
+  state: "candidate" | "bound" | "transformed";
 }
 
 function rounded(value: number): number {
@@ -53,6 +62,55 @@ function adjacentStemPair(stems: string[], pair: readonly string[]): boolean {
   return left.some((a) => right.some((b) => Math.abs(a - b) === 1));
 }
 
+function calculatePresence(pillars: FourPillars): Record<Element, { score: number; ratio: number }> {
+  const mass = Object.fromEntries(ELEMENTS.map((element) => [element, 0])) as Record<Element, number>;
+  for (const key of PILLAR_KEYS) {
+    const pillar = pillars[key];
+    mass[pillar.stemElement] += rules.presence.visibleStemMass;
+    const hidden = HIDDEN_STEMS[pillar.branch];
+    const shares = hidden.length === 1
+      ? rules.presence.branchShares.single
+      : hidden.length === 2
+        ? rules.presence.branchShares.double
+        : rules.presence.branchShares.triple;
+    for (const item of hidden) mass[item.element] += rules.presence.branchMass * shares[item.role];
+  }
+  const total = PILLAR_KEYS.length * (rules.presence.visibleStemMass + rules.presence.branchMass);
+  return Object.fromEntries(ELEMENTS.map((element) => [element, {
+    score: rounded(mass[element]),
+    ratio: rounded(mass[element] / total * 100),
+  }])) as Record<Element, { score: number; ratio: number }>;
+}
+
+function evaluateStemCombinations(
+  pillars: FourPillars,
+  stems: string[],
+  monthElement: Element,
+  groups: ReturnType<typeof completedGroupElements>,
+  profiles: Record<Element, BaseProfile>,
+): StemCombinationEvaluation[] {
+  return STEM_COMBINATIONS.flatMap((rule): StemCombinationEvaluation[] => {
+    if (!rule.stems.every((stem) => stems.includes(stem))) return [];
+    const adjacent = adjacentStemPair(stems, rule.stems);
+    const includesDayStem = rule.stems.includes(pillars.day.stem);
+    const targetSupported = monthElement === rule.element ||
+      groups.full.includes(rule.element) || groups.directional.includes(rule.element);
+    const sourceElements = [...new Set(rule.stems.map((stem) => STEMS[stem].element))];
+    const resistingSources = sourceElements.filter((element) => element !== rule.element);
+    const rootedResistance = resistingSources.length
+      ? Math.max(...resistingSources.map((element) => profiles[element].rootStrength))
+      : 0;
+    const transformed = (!rules.stemCombination.requireAdjacency || adjacent) &&
+      (!rules.stemCombination.requireDayStemForTransformation || includesDayStem) &&
+      targetSupported && rootedResistance <= rules.stemCombination.originalRootResistanceMaximum;
+    return [{
+      sourceElements,
+      targetElement: rule.element,
+      state: transformed ? "transformed" : adjacent ? "bound" : "candidate",
+    }];
+  });
+}
+
 function hasSourceChannel(profile: BaseProfile): boolean {
   return profile.monthCommand || profile.fullFormation || profile.directionalFormation ||
     profile.rootStrength >= rules.roots.strongRootMinimum ||
@@ -71,11 +129,9 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
   const season = seasonFromMonthBranch(pillars.month.branch);
   const groups = completedGroupElements(pillars);
   const monthElement = pillars.month.branchElement;
-  const transformedStemRules = STEM_COMBINATIONS.filter((rule) =>
-    adjacentStemPair(stems, rule.stems) &&
-    (monthElement === rule.element || GENERATES[monthElement] === rule.element));
+  const presence = calculatePresence(pillars);
 
-  const profiles = Object.fromEntries(ELEMENTS.map((element) => {
+  const rawProfiles = Object.fromEntries(ELEMENTS.map((element) => {
     const contributions: ScoreContribution[] = [];
     const visibleStems = stems.filter((stem) => STEMS[stem].element === element);
     const rootDetails = PILLAR_KEYS.flatMap((key: PillarKey) => {
@@ -143,16 +199,6 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
     if (archingCount) contributions.push(contribution("왕지가 빠진 공합 후보", rules.scores.archingHarmony * archingCount));
     if (sixCount) contributions.push(contribution("월령이 돕는 지지 육합", rules.scores.sixHarmony * sixCount));
 
-    const transformedHere = transformedStemRules.filter((rule) => rule.element === element).length;
-    if (transformedHere) {
-      contributions.push(contribution("인접하고 월령이 돕는 천간합화", rules.scores.transformedStemCombination * transformedHere));
-    }
-    const combinedAway = transformedStemRules.some((rule) =>
-      rule.element !== element && rule.stems.some((stem) => STEMS[stem].element === element));
-    if (combinedAway && !monthCommand) {
-      contributions.push(contribution("성립 조건을 갖춘 합화로 독립 작용이 약해짐", rules.scores.combinedAway));
-    }
-
     if (roots.length === 1 && rootDetails.every((root) => root.damaged)) {
       contributions.push(contribution("유일한 뿌리가 충으로 손상", rules.scores.uniqueRootClash));
     }
@@ -166,7 +212,6 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
       ...(halfCount ? ["반합"] : []),
       ...(archingCount ? ["공합 후보"] : []),
       ...(sixCount ? ["육합"] : []),
-      ...(transformedHere ? ["천간합화"] : []),
     ];
     const clashes = rootDetails.filter((root) => root.damaged)
       .map((root) => `${branchKorean(root.branch)} ${root.role}근 충손`);
@@ -174,6 +219,8 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
 
     return [element, {
       element,
+      presenceScore: presence[element].score,
+      presenceRatio: presence[element].ratio,
       contributions,
       visibleStems,
       roots,
@@ -187,6 +234,44 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
       baseScore,
       fullFormation: fullCount > 0,
       directionalFormation: directionCount > 0,
+      combinationPenalty: 0,
+    } satisfies BaseProfile];
+  })) as Record<Element, BaseProfile>;
+
+  const stemCombinationEvaluations = evaluateStemCombinations(
+    pillars, stems, monthElement, groups, rawProfiles,
+  );
+  const profiles = Object.fromEntries(ELEMENTS.map((element) => {
+    const profile = rawProfiles[element];
+    const contributions = [...profile.contributions];
+    const combinations = [...profile.combinations];
+    const transformedTo = stemCombinationEvaluations.filter((item) =>
+      item.state === "transformed" && item.targetElement === element).length;
+    const transformedFrom = stemCombinationEvaluations.filter((item) =>
+      item.state === "transformed" && item.sourceElements.includes(element)).length;
+    const bound = stemCombinationEvaluations.filter((item) =>
+      item.state === "bound" && item.sourceElements.includes(element)).length;
+    let combinationPenalty = 0;
+    if (transformedTo) {
+      contributions.push(contribution("일간 참여·월령·무근 조건을 갖춘 천간합화", rules.scores.transformedStemCombination * transformedTo));
+      combinations.push("천간합화");
+    }
+    if (transformedFrom && !profile.monthCommand) {
+      const value = rules.scores.combinedAway * transformedFrom;
+      contributions.push(contribution("완전 합화로 원래 오행의 독립 작용이 약해짐", value));
+      combinationPenalty += value;
+    } else if (bound) {
+      const value = rules.scores.combinedBinding * bound;
+      contributions.push(contribution("천간은 합하지만 화하지 않아 일부 결속됨", value));
+      combinations.push("천간합·불화");
+      combinationPenalty += value;
+    }
+    return [element, {
+      ...profile,
+      contributions,
+      combinations,
+      combinationPenalty,
+      baseScore: rounded(contributions.reduce((sum, item) => sum + item.value, 0)),
     } satisfies BaseProfile];
   })) as Record<Element, BaseProfile>;
 
@@ -202,6 +287,9 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
     if (generatorReady && targetCanReceive) {
       supportScore = rules.scores.strongSupport;
       contributions.push(contribution(`${ELEMENT_META[generator.element].label}의 성립된 기맥에서 받는 생조`, supportScore));
+    } else if (generator.rootStrength >= rules.roots.strongRootMinimum && targetCanReceive) {
+      supportScore = rules.scores.rootedSourceSupport;
+      contributions.push(contribution(`${ELEMENT_META[generator.element].label}의 뿌리에서 받는 미약 생조`, supportScore));
     }
 
     if (generator.baseScore >= rules.structure.flowSourceScore &&
@@ -229,8 +317,23 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
     if (controller.baseScore >= rules.structure.strongControllerScore &&
         controller.baseScore >= profile.baseScore + 2 && !rescued &&
         !profile.monthCommand && !profile.fullFormation && !profile.directionalFormation) {
-      controlPenalty = rules.scores.uncontrolledStrongControl;
-      contributions.push(contribution(`${ELEMENT_META[controller.element].label}의 강한 극을 받고 구원이 약함`, controlPenalty));
+      const rootedMitigation = profile.rootStrength >= rules.structure.rootedPotentialMinimum
+        ? rules.scores.rootedControlMitigation : 0;
+      controlPenalty = rules.scores.uncontrolledStrongControl + rootedMitigation;
+      contributions.push(contribution(
+        rootedMitigation
+          ? `${ELEMENT_META[controller.element].label}의 강한 극을 받지만 통근이 일부 버팀`
+          : `${ELEMENT_META[controller.element].label}의 강한 극을 받고 구원이 약함`,
+        controlPenalty,
+      ));
+    }
+
+    const combinedConstraint = profile.combinationPenalty + controlPenalty;
+    if (combinedConstraint < rules.structure.compoundConstraintFloor) {
+      contributions.push(contribution(
+        "같은 기맥에 겹친 합거·극제 감점의 중복 상한",
+        rules.structure.compoundConstraintFloor - combinedConstraint,
+      ));
     }
 
     const score = rounded(contributions.reduce((sum, item) => sum + item.value, 0));
@@ -245,6 +348,17 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
       eligibilityReasons.push("일간 오행이 뿌리 또는 성립된 생조를 얻음");
     }
     const structuralEligible = score >= rules.structure.effectiveScore && eligibilityReasons.length > 0;
+    const potentialReasons: string[] = [];
+    const visibleAndRooted = profile.visibleStems.length > 0 &&
+      profile.rootStrength >= rules.structure.rootedPotentialMinimum;
+    const independentTrace = profile.monthCommand || profile.fullFormation || profile.directionalFormation ||
+      visibleAndRooted || profile.rootStrength >= rules.roots.strongRootMinimum;
+    if (!structuralEligible && visibleAndRooted) {
+      potentialReasons.push("천간 투출과 약한 통근은 이어지지만 계절·극제 때문에 독립 활성도가 부족함");
+    }
+    if (!structuralEligible && score >= rules.structure.potentialScore && independentTrace) {
+      potentialReasons.push("기맥 활성도와 독립 흔적이 잠재 기준을 충족함");
+    }
     const reasons = contributions.filter((item) => item.value !== 0)
       .sort((a, b) => Math.abs(b.value) - Math.abs(a.value))
       .slice(0, 5)
@@ -252,6 +366,8 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
 
     return [element, {
       element,
+      presenceScore: profile.presenceScore,
+      presenceRatio: profile.presenceRatio,
       baseScore: profile.baseScore,
       score,
       visibleStems: profile.visibleStems,
@@ -271,20 +387,27 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
       monthCommand: profile.monthCommand,
       structuralEligible,
       eligibilityReasons,
+      potentialReasons,
       qualitySelected: false,
     } satisfies ElementEvidence];
   })) as Record<Element, ElementEvidence>;
 
   const scores = ELEMENTS.map((element) => preliminary[element].score);
   const maximumScore = Math.max(...scores);
+  const scoreSpread = maximumScore - Math.min(...scores);
 
   return Object.fromEntries(ELEMENTS.map((element) => {
     const item = preliminary[element];
-    const hasTrace = item.visibleStems.length > 0 || item.rootStrength > 0 || item.combinations.length > 0;
+    const hasTrace = item.visibleStems.length > 0 || item.rootStrength > 0 || item.monthCommand ||
+      item.combinations.length > 0;
     const dominantGap = maximumScore - item.score;
+    const sealedBelowPotential = item.score < rules.structure.potentialScore &&
+      scoreSpread > rules.structure.collectiveBuriedMaximumSpread &&
+      (item.visibleStems.length === 0 || item.controlPenalty < 0 || item.combinations.includes("천간합·불화"));
     const collectiveEligible = !item.structuralEligible && hasTrace &&
       item.score >= rules.structure.collectiveMinimumScore &&
-      dominantGap < rules.structure.collectiveMaximumSpread;
+      dominantGap < rules.structure.collectiveMaximumSpread &&
+      !sealedBelowPotential;
     return [element, collectiveEligible ? {
       ...item,
       structuralEligible: true,

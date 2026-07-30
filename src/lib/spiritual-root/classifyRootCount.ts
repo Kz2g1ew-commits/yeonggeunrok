@@ -72,25 +72,6 @@ export function classifyRootCount(
     };
   }
   if (count === 2) {
-    const byScore = [...effective].sort((a, b) => evidence[b].score - evidence[a].score);
-    const primaryScore = evidence[byScore[0]].score;
-    const secondaryScore = evidence[byScore[1]].score;
-    const purityGap = primaryScore - secondaryScore;
-    const heavenly = primaryScore >= SPIRITUAL_ROOT_RULES.thresholds.heavenlyPrimaryMin &&
-      secondaryScore <= SPIRITUAL_ROOT_RULES.thresholds.heavenlySecondaryMax &&
-      purityGap >= SPIRITUAL_ROOT_RULES.thresholds.heavenlyPurityGap;
-    if (heavenly) {
-      const element = byScore[0];
-      const grade = singleGrade(primaryScore, ELEMENTS.filter((item) => item !== element).map((item) => evidence[item].score));
-      return {
-        ...base, rootCount: "single", grade,
-        displayName: `${GRADE_LABEL[grade]} ${ELEMENT_META[element].label} 천영근`,
-        workingElements: [ELEMENT_META[element].label],
-        relationship: `${ELEMENT_META[element].label} 기맥이 약한 부속 통로를 흡수한 고순도형`,
-        cultivationSpeed: "매우 빠름", adaptability: `${ELEMENT_META[element].label}계 공법에 극도로 집중`,
-        qualityTier: "heavenly", qualityRank: 1, qualityLabel: "최상급", rarityLabel: "보유자 약 1~2%",
-      };
-    }
     if (activeMutation?.status === "confirmed") {
       return {
         ...base, rootCount: "single", displayName: `${activeMutation.name} 변이영근`,

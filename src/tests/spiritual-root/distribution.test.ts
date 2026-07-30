@@ -51,12 +51,12 @@ describe("spiritual-root population balance", () => {
     expect(share("mutation")).toBeLessThan(0.06);
     expect(share("dual")).toBeGreaterThan(0.075);
     expect(share("dual")).toBeLessThan(0.13);
-    expect(share("triple")).toBeGreaterThan(0.1);
-    expect(share("triple")).toBeLessThan(0.16);
-    expect(share("quadruple")).toBeGreaterThan(0.3);
-    expect(share("quadruple")).toBeLessThan(0.39);
-    expect(share("five")).toBeGreaterThan(0.3);
-    expect(share("five")).toBeLessThan(0.4);
+    expect(share("triple")).toBeGreaterThan(0.18);
+    expect(share("triple")).toBeLessThan(0.23);
+    expect(share("quadruple")).toBeGreaterThan(0.28);
+    expect(share("quadruple")).toBeLessThan(0.34);
+    expect(share("five")).toBeGreaterThan(0.29);
+    expect(share("five")).toBeLessThan(0.36);
     expect(share("heavenly")).toBeLessThan(share("mutation"));
     expect(share("mutation")).toBeLessThan(share("dual"));
     expect(share("dual")).toBeLessThan(share("triple"));

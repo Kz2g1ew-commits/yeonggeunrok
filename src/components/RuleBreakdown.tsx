@@ -21,7 +21,7 @@ export function RuleBreakdown({ data }: { data: StoredAnalysis }) {
             <p>{analysis.result.awakening.explanation}</p>
             <p className="text-xs text-[#8fa2a9]">{daoLabel} {dao.score.toFixed(1)}점 / 통과선 {analysis.result.awakening.threshold.toFixed(1)}점 · 순천 {dao.naturalScore.toFixed(1)} · 역천 {dao.defiantScore.toFixed(1)}</p>
             <p className="text-[11px] text-[#748991]">해시값 {analysis.result.awakening.roll.toString().padStart(4, "0")}은 같은 점수대의 동점 보정에만 사용됩니다.</p>
-            {analysis.result.qualityDistribution && <p className="mt-2 border-t border-white/6 pt-2 text-xs text-[#8fa2a9]">순도 배분값 {analysis.result.qualityDistribution.roll.toString().padStart(4, "0")} · {analysis.result.qualityDistribution.label} · 구조 유효 {analysis.result.qualityDistribution.eligibleCount}개 중 {analysis.result.qualityDistribution.appliedCount}개 작동{analysis.result.qualityDistribution.limitedByStructure ? " · 구조 미달 오행은 승격하지 않음" : ""}</p>}
+            {analysis.result.qualityDistribution && <p className="mt-2 border-t border-white/6 pt-2 text-xs text-[#8fa2a9]">순도 배분값 {analysis.result.qualityDistribution.roll.toString().padStart(4, "0")} · {analysis.result.qualityDistribution.label} · 구조 유효 {analysis.result.qualityDistribution.eligibleCount}개 중 {analysis.result.qualityDistribution.appliedCount}개 작동{analysis.result.qualityDistribution.limitedByStructure ? " · 응축·융합 조건과 맞지 않아 원 구조를 보존함" : ""}</p>}
           </div>
           <div>
             <h3 className="font-bold text-[#e7dcc0]">도맥 판정 근거</h3>
@@ -49,7 +49,7 @@ export function RuleBreakdown({ data }: { data: StoredAnalysis }) {
             <div className="mt-3 grid gap-3 md:grid-cols-2">
               {ELEMENTS.map((element) => { const item = analysis.result.elementEvidence[element]; return <details key={element} className="surface-soft p-4">
                 <summary className="flex cursor-pointer list-none items-center justify-between"><strong style={{ color: ELEMENT_META[element].color }}>{ELEMENT_META[element].label} {ELEMENT_META[element].hanja}</strong><span className="font-bold">{item.score.toFixed(1)}점 · {item.effective ? "최종 유효" : item.structuralEligible ? "구조 유효·미선택" : item.potential ? "잠재" : "미성립"}</span></summary>
-                <div className="mt-3 border-t border-white/6 pt-3 text-xs leading-6 text-[#84989f]"><p>기초 {item.baseScore.toFixed(1)}점 · 가중 통근 {item.rootStrength.toFixed(1)}</p><p>{item.structuralEligible ? item.eligibilityReasons.join(" · ") : "구조 관문 미통과"}</p></div>
+                <div className="mt-3 border-t border-white/6 pt-3 text-xs leading-6 text-[#84989f]"><p>원국 구성 {item.presenceScore.toFixed(1)}/240 ({item.presenceRatio.toFixed(1)}%) · 기초 활성 {item.baseScore.toFixed(1)}점 · 가중 통근 {item.rootStrength.toFixed(1)}</p><p>{item.structuralEligible ? item.eligibilityReasons.join(" · ") : item.potentialReasons.length ? item.potentialReasons.join(" · ") : "구조 관문 미통과"}</p></div>
                 <ul className="mt-2 grid gap-1.5 text-xs text-[#aab9bf]">{item.contributions.map((part, index) => <li key={`${part.label}-${index}`} className="flex justify-between gap-3"><span>{part.label}</span><b className={part.value < 0 ? "text-[#e39188]" : "text-[#79c9b0]"}>{signed(part.value)}</b></li>)}</ul>
               </details>; })}
             </div>

@@ -47,7 +47,7 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
     ...qualityRoll,
     eligibleCount: roots.structural.length,
     appliedCount: roots.effective.length,
-    limitedByStructure: roots.effective.length < qualityRoll.desiredCount,
+    limitedByStructure: roots.effective.length !== qualityRoll.desiredCount,
   } : undefined;
   const evidence = roots.evidence;
   const shensha = detectShensha(calculation.pillars, input.shensha);

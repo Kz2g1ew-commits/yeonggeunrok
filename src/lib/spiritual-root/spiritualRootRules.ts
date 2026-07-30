@@ -1,6 +1,16 @@
 import type { Element } from "@/types/bazi";
 
 export const SPIRITUAL_ROOT_RULES = {
+  presence: {
+    visibleStemMass: 30,
+    branchMass: 30,
+    // 지장간 작용 일수에는 유파 차가 커, 글자 수별 비율을 명시한 설명용 모델을 쓴다.
+    branchShares: {
+      single: { main: 1, middle: 0, residual: 0 },
+      double: { main: 0.7, middle: 0.3, residual: 0 },
+      triple: { main: 0.6, middle: 0.3, residual: 0.1 },
+    },
+  },
   scores: {
     dayMaster: 3,
     monthBranchMain: 4,
@@ -17,6 +27,7 @@ export const SPIRITUAL_ROOT_RULES = {
     sixHarmony: 1,
     transformedStemCombination: 3,
     strongSupport: 1,
+    rootedSourceSupport: 0.5,
     seasonalProsperous: 2,
     seasonalAssistant: 1,
     seasonalImprisoned: -0.5,
@@ -29,6 +40,8 @@ export const SPIRITUAL_ROOT_RULES = {
     uncontrolledStrongControl: -2,
     stemWithoutRoot: -1,
     combinedAway: -1,
+    combinedBinding: -0.5,
+    rootedControlMitigation: 0.75,
   },
   thresholds: {
     independentStrength: 4,
@@ -37,9 +50,9 @@ export const SPIRITUAL_ROOT_RULES = {
     sealedPotential: 0.5,
     balanceGap: 2,
     strongBiasGap: 3.5,
-    heavenlyPurityGap: 14,
-    heavenlySecondaryMax: 3.9,
-    heavenlyPrimaryMin: 16,
+    heavenlyPurityGap: 9,
+    heavenlySecondaryMax: 5,
+    heavenlyPrimaryMin: 14,
     fiveBalanceSpread: 3,
     hunyuanSpread: 2.5,
   },
@@ -73,6 +86,14 @@ export const SPIRITUAL_ROOT_RULES = {
     weakRescueScore: 4,
     collectiveMinimumScore: -0.5,
     collectiveMaximumSpread: 17,
+    collectiveBuriedMaximumSpread: 14.5,
+    compoundConstraintFloor: -2.25,
+    rootedPotentialMinimum: 0.6,
+  },
+  stemCombination: {
+    requireAdjacency: true,
+    requireDayStemForTransformation: true,
+    originalRootResistanceMaximum: 1.25,
   },
   awakening: {
     populationRates: {
@@ -120,9 +141,9 @@ export const SPIRITUAL_ROOT_RULES = {
     },
   },
   qualityDistribution: [
-    { tier: "heavenly", share: 1.5, desiredCount: 1, label: "천영근 순도 배분" },
-    { tier: "mutation", share: 11, desiredCount: 2, label: "변이 융합 시도 배분" },
-    { tier: "five", share: 87.5, desiredCount: 5, label: "명식 구조 유지 배분" },
+    { tier: "heavenly", share: 20, desiredCount: 1, label: "천영근 응축 시도 배분" },
+    { tier: "mutation", share: 36, desiredCount: 2, label: "변이 융합 시도 배분" },
+    { tier: "five", share: 44, desiredCount: 5, label: "명식 구조 유지 배분" },
   ],
   grade: {
     lowMax: 6.9,

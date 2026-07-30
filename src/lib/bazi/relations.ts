@@ -1,6 +1,6 @@
 import type { BranchRelations, Element, FourPillars } from "@/types/bazi";
-import { ELEMENT_META, GENERATES } from "./elementMeta";
-import { BRANCHES, branchKorean } from "./branches";
+import { ELEMENT_META } from "./elementMeta";
+import { branchKorean } from "./branches";
 import { stemKorean } from "./stems";
 
 interface GroupRule {
@@ -127,13 +127,4 @@ export function completedGroupElements(pillars: FourPillars): { full: Element[];
     }).map((rule) => rule.element),
     directional: DIRECTIONAL_GROUPS.filter((rule) => rule.members.every((branch) => branches.includes(branch))).map((rule) => rule.element),
   };
-}
-
-export function transformedStemElements(pillars: FourPillars): Element[] {
-  const stems = Object.values(pillars).map((pillar) => pillar.stem);
-  const monthElement = BRANCHES[pillars.month.branch].element;
-  return STEM_COMBINATIONS.filter((rule) =>
-    rule.stems.every((stem) => stems.includes(stem)) &&
-    (monthElement === rule.element || GENERATES[monthElement] === rule.element),
-  ).map((rule) => rule.element);
 }

@@ -31,13 +31,14 @@ export function evidenceSet(scores: Partial<Record<Element, number>>, potentials
   return Object.fromEntries(ELEMENTS.map((element) => {
     const score = scores[element] ?? 0;
     return [element, {
-      element, baseScore: score, score, visibleStems: score >= 4 ? ["甲"] : [], roots: score >= 4 ? ["寅"] : [],
+      element, presenceScore: score * 10, presenceRatio: score * 2, baseScore: score, score,
+      visibleStems: score >= 4 ? ["甲"] : [], roots: score >= 4 ? ["寅"] : [],
       rootStrength: score >= 4 ? 1 : 0,
       rootDetails: score >= 4 ? [{ branch: "寅", stem: "甲", role: "main", strength: 1, damaged: false }] : [],
       hiddenStems: [], seasonalStrength: 0, supportScore: score >= 7 ? 1 : 0, controlPenalty: 0,
       combinations: [], clashes: [], effective: score >= 4, potential: potentials.includes(element),
       reasons: [], contributions: [], monthCommand: false, structuralEligible: score >= 4,
-      eligibilityReasons: score >= 4 ? ["테스트용 투간통근"] : [], qualitySelected: false,
+      eligibilityReasons: score >= 4 ? ["테스트용 투간통근"] : [], potentialReasons: [], qualitySelected: false,
     } satisfies ElementEvidence];
   })) as unknown as Record<Element, ElementEvidence>;
 }
