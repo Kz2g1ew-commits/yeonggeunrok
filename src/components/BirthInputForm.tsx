@@ -84,8 +84,8 @@ export function BirthInputForm() {
           <div className="grid gap-2 sm:grid-cols-3">
             {([
               { mode: "generous", title: "유연 판정 · 기본", description: "영근이 있다는 전제로 오행 수와 품질을 판정" },
-              { mode: "balanced", title: "균형 판정 · 약 15%", description: "순천·역천 도맥 점수 56.5 이상 발현" },
-              { mode: "strict", title: "엄격 판정 · 약 1%", description: "극희귀 도맥 점수 68.8 이상 발현" },
+              { mode: "balanced", title: "균형 판정 · 약 15%", description: "순천·역천 도맥 점수 47.0 이상 발현" },
+              { mode: "strict", title: "엄격 판정 · 약 1%", description: "극희귀 도맥 점수 62.4 이상 발현" },
             ] as const).map((option) => (
               <button key={option.mode} type="button" aria-pressed={input.judgmentMode === option.mode}
                 onClick={() => setInput((current) => ({ ...current, judgmentMode: option.mode }))}

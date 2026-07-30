@@ -16,7 +16,7 @@ export function birthInput(overrides: Partial<BirthInput> = {}): BirthInput {
   };
 }
 
-function pillar(stem: string, branch: string) {
+export function pillar(stem: string, branch: string) {
   return {
     stem, branch, stemElement: STEMS[stem].element, branchElement: BRANCHES[branch].element,
     stemYinYang: STEMS[stem].yinYang, branchYinYang: BRANCHES[branch].yinYang,
@@ -31,10 +31,13 @@ export function evidenceSet(scores: Partial<Record<Element, number>>, potentials
   return Object.fromEntries(ELEMENTS.map((element) => {
     const score = scores[element] ?? 0;
     return [element, {
-      element, score, visibleStems: score >= 4 ? ["甲"] : [], roots: score >= 4 ? ["寅"] : [],
+      element, baseScore: score, score, visibleStems: score >= 4 ? ["甲"] : [], roots: score >= 4 ? ["寅"] : [],
+      rootStrength: score >= 4 ? 1 : 0,
+      rootDetails: score >= 4 ? [{ branch: "寅", stem: "甲", role: "main", strength: 1, damaged: false }] : [],
       hiddenStems: [], seasonalStrength: 0, supportScore: score >= 7 ? 1 : 0, controlPenalty: 0,
       combinations: [], clashes: [], effective: score >= 4, potential: potentials.includes(element),
-      reasons: [], contributions: [], monthCommand: false, qualitySelected: false,
+      reasons: [], contributions: [], monthCommand: false, structuralEligible: score >= 4,
+      eligibilityReasons: score >= 4 ? ["테스트용 투간통근"] : [], qualitySelected: false,
     } satisfies ElementEvidence];
   })) as unknown as Record<Element, ElementEvidence>;
 }
@@ -53,7 +56,7 @@ export function analysisContext(
     pillars: testPillars,
     evidence,
     season: "spring",
-    relations: { combinations: [], halfCombinations: [], directionalCombinations: [], clashes: [], punishments: [], harms: [], breaks: [], stemCombinations: [], dynamicCount: 0 },
+    relations: { combinations: [], halfCombinations: [], archingCombinations: [], directionalCombinations: [], sixCombinations: [], clashes: [], punishments: [], harms: [], breaks: [], stemCombinations: [], dynamicCount: 0 },
     shensha: blankShensha,
     ...overrides,
   };

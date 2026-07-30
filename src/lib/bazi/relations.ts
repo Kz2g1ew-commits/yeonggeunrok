@@ -35,6 +35,15 @@ export const STEM_COMBINATIONS: Array<{ stems: [string, string]; element: Elemen
   { stems: ["戊", "癸"], element: "fire" },
 ];
 
+export const SIX_COMBINATIONS: Array<{ branches: [string, string]; element: Element }> = [
+  { branches: ["子", "丑"], element: "earth" },
+  { branches: ["寅", "亥"], element: "wood" },
+  { branches: ["卯", "戌"], element: "fire" },
+  { branches: ["辰", "酉"], element: "metal" },
+  { branches: ["巳", "申"], element: "water" },
+  { branches: ["午", "未"], element: "earth" },
+];
+
 function hasPair(values: string[], pair: string[]): boolean {
   return pair.every((value) => values.includes(value));
 }
@@ -49,6 +58,7 @@ export function analyzeRelations(pillars: FourPillars): BranchRelations {
   const stems = values.map((pillar) => pillar.stem);
   const combinations: string[] = [];
   const halfCombinations: string[] = [];
+  const archingCombinations: string[] = [];
   const directionalCombinations: string[] = [];
 
   for (const rule of THREE_HARMONIES) {
@@ -56,7 +66,12 @@ export function analyzeRelations(pillars: FourPillars): BranchRelations {
     if (count === 3) {
       combinations.push(`${rule.members.map(branchKorean).join("·")} 삼합 ${ELEMENT_META[rule.element].label}국`);
     } else if (count === 2) {
-      halfCombinations.push(`${rule.members.filter((branch) => branches.includes(branch)).map(branchKorean).join("·")} 반합`);
+      const present = rule.members.filter((branch) => branches.includes(branch));
+      if (present.includes(rule.members[1])) {
+        halfCombinations.push(`${present.map(branchKorean).join("·")} 반합 ${ELEMENT_META[rule.element].label}세`);
+      } else {
+        archingCombinations.push(`${present.map(branchKorean).join("·")} 공합 ${ELEMENT_META[rule.element].label}기 후보`);
+      }
     }
   }
 
@@ -80,11 +95,15 @@ export function analyzeRelations(pillars: FourPillars): BranchRelations {
 
   const stemCombinations = STEM_COMBINATIONS.filter((rule) => rule.stems.every((stem) => stems.includes(stem)))
     .map((rule) => `${rule.stems.map(stemKorean).join("·")}합 ${ELEMENT_META[rule.element].label}화 후보`);
+  const sixCombinations = SIX_COMBINATIONS.filter((rule) => hasPair(branches, rule.branches))
+    .map((rule) => `${rule.branches.map(branchKorean).join("·")} 육합 ${ELEMENT_META[rule.element].label}화 후보`);
 
   return {
     combinations,
     halfCombinations,
+    archingCombinations,
     directionalCombinations,
+    sixCombinations,
     clashes,
     punishments,
     harms,
@@ -94,11 +113,18 @@ export function analyzeRelations(pillars: FourPillars): BranchRelations {
   };
 }
 
-export function completedGroupElements(pillars: FourPillars): { full: Element[]; half: Element[]; directional: Element[] } {
+export function completedGroupElements(pillars: FourPillars): { full: Element[]; half: Element[]; arching: Element[]; directional: Element[] } {
   const branches = Object.values(pillars).map((pillar) => pillar.branch);
   return {
     full: THREE_HARMONIES.filter((rule) => rule.members.every((branch) => branches.includes(branch))).map((rule) => rule.element),
-    half: THREE_HARMONIES.filter((rule) => rule.members.filter((branch) => branches.includes(branch)).length === 2).map((rule) => rule.element),
+    half: THREE_HARMONIES.filter((rule) => {
+      const present = rule.members.filter((branch) => branches.includes(branch));
+      return present.length === 2 && present.includes(rule.members[1]);
+    }).map((rule) => rule.element),
+    arching: THREE_HARMONIES.filter((rule) => {
+      const present = rule.members.filter((branch) => branches.includes(branch));
+      return present.length === 2 && !present.includes(rule.members[1]);
+    }).map((rule) => rule.element),
     directional: DIRECTIONAL_GROUPS.filter((rule) => rule.members.every((branch) => branches.includes(branch))).map((rule) => rule.element),
   };
 }

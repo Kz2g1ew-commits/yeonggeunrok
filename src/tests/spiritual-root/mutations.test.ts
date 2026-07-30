@@ -18,7 +18,7 @@ describe("detectMutationRoots", () => {
   });
 
   it("confirms lightning for balanced wood-fire with dynamic clashes", () => {
-    const lightning = candidate("lightning", { wood: 9, fire: 9 }, { relations: { combinations: [], halfCombinations: [], directionalCombinations: [], clashes: ["인·신 충"], punishments: [], harms: [], breaks: [], stemCombinations: [], dynamicCount: 2 } });
+    const lightning = candidate("lightning", { wood: 9, fire: 9 }, { relations: { combinations: [], halfCombinations: [], archingCombinations: [], directionalCombinations: [], sixCombinations: [], clashes: ["인·신 충"], punishments: [], harms: [], breaks: [], stemCombinations: [], dynamicCount: 2 } });
     expect(["confirmed", "likely"]).toContain(lightning.status);
   });
 
@@ -29,7 +29,7 @@ describe("detectMutationRoots", () => {
   });
 
   it("finds a wind candidate for water-wood with movement", () => {
-    const wind = candidate("wind-moist", { water: 8, wood: 8 }, { relations: { combinations: [], halfCombinations: [], directionalCombinations: [], clashes: ["인·신 충"], punishments: [], harms: [], breaks: [], stemCombinations: [], dynamicCount: 2 } });
+    const wind = candidate("wind-moist", { water: 8, wood: 8 }, { relations: { combinations: [], halfCombinations: [], archingCombinations: [], directionalCombinations: [], sixCombinations: [], clashes: ["인·신 충"], punishments: [], harms: [], breaks: [], stemCombinations: [], dynamicCount: 2 } });
     expect(["confirmed", "likely", "possible"]).toContain(wind.status);
   });
 
@@ -43,7 +43,7 @@ describe("detectMutationRoots", () => {
     const evidence = evidenceSet({ fire: 8, metal: 8 }, ["earth"]);
     evidence.earth.score = 3;
     const active = detectMutationRoots(analysisContext(evidence, {
-      relations: { combinations: [], halfCombinations: [], directionalCombinations: [], clashes: ["묘·유 충"], punishments: [], harms: [], breaks: [], stemCombinations: [], dynamicCount: 2 },
+      relations: { combinations: [], halfCombinations: [], archingCombinations: [], directionalCombinations: [], sixCombinations: [], clashes: ["묘·유 충"], punishments: [], harms: [], breaks: [], stemCombinations: [], dynamicCount: 2 },
     })).filter((item) => ["light", "purple-lightning"].includes(item.id) && item.status !== "rejected");
     expect(active).toHaveLength(2);
   });

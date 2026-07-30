@@ -15,13 +15,13 @@ describe("determineAwakening", () => {
   });
 
   it("uses a calibrated Dao score boundary for balanced mode", () => {
-    expect(determineAwakening("balanced", dao(56.4)).passed).toBe(false);
-    expect(determineAwakening("balanced", dao(56.5)).passed).toBe(true);
+    expect(determineAwakening("balanced", dao(46.9)).passed).toBe(false);
+    expect(determineAwakening("balanced", dao(47)).passed).toBe(true);
   });
 
   it("uses a calibrated Dao score boundary for strict mode", () => {
-    expect(determineAwakening("strict", dao(68.7)).passed).toBe(false);
-    expect(determineAwakening("strict", dao(68.8)).passed).toBe(true);
+    expect(determineAwakening("strict", dao(62.3)).passed).toBe(false);
+    expect(determineAwakening("strict", dao(62.4)).passed).toBe(true);
   });
 
   it("keeps the hash as a deterministic tie breaker only", () => {
