@@ -84,8 +84,8 @@ export function BirthInputForm() {
           <div className="grid gap-2 sm:grid-cols-3">
             {([
               { mode: "generous", title: "유연 판정 · 기본", description: "영근이 있다는 전제로 오행 수와 품질을 판정" },
-              { mode: "balanced", title: "균형 판정 · 약 15%", description: "순천·역천 도맥 점수 47.0 이상 발현" },
-              { mode: "strict", title: "엄격 판정 · 약 1%", description: "극희귀 도맥 점수 62.4 이상 발현" },
+              { mode: "balanced", title: "균형 판정 · 약 15%", description: "천문·지근·인맥의 완성도가 균형 관문 이상일 때 발현" },
+              { mode: "strict", title: "엄격 판정 · 약 1%", description: "강하고 끊김 없는 삼관 기맥만 발현" },
             ] as const).map((option) => (
               <button key={option.mode} type="button" aria-pressed={input.judgmentMode === option.mode}
                 onClick={() => setInput((current) => ({ ...current, judgmentMode: option.mode }))}
@@ -95,7 +95,7 @@ export function BirthInputForm() {
               </button>
             ))}
           </div>
-          <p className="mt-2 text-[11px] leading-5 text-[#728991]">세 모드 모두 발현 후에는 같은 오행 점수와 품질 분포를 사용합니다. 천영근 → 변이영근 → 이영근 → 삼영근 → 사영근 → 오영근 순으로 왼쪽일수록 순도가 높습니다.</p>
+          <p className="mt-2 text-[11px] leading-5 text-[#728991]">세 모드 모두 영근 수는 같은 천·지·인 구조로 정하며, 순천·역천도맥은 발현 여부가 아닌 수련 성향만 설명합니다. 천영근 → 변이영근 → 이영근 → 삼영근 → 사영근 → 오영근 순으로 왼쪽일수록 순도가 높습니다.</p>
         </fieldset>
 
         <fieldset>

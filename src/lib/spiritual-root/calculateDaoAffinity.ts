@@ -2,7 +2,6 @@ import type { BranchRelations, Element, FourPillars } from "@/types/bazi";
 import type { DaoAffinityResult, DaoContribution, ElementEvidence } from "@/types/spiritualRoot";
 import { ELEMENTS, generatorOf } from "@/lib/bazi/elementMeta";
 import { seasonFromMonthBranch } from "@/lib/calendar/solarTerms";
-import { stableSpiritualRootRoll } from "./determineAwakening";
 import { SEASON_EXTREME_WEAK, SPIRITUAL_ROOT_RULES } from "./spiritualRootRules";
 
 function rounded(value: number): number {
@@ -13,7 +12,6 @@ export function calculateDaoAffinity(
   pillars: FourPillars,
   evidence: Record<Element, ElementEvidence>,
   relations: BranchRelations,
-  seed: string,
 ): DaoAffinityResult {
   const contributions: DaoContribution[] = [];
   const natural = SPIRITUAL_ROOT_RULES.daoAffinity.natural;
@@ -78,12 +76,11 @@ export function calculateDaoAffinity(
   const naturalScore = rounded(contributions.filter((item) => item.path === "natural").reduce((sum, item) => sum + item.value, 0));
   const defiantScore = rounded(contributions.filter((item) => item.path === "defiant").reduce((sum, item) => sum + item.value, 0));
   const path = defiantQualified && defiantScore > naturalScore ? "defiant" : "natural";
-  const tieBreaker = stableSpiritualRootRoll(`${seed}::dao`);
-  const score = rounded((path === "natural" ? naturalScore : defiantScore) + tieBreaker / 10_000);
+  const score = path === "natural" ? naturalScore : defiantScore;
   const reasons = contributions.filter((item) => item.path === path)
     .sort((a, b) => Math.abs(b.value) - Math.abs(a.value))
     .slice(0, 5)
     .map((item) => `${item.label}: ${item.reason}`);
 
-  return { path, naturalScore, defiantScore, score, tieBreaker, contributions, reasons };
+  return { path, naturalScore, defiantScore, score, contributions, reasons };
 }

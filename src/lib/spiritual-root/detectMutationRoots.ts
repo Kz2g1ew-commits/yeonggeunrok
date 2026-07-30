@@ -1,6 +1,7 @@
 import type { AnalysisContext, MutationCandidate } from "@/types/spiritualRoot";
 import { ELEMENT_META } from "@/lib/bazi/elementMeta";
 import { MUTATION_RULES, type MutationRule } from "./mutationRules";
+import { SPIRITUAL_ROOT_RULES } from "./spiritualRootRules";
 
 const clamp = (value: number, min = 0, max = 100) => Math.min(max, Math.max(min, value));
 
@@ -141,8 +142,10 @@ function evaluateRule(rule: MutationRule, context: AnalysisContext): MutationCan
   if (!sourceReady) confidence = Math.min(confidence, 49);
   if (thirdRoots.length > 0) confidence = Math.min(confidence, 69);
   if (blockers.length >= 2) confidence = Math.min(confidence, 49);
-  const status: MutationCandidate["status"] = confidence >= 85 ? "confirmed"
-    : confidence >= 70 ? "likely" : confidence >= 50 ? "possible" : "rejected";
+  const statusRules = SPIRITUAL_ROOT_RULES.mutationStatus;
+  const status: MutationCandidate["status"] = confidence >= statusRules.confirmed ? "confirmed"
+    : confidence >= statusRules.likely ? "likely"
+      : confidence >= statusRules.possible ? "possible" : "rejected";
 
   return {
     id: rule.id, name: rule.name, sourceElements: rule.sourceElements,

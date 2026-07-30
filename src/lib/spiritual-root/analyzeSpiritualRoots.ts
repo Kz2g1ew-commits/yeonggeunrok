@@ -10,8 +10,7 @@ import { classifyRootCount } from "./classifyRootCount";
 import { detectMutationRoots } from "./detectMutationRoots";
 import { calculateConfidence } from "./calculateConfidence";
 import { generateExplanation } from "./generateExplanation";
-import { awakeningSeed, determineAwakening } from "./determineAwakening";
-import { determineRootQuality } from "./determineRootQuality";
+import { determineAwakening } from "./determineAwakening";
 import { calculateDaoAffinity } from "./calculateDaoAffinity";
 
 const PATHS: Record<Element, string[]> = {
@@ -37,18 +36,10 @@ function distinct<T>(items: T[]): T[] {
 
 export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillarsCalculation): AnalysisBundle {
   const relations = analyzeRelations(calculation.pillars);
-  const seed = awakeningSeed(input, calculation);
   const rawEvidence = calculateElementScores(calculation.pillars);
-  const dao = calculateDaoAffinity(calculation.pillars, rawEvidence, relations, seed);
-  const awakening = determineAwakening(input.judgmentMode, dao);
-  const qualityRoll = awakening.passed ? determineRootQuality(seed) : undefined;
-  const roots = determineEffectiveRoots(rawEvidence, awakening.passed, qualityRoll);
-  const qualityDistribution = qualityRoll ? {
-    ...qualityRoll,
-    eligibleCount: roots.structural.length,
-    appliedCount: roots.effective.length,
-    limitedByStructure: roots.effective.length !== qualityRoll.desiredCount,
-  } : undefined;
+  const dao = calculateDaoAffinity(calculation.pillars, rawEvidence, relations);
+  const awakening = determineAwakening(input.judgmentMode, rawEvidence, dao);
+  const roots = determineEffectiveRoots(rawEvidence, awakening.passed);
   const evidence = roots.evidence;
   const shensha = detectShensha(calculation.pillars, input.shensha);
   const context: AnalysisContext = {
@@ -58,53 +49,21 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
     shensha,
     season: seasonFromMonthBranch(calculation.pillars.month.branch),
   };
-  let mutations = detectMutationRoots(context);
-  if (qualityDistribution?.targetTier === "mutation") {
-    const promotableIndex = mutations.findIndex((candidate) => candidate.status === "confirmed" || candidate.status === "likely");
-    if (promotableIndex >= 0 && mutations[promotableIndex].status === "likely") {
-      mutations = mutations.map((candidate, index) => index === promotableIndex ? {
-        ...candidate,
-        status: "confirmed" as const,
-        confidence: Math.max(85, candidate.confidence),
-        satisfiedConditions: [...candidate.satisfiedConditions, "희귀 순도 배분값이 최종 융합을 안정시킴"],
-      } : candidate);
-    }
-  } else {
-    mutations = mutations.map((candidate) => candidate.status === "confirmed" ? {
-      ...candidate,
-      status: "likely" as const,
-      confidence: Math.min(84, candidate.confidence),
-      missingConditions: [...candidate.missingConditions, "이번 순도 배분값은 완전 융합을 지지하지 않음"],
-    } : candidate);
-  }
-  const activeMutation = qualityDistribution?.targetTier === "mutation"
-    ? mutations.find((candidate) => candidate.status === "confirmed")
-    : undefined;
+  const mutations = detectMutationRoots(context);
+  const activeMutation = mutations.find((candidate) => candidate.status === "confirmed");
   const likelyMutation = mutations.find((candidate) => candidate.status === "likely");
   const classification = classifyRootCount(
     roots.effective,
     roots.potential,
     evidence,
     relations,
-    activeMutation ?? (qualityDistribution?.targetTier === "dual" ? likelyMutation : undefined),
+    activeMutation ?? likelyMutation,
   );
-  if (!awakening.passed) {
-    classification.displayName = "무영근 — 쇄맥무근";
-    classification.adaptability = "외부 기연이나 특수 개맥법에 의존";
-  }
 
   const conflictCount = relations.clashes.length + relations.punishments.length + relations.harms.length + relations.breaks.length;
-  const resolvedEffective = classification.qualityTier === "heavenly" && roots.effective.length > 1
-    ? [[...roots.effective].sort((a, b) => evidence[b].score - evidence[a].score)[0]]
-    : roots.effective;
-  const absorbedElements = classification.qualityTier === "heavenly"
-    ? roots.effective.filter((element) => !resolvedEffective.includes(element))
-    : [];
-  const resolvedPotential = distinct([...roots.potential, ...absorbedElements]);
-  const resolvedEvidence = Object.fromEntries(Object.entries(evidence).map(([element, item]) => [
-    element,
-    absorbedElements.includes(element as Element) ? { ...item, effective: false, potential: true } : item,
-  ])) as typeof evidence;
+  const resolvedEffective = roots.effective;
+  const resolvedPotential = roots.potential;
+  const resolvedEvidence = evidence;
   const confidence = calculateConfidence(input, calculation, resolvedEvidence, mutations, conflictCount, awakening);
   const primary = resolvedEffective.length ? resolvedEffective : resolvedPotential.slice(0, 1);
   const strongest = primary[0];
@@ -159,7 +118,6 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
       disclaimer: "이 결과는 전통 명리학의 간지·오행 구조를 바탕으로 만든 선협 세계관용 창작 판정입니다.",
       classification,
       awakening,
-      qualityDistribution,
     },
   };
 }

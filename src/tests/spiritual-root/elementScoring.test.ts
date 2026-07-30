@@ -27,16 +27,28 @@ describe("structural element scoring", () => {
     expect(evidence.fire.presenceRatio).toBeGreaterThan(evidence.water.presenceRatio);
     expect(evidence.wood.contributions.some((item) => item.label.includes("통관"))).toBe(false);
     expect(evidence.fire.combinations).not.toContain("천간합화");
+    expect(evidence.water.channel.state).toBe("sealed");
+    expect(evidence.metal.channel.state).toBe("hidden");
+    expect(evidence.wood.channel.state).toBe("dormant");
   });
 
-  it("does not let a five-root purity allocation promote structurally invalid elements", () => {
+  it("does not promote channels that fail the three-gate structure", () => {
     const evidence = evidenceSet({ fire: 12, earth: 9, water: 1, wood: 0.5, metal: 1 });
     evidence.water.visibleStems = ["壬"];
     evidence.water.rootStrength = 0.7;
     evidence.water.rootDetails = [{ branch: "辰", stem: "癸", role: "residual", strength: 0.7, damaged: false }];
-    const roots = determineEffectiveRoots(evidence, true, {
-      roll: 9_999, targetTier: "five", targetShare: 33, desiredCount: 5, label: "테스트 오영근 배분",
-    });
+    evidence.water.channel = {
+      ...evidence.water.channel,
+      heaven: { score: 3, passed: true, reasons: ["테스트용 천문"] },
+      earth: { score: 2, passed: true, reasons: ["테스트용 지근"] },
+      human: { score: 1, passed: false, reasons: [] },
+      completion: 25,
+      state: "latent",
+      complete: false,
+      potential: true,
+      reasons: ["테스트용 잠재 통로"],
+    };
+    const roots = determineEffectiveRoots(evidence, true);
     expect(roots.structural).toEqual(["fire", "earth"]);
     expect(roots.effective).toEqual(["fire", "earth"]);
     expect(roots.effective).not.toContain("wood");
@@ -45,17 +57,33 @@ describe("structural element scoring", () => {
     expect(classifyRootCount(roots.effective, roots.potential, roots.evidence, analyzeRelations(hotFireEarthChart)).rootCount).toBe("dual");
   });
 
-  it("does not let a heavenly allocation erase a strong second channel", () => {
-    const roots = determineEffectiveRoots(evidenceSet({ fire: 16, earth: 10 }), true, {
-      roll: 0, targetTier: "heavenly", targetShare: 20, desiredCount: 1, label: "테스트 천영근 응축",
-    });
+  it("does not erase a strong second complete channel", () => {
+    const roots = determineEffectiveRoots(evidenceSet({ fire: 16, earth: 10 }), true);
     expect(roots.effective).toEqual(["fire", "earth"]);
   });
 
-  it("keeps a directly effective third root from disappearing before mutation analysis", () => {
-    const roots = determineEffectiveRoots(evidenceSet({ wood: 12, fire: 10, earth: 8 }), true, {
-      roll: 2_000, targetTier: "mutation", targetShare: 36, desiredCount: 2, label: "테스트 변이 융합",
-    });
+  it("condenses only a dominant primary and weak but connected secondary into a heavenly root", () => {
+    const evidence = evidenceSet({ fire: 19, earth: 3 });
+    evidence.earth.channel = {
+      ...evidence.earth.channel,
+      heaven: { score: 2, passed: true, reasons: [] },
+      earth: { score: 1.1, passed: true, reasons: [] },
+      human: { score: 2, passed: true, reasons: [] },
+      integrity: 0.8,
+      completion: 21,
+      state: "complete",
+      complete: true,
+      potential: false,
+    };
+    evidence.earth.structuralEligible = true;
+    const roots = determineEffectiveRoots(evidence, true);
+    expect(roots.structural).toEqual(["fire", "earth"]);
+    expect(roots.effective).toEqual(["fire"]);
+    expect(roots.potential).toContain("earth");
+  });
+
+  it("keeps a directly complete third root before mutation analysis", () => {
+    const roots = determineEffectiveRoots(evidenceSet({ wood: 12, fire: 10, earth: 8 }), true);
     expect(roots.effective).toEqual(["wood", "fire", "earth"]);
   });
 

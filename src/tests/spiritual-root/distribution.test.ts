@@ -32,8 +32,8 @@ describe("spiritual-root population balance", () => {
       const calculation = calculateFourPillars(input);
       const result = analyzeSpiritualRoots(input, calculation).result;
       counts[result.classification.qualityTier] += 1;
-      if (determineAwakening("balanced", result.awakening.dao).passed) balancedPasses += 1;
-      if (determineAwakening("strict", result.awakening.dao).passed) {
+      if (determineAwakening("balanced", result.elementEvidence, result.awakening.dao).passed) balancedPasses += 1;
+      if (determineAwakening("strict", result.elementEvidence, result.awakening.dao).passed) {
         const strictResult = analyzeSpiritualRoots({ ...input, judgmentMode: "strict" }, calculation).result;
         expect(strictResult.classification.qualityTier).toBe(result.classification.qualityTier);
         expect(strictResult.primaryElements).toEqual(result.primaryElements);
@@ -43,24 +43,24 @@ describe("spiritual-root population balance", () => {
     }
 
     const share = (tier: RootQualityTier) => counts[tier] / 5_000;
-    expect(share("none")).toBeGreaterThan(0.002);
-    expect(share("none")).toBeLessThan(0.025);
-    expect(share("heavenly")).toBeGreaterThan(0.01);
-    expect(share("heavenly")).toBeLessThan(0.03);
-    expect(share("mutation")).toBeGreaterThan(0.04);
-    expect(share("mutation")).toBeLessThan(0.06);
-    expect(share("dual")).toBeGreaterThan(0.075);
-    expect(share("dual")).toBeLessThan(0.13);
-    expect(share("triple")).toBeGreaterThan(0.18);
-    expect(share("triple")).toBeLessThan(0.23);
-    expect(share("quadruple")).toBeGreaterThan(0.28);
-    expect(share("quadruple")).toBeLessThan(0.34);
-    expect(share("five")).toBeGreaterThan(0.29);
-    expect(share("five")).toBeLessThan(0.36);
+    expect(share("none")).toBeLessThan(0.002);
+    expect(share("heavenly")).toBeGreaterThan(0.008);
+    expect(share("heavenly")).toBeLessThan(0.018);
+    expect(share("mutation")).toBeGreaterThan(0.018);
+    expect(share("mutation")).toBeLessThan(0.035);
+    expect(share("dual")).toBeGreaterThan(0.04);
+    expect(share("dual")).toBeLessThan(0.07);
+    expect(share("triple")).toBeGreaterThan(0.22);
+    expect(share("triple")).toBeLessThan(0.28);
+    expect(share("quadruple")).toBeGreaterThan(0.29);
+    expect(share("quadruple")).toBeLessThan(0.35);
+    expect(share("five")).toBeGreaterThan(0.31);
+    expect(share("five")).toBeLessThan(0.38);
     expect(share("heavenly")).toBeLessThan(share("mutation"));
     expect(share("mutation")).toBeLessThan(share("dual"));
     expect(share("dual")).toBeLessThan(share("triple"));
     expect(share("triple")).toBeLessThan(share("quadruple"));
+    expect(share("quadruple")).toBeLessThan(share("five"));
     expect(balancedPasses / 5_000).toBeGreaterThan(0.13);
     expect(balancedPasses / 5_000).toBeLessThan(0.17);
     expect(strictPasses / 5_000).toBeGreaterThan(0.005);
