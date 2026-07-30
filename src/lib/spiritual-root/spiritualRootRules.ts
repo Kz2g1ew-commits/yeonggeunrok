@@ -22,12 +22,21 @@ export const SPIRITUAL_ROOT_RULES = {
     combinedAway: -1,
   },
   thresholds: {
-    effective: 4,
+    independentStrength: 4,
     potential: 2,
+    generousChannel: 1.5,
+    sealedPotential: 0.5,
     balanceGap: 2,
     strongBiasGap: 3.5,
+    heavenlyPurityGap: 14,
+    heavenlySecondaryMax: 3.9,
+    heavenlyPrimaryMin: 16,
     fiveBalanceSpread: 3,
     hunyuanSpread: 2.5,
+  },
+  awakening: {
+    strictPopulationRate: 1,
+    rollScale: 10_000,
   },
   grade: {
     lowMax: 6.9,

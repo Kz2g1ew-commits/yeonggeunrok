@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Element } from "@/types/bazi";
 import { classifyRootCount } from "@/lib/spiritual-root/classifyRootCount";
 import { evidenceSet } from "../fixtures";
+import type { MutationCandidate } from "@/types/spiritualRoot";
 
 const relations = { combinations: [], halfCombinations: [], directionalCombinations: [], clashes: [], punishments: [], harms: [], breaks: [], stemCombinations: [], dynamicCount: 0 };
 
@@ -32,5 +33,33 @@ describe("classifyRootCount", () => {
     const elements: Element[] = ["wood", "fire", "earth", "metal", "water"];
     const supported = { ...relations, combinations: ["삼합"] };
     expect(classifyRootCount(elements, [], evidenceSet({ wood: 8, fire: 8, earth: 7.5, metal: 7, water: 8 }), supported).displayName).toBe("혼원오행영근");
+  });
+
+  it("collapses an overwhelmingly pure channel into a heavenly root", () => {
+    const result = classifyRootCount(
+      ["wood", "earth"],
+      [],
+      evidenceSet({ wood: 19, earth: 3 }),
+      relations,
+    );
+    expect(result.qualityTier).toBe("heavenly");
+    expect(result.rootCount).toBe("single");
+  });
+
+  it("places a confirmed mutation above a normal dual root", () => {
+    const mutation: MutationCandidate = {
+      id: "ice", name: "빙", sourceElements: ["metal", "water"], score: 90, confidence: 90,
+      status: "confirmed", satisfiedConditions: [], missingConditions: [], blockers: [], description: "test",
+    };
+    const result = classifyRootCount(
+      ["metal", "water"],
+      [],
+      evidenceSet({ metal: 9, water: 9 }),
+      relations,
+      mutation,
+    );
+    expect(result.qualityTier).toBe("mutation");
+    expect(result.qualityRank).toBe(2);
+    expect(result.rootCount).toBe("single");
   });
 });

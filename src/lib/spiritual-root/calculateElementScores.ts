@@ -110,12 +110,6 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
     if (combinedAway && !monthCommand) contributions.push(contribution("합거되어 독립 작용이 약해짐", rules.scores.combinedAway));
 
     const score = Math.round(contributions.reduce((sum, item) => sum + item.value, 0) * 10) / 10;
-    const hasVisibleAndRoot = visibleStems.length > 0 && roots.length > 0;
-    const hasFormation = fullCount > 0 || directionCount > 0;
-    const dayMasterQualified = pillars.day.stemElement === element && (roots.length > 0 || supportScore > 0);
-    const qualified = hasVisibleAndRoot || monthCommand || hasFormation || dayMasterQualified;
-    const effective = score >= rules.thresholds.effective && qualified;
-    const potential = !effective && score >= rules.thresholds.potential;
     const combinations = [
       ...(fullCount ? ["삼합"] : []), ...(directionCount ? ["방합"] : []),
       ...(halfCount ? ["반합"] : []), ...(stemCombination ? ["천간합"] : []),
@@ -130,7 +124,7 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
       element, score, visibleStems, roots: [...new Set(roots)], hiddenStems,
       seasonalStrength: monthCommand ? rules.scores.monthBranchMain + rules.scores.monthCommandBonus
         : SEASON_EXTREME_WEAK[season] === element ? rules.scores.seasonalExtremeWeakness : 0,
-      supportScore, controlPenalty, combinations, clashes, effective, potential,
+      supportScore, controlPenalty, combinations, clashes, effective: false, potential: false,
       reasons, contributions, monthCommand,
     } satisfies ElementEvidence];
   })) as Record<Element, ElementEvidence>;

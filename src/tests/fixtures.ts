@@ -6,6 +6,7 @@ import { ELEMENTS } from "@/lib/bazi/elementMeta";
 
 export function birthInput(overrides: Partial<BirthInput> = {}): BirthInput {
   return {
+    judgmentMode: "generous",
     calendarType: "solar", isLeapMonth: false, year: 2024, month: 2, day: 4, hour: 12, minute: 0,
     timezone: "Asia/Seoul", country: "대한민국", city: "서울", longitude: 126.978,
     longitudeIsApproximate: true, gender: "unspecified", applyLateZi: false,

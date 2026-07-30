@@ -20,6 +20,7 @@ const CITIES = [
 ] as const;
 
 const initialInput: BirthInput = {
+  judgmentMode: "generous",
   calendarType: "solar", isLeapMonth: false,
   year: 1995, month: 5, day: 15, hour: 12, minute: 0,
   timezone: "Asia/Seoul", country: "대한민국", city: "서울", longitude: 126.978,
@@ -78,6 +79,24 @@ export function BirthInputForm() {
       </div>
 
       <div className="grid gap-6 p-5 sm:p-7">
+        <fieldset>
+          <legend className="mb-2 text-xs font-bold text-[#9badb5]">영근 발현 기준</legend>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {([
+              { mode: "generous", title: "유연 판정 · 기본", description: "영근이 있다는 전제로 오행 수와 품질을 판정" },
+              { mode: "strict", title: "엄격 판정 · 세계관", description: "약 1%만 영근 발현, 나머지는 무영근" },
+            ] as const).map((option) => (
+              <button key={option.mode} type="button" aria-pressed={input.judgmentMode === option.mode}
+                onClick={() => setInput((current) => ({ ...current, judgmentMode: option.mode }))}
+                className={`rounded-xl border p-3 text-left transition ${input.judgmentMode === option.mode ? "border-[#d8b66a]/55 bg-[#d8b66a]/10" : "border-white/8 bg-black/10 hover:border-white/18"}`}>
+                <strong className={input.judgmentMode === option.mode ? "text-[#efd48d]" : "text-[#cbd5d8]"}>{option.title}</strong>
+                <span className="mt-1 block text-[11px] leading-5 text-[#7f939b]">{option.description}</span>
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-[11px] leading-5 text-[#728991]">두 모드 모두 천영근 → 변이영근 → 이영근 → 삼영근 → 사영근 → 오영근 순이며, 왼쪽일수록 순도가 높고 희귀합니다.</p>
+        </fieldset>
+
         <fieldset>
           <legend className="mb-2 text-xs font-bold text-[#9badb5]">달력 기준</legend>
           <div className="segmented">
