@@ -2,6 +2,7 @@ import type { BranchRelations, Element } from "@/types/bazi";
 import type { ElementEvidence, MutationCandidate, RootClassification, RootCount, RootGrade } from "@/types/spiritualRoot";
 import { CONTROLS, ELEMENT_META, ELEMENTS, GENERATES } from "@/lib/bazi/elementMeta";
 import { SPIRITUAL_ROOT_RULES } from "./spiritualRootRules";
+import { buildMultiRootProfile } from "./multiRootProfiles";
 
 const GRADE_LABEL: Record<RootGrade, string> = { low: "하품", middle: "중품", high: "상품", supreme: "극품" };
 
@@ -98,24 +99,26 @@ export function classifyRootCount(
   }
   if (count === 4) {
     const missingElement = ELEMENTS.find((element) => !effective.includes(element))!;
+    const multiRootProfile = buildMultiRootProfile(ordered, evidence, relations)!;
     return {
-      ...base, missingElement, displayName: `사영근 — ${ELEMENT_META[missingElement].label} 결핍`,
-      cultivationSpeed: "느림", adaptability: "넓음",
+      ...base, missingElement, multiRootProfile,
+      displayName: `사영근 — ${ELEMENT_META[missingElement].label} 결핍 · ${multiRootProfile.subtype}`,
+      relationship: `${multiRootProfile.cycleLabel} · ${multiRootProfile.conflictLabel}`,
+      cultivationSpeed: "느림", adaptability: `네 속성 공법에 넓게 적응 · ${multiRootProfile.subtype}`,
       qualityTier: "quadruple", qualityRank: 5, qualityLabel: "하급", rarityLabel: "유연 표본 약 29~35%",
     };
   }
 
-  const scores = ELEMENTS.map((element) => evidence[element].score);
-  const spread = Math.max(...scores) - Math.min(...scores);
-  const severeConflict = relations.clashes.length + relations.punishments.length >= 3;
-  const cycleSupport = relations.combinations.length + relations.directionalCombinations.length > 0 ||
-    ELEMENTS.some((element) => evidence[element].combinations.includes("천간합화"));
-  const hunyuan = spread <= SPIRITUAL_ROOT_RULES.thresholds.hunyuanSpread && !severeConflict && cycleSupport;
-  const balanced = spread <= SPIRITUAL_ROOT_RULES.thresholds.fiveBalanceSpread && !severeConflict;
-  const displayName = hunyuan ? "혼원오행영근" : balanced ? "오행균형영근" : "오행잡영근";
+  const multiRootProfile = buildMultiRootProfile(ordered, evidence, relations)!;
+  const hunyuan = multiRootProfile.subtype === "오기조원형";
+  const balanced = multiRootProfile.scoreSpread <= SPIRITUAL_ROOT_RULES.thresholds.fiveBalanceSpread &&
+    multiRootProfile.conflictLevel !== "turbulent";
+  const baseName = hunyuan ? "혼원오행영근" : balanced ? "오행균형영근" : "오행잡영근";
   return {
-    ...base, displayName, cultivationSpeed: hunyuan ? "초반은 느리나 후반 잠재력이 큼" : "가장 느림",
-    adaptability: hunyuan ? "오행공법과 매우 높은 궁합" : "대부분의 오행공법에 적응",
+    ...base, multiRootProfile, displayName: `${baseName} — ${multiRootProfile.subtype}`,
+    relationship: `${multiRootProfile.cycleLabel} · ${multiRootProfile.conflictLabel}`,
+    cultivationSpeed: hunyuan ? "초반은 느리나 후반 잠재력이 큼" : "가장 느림",
+    adaptability: hunyuan ? "오행공법과 매우 높은 궁합" : `대부분의 오행공법에 적응 · ${multiRootProfile.subtype}`,
     qualityTier: "five", qualityRank: 6, qualityLabel: hunyuan ? "오영근 예외형" : "최하급", rarityLabel: hunyuan ? "극히 드문 오영근 예외" : "유연 표본 약 31~38%",
   };
 }

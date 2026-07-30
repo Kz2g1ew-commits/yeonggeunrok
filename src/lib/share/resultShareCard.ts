@@ -17,6 +17,7 @@ export interface ResultShareElement {
 export interface ResultShareCardModel {
   serviceName: "영근록";
   rootName: string;
+  rootProfile: string;
   quality: string;
   primaryRoots: string;
   potentialRoots: string;
@@ -46,6 +47,7 @@ export function buildResultShareCardModel(result: SpiritualRootResult): ResultSh
   return {
     serviceName: "영근록",
     rootName: result.displayName,
+    rootProfile: result.classification.multiRootProfile?.subtype ?? result.classification.relationship ?? "기본 영근형",
     quality: `${result.classification.qualityLabel} · ${result.classification.rarityLabel}`,
     primaryRoots: elementNames(result.primaryElements, "미성립"),
     potentialRoots: elementNames(result.potentialElements, "없음"),
@@ -160,8 +162,12 @@ export async function renderResultShareImage(result: SpiritualRootResult): Promi
   context.font = '700 64px "Noto Serif KR", Batang, serif';
   context.fillText(model.rootName, 104, 422, 872);
 
+  context.fillStyle = "#9fc0b7";
+  context.font = '700 24px "Noto Sans KR", "Apple SD Gothic Neo", sans-serif';
+  context.fillText(`세부 구조 · ${model.rootProfile}`, 104, 464, 872);
+
   context.fillStyle = "rgba(255,255,255,0.032)";
-  roundedRect(context, 88, 466, 904, 166, 22);
+  roundedRect(context, 88, 492, 904, 166, 22);
   context.fill();
   context.strokeStyle = "rgba(155,173,181,0.15)";
   context.lineWidth = 1.5;
@@ -175,7 +181,7 @@ export async function renderResultShareImage(result: SpiritualRootResult): Promi
   ];
   details.forEach(([label, value], index) => {
     const x = index % 2 === 0 ? 124 : 554;
-    const y = index < 2 ? 505 : 574;
+    const y = index < 2 ? 531 : 600;
     context.fillStyle = "#7f949c";
     context.font = '700 18px "Noto Sans KR", "Apple SD Gothic Neo", sans-serif';
     context.fillText(label, x, y);
@@ -186,26 +192,26 @@ export async function renderResultShareImage(result: SpiritualRootResult): Promi
 
   context.strokeStyle = "rgba(155,173,181,0.1)";
   context.beginPath();
-  context.moveTo(520, 486);
-  context.lineTo(520, 612);
-  context.moveTo(108, 552);
-  context.lineTo(972, 552);
+  context.moveTo(520, 512);
+  context.lineTo(520, 638);
+  context.moveTo(108, 578);
+  context.lineTo(972, 578);
   context.stroke();
 
   context.fillStyle = "rgba(255,255,255,0.032)";
-  roundedRect(context, 88, 660, 904, 500, 26);
+  roundedRect(context, 88, 688, 904, 478, 26);
   context.fill();
   context.strokeStyle = "rgba(155,173,181,0.15)";
   context.stroke();
 
   context.fillStyle = "#d8c99f";
   context.font = '700 25px "Noto Sans KR", "Apple SD Gothic Neo", sans-serif';
-  context.fillText("오행 기맥 활성", 128, 714);
+  context.fillText("오행 기맥 활성", 128, 742);
 
   const activationMax = Math.max(1, ...model.elements.map(({ activationScore }) => activationScore));
 
   model.elements.forEach((item, index) => {
-    const y = 785 + index * 69;
+    const y = 813 + index * 65;
 
     context.fillStyle = item.color;
     context.font = '700 30px "Noto Serif KR", Batang, serif';
@@ -234,7 +240,7 @@ export async function renderResultShareImage(result: SpiritualRootResult): Promi
 
   context.fillStyle = "#8da0a7";
   context.font = '500 20px "Noto Sans KR", "Apple SD Gothic Neo", sans-serif';
-  context.fillText(model.activationNote, 128, 1124);
+  context.fillText(model.activationNote, 128, 1138);
 
   context.strokeStyle = "rgba(216,182,106,0.2)";
   context.beginPath();

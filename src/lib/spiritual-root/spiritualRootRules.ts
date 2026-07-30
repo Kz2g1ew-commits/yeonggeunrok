@@ -113,6 +113,14 @@ export const SPIRITUAL_ROOT_RULES = {
     likely: 65,
     possible: 50,
   },
+  multiRootProfiles: {
+    dominantSpread: 5,
+    mixedConflictMinimum: 2,
+    turbulentConflictMinimum: 4,
+    fourStrongFlowMinimum: 3,
+    fiveStrongFlowMinimum: 4,
+    completeCycleLinks: 5,
+  },
   stemCombination: {
     requireAdjacency: true,
     requireDayStemForTransformation: true,

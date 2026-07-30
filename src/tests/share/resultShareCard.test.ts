@@ -19,6 +19,7 @@ describe("result share card privacy model", () => {
     expect(Object.keys(model)).toEqual([
       "serviceName",
       "rootName",
+      "rootProfile",
       "quality",
       "primaryRoots",
       "potentialRoots",
@@ -28,6 +29,7 @@ describe("result share card privacy model", () => {
       "privacyNote",
     ]);
     expect(model.rootName).toBe("금수 이영근");
+    expect(model.rootProfile).toBe("기본 영근형");
     expect(model.quality).toBe("상등 · 희귀");
     expect(model.primaryRoots).toBe("금(金) · 수(水)");
     expect(model.potentialRoots).toBe("토(土)");

@@ -18,6 +18,8 @@ describe("spiritual-root population balance", () => {
     let strictComparisons = 0;
     let balancedPasses = 0;
     let strictPasses = 0;
+    const quadrupleSubtypes = new Set<string>();
+    const fiveSubtypes = new Set<string>();
 
     for (let index = 0; index < 5_000; index += 1) {
       const input: BirthInput = {
@@ -32,6 +34,14 @@ describe("spiritual-root population balance", () => {
       const calculation = calculateFourPillars(input);
       const result = analyzeSpiritualRoots(input, calculation).result;
       counts[result.classification.qualityTier] += 1;
+      if (result.classification.qualityTier === "quadruple") {
+        expect(result.classification.multiRootProfile).toBeDefined();
+        quadrupleSubtypes.add(result.classification.multiRootProfile!.subtype);
+      }
+      if (result.classification.qualityTier === "five") {
+        expect(result.classification.multiRootProfile).toBeDefined();
+        fiveSubtypes.add(result.classification.multiRootProfile!.subtype);
+      }
       if (determineAwakening("balanced", result.elementEvidence, result.awakening.dao).passed) balancedPasses += 1;
       if (determineAwakening("strict", result.elementEvidence, result.awakening.dao).passed) {
         const strictResult = analyzeSpiritualRoots({ ...input, judgmentMode: "strict" }, calculation).result;
@@ -61,6 +71,8 @@ describe("spiritual-root population balance", () => {
     expect(share("dual")).toBeLessThan(share("triple"));
     expect(share("triple")).toBeLessThan(share("quadruple"));
     expect(share("quadruple")).toBeLessThan(share("five"));
+    expect(quadrupleSubtypes.size).toBeGreaterThanOrEqual(5);
+    expect(fiveSubtypes.size).toBeGreaterThanOrEqual(5);
     expect(balancedPasses / 5_000).toBeGreaterThan(0.13);
     expect(balancedPasses / 5_000).toBeLessThan(0.17);
     expect(strictPasses / 5_000).toBeGreaterThan(0.005);
