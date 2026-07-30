@@ -22,7 +22,7 @@ export default function ResultPage() {
   const { result } = analysis;
   const share = async () => {
     const topMutation = result.mutations.find((candidate) => candidate.status !== "rejected");
-    const summary = `영근록 판정: ${result.displayName}\n주영근: ${result.primaryElements.map((element) => ELEMENT_META[element].label).join("·") || "미성립"}\n${topMutation ? `변이 후보: ${topMutation.name}영근 ${topMutation.confidence}%\n` : ""}판정 신뢰도: ${result.confidence}% (${result.confidenceLabel})\n※ 선협 세계관용 창작·오락 결과`;
+    const summary = `영근록 판정: ${result.displayName}\n판정 모드: ${result.awakening.label}\n품질: ${result.classification.qualityLabel} · ${result.classification.rarityLabel}\n주영근: ${result.primaryElements.map((element) => ELEMENT_META[element].label).join("·") || "미성립"}\n${topMutation ? `변이 후보: ${topMutation.name}영근 ${topMutation.confidence}%\n` : ""}판정 신뢰도: ${result.confidence}% (${result.confidenceLabel})\n※ 선협 세계관용 창작·오락 결과`;
     await navigator.clipboard.writeText(summary);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1800);

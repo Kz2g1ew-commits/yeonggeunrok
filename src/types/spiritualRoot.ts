@@ -1,7 +1,18 @@
-import type { BranchRelations, Element, FourPillars, ShenshaResult } from "./bazi";
+import type { BranchRelations, Element, FourPillars, RootJudgmentMode, ShenshaResult } from "./bazi";
 
 export type RootCount = "none" | "single" | "dual" | "triple" | "quadruple" | "five";
 export type RootGrade = "low" | "middle" | "high" | "supreme";
+export type RootQualityTier = "none" | "heavenly" | "mutation" | "dual" | "triple" | "quadruple" | "five";
+
+export interface AwakeningResult {
+  mode: RootJudgmentMode;
+  passed: boolean;
+  roll: number;
+  threshold: number;
+  populationRate: number;
+  label: string;
+  explanation: string;
+}
 
 export interface ScoreContribution {
   label: string;
@@ -50,6 +61,10 @@ export interface RootClassification {
   missingElement?: Element;
   cultivationSpeed: string;
   adaptability: string;
+  qualityTier: RootQualityTier;
+  qualityRank: number;
+  qualityLabel: string;
+  rarityLabel: string;
 }
 
 export interface ConfidenceBreakdown {
@@ -83,6 +98,7 @@ export interface SpiritualRootResult {
   explanations: string[];
   disclaimer: string;
   classification: RootClassification;
+  awakening: AwakeningResult;
 }
 
 export interface AnalysisContext {

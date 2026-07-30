@@ -14,6 +14,11 @@ export function RuleBreakdown({ data }: { data: StoredAnalysis }) {
           <ChevronDown className="shrink-0 text-[#d8b66a] transition group-open:rotate-180" />
         </summary>
         <div className="grid gap-6 border-t border-white/6 p-5 sm:p-7">
+          <div className="surface-soft p-4 text-sm leading-7 text-[#aab9bf]">
+            <strong className="block text-[#e2d4ae]">영근 발현 관문 · {analysis.result.awakening.label}</strong>
+            <p>{analysis.result.awakening.explanation}</p>
+            <p className="text-xs text-[#748991]">내부 결정값 {analysis.result.awakening.roll.toString().padStart(4, "0")} / 통과선 {analysis.result.awakening.threshold} · 이 값은 세계관용 결정적 분배값이며 전통 명리 판정이 아닙니다.</p>
+          </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
               ["입력 현지 시각", calculation.correction.originalLocalISO],

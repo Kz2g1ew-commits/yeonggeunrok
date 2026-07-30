@@ -29,7 +29,7 @@ export function calculateConfidence(
   );
   const boundarySafety = boundaryDistance >= 120 ? 20 : boundaryDistance >= 60 ? 16 : boundaryDistance > 30 ? 12 : 5;
 
-  const distances = ELEMENTS.map((element) => Math.abs(evidence[element].score - SPIRITUAL_ROOT_RULES.thresholds.effective));
+  const distances = ELEMENTS.map((element) => Math.abs(evidence[element].score - SPIRITUAL_ROOT_RULES.thresholds.generousChannel));
   const closestThreshold = Math.min(...distances);
   const effectiveScores = ELEMENTS.filter((element) => evidence[element].effective).map((element) => evidence[element].score).sort((a, b) => b - a);
   const scoreGap = effectiveScores.length >= 2 ? Math.abs(effectiveScores[0] - effectiveScores[1]) : closestThreshold;

@@ -2,6 +2,7 @@ export type Element = "wood" | "fire" | "earth" | "metal" | "water";
 export type YinYang = "yang" | "yin";
 export type CalendarType = "solar" | "lunar";
 export type TimeAccuracy = "exact" | "approximate" | "unknown";
+export type RootJudgmentMode = "generous" | "strict";
 
 export interface HiddenStem {
   stem: string;
@@ -27,6 +28,7 @@ export interface FourPillars {
 }
 
 export interface BirthInput {
+  judgmentMode: RootJudgmentMode;
   calendarType: CalendarType;
   isLeapMonth: boolean;
   year: number;

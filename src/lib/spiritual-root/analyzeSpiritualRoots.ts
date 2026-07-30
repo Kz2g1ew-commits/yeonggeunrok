@@ -10,6 +10,7 @@ import { classifyRootCount } from "./classifyRootCount";
 import { detectMutationRoots } from "./detectMutationRoots";
 import { calculateConfidence } from "./calculateConfidence";
 import { generateExplanation } from "./generateExplanation";
+import { awakeningSeed, determineAwakening } from "./determineAwakening";
 
 const PATHS: Record<Element, string[]> = {
   wood: ["목계 생장공", "치유·진법", "풍계 신법"],
@@ -34,8 +35,10 @@ function distinct<T>(items: T[]): T[] {
 
 export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillarsCalculation): AnalysisBundle {
   const relations = analyzeRelations(calculation.pillars);
-  const evidence = calculateElementScores(calculation.pillars);
-  const roots = determineEffectiveRoots(evidence);
+  const awakening = determineAwakening(input.judgmentMode, awakeningSeed(input, calculation));
+  const rawEvidence = calculateElementScores(calculation.pillars);
+  const roots = determineEffectiveRoots(rawEvidence, awakening.passed);
+  const evidence = roots.evidence;
   const shensha = detectShensha(calculation.pillars, input.shensha);
   const context: AnalysisContext = {
     pillars: calculation.pillars,
@@ -45,24 +48,36 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
     season: seasonFromMonthBranch(calculation.pillars.month.branch),
   };
   const mutations = detectMutationRoots(context);
-  const classification = classifyRootCount(roots.effective, roots.potential, evidence, relations);
   const activeMutation = mutations.find((candidate) => candidate.status === "confirmed");
   const likelyMutation = mutations.find((candidate) => candidate.status === "likely");
-
-  if (activeMutation && roots.effective.length === 2) {
-    classification.displayName = `${activeMutation.name} 변이영근`;
-    classification.workingElements = [activeMutation.name];
-    classification.rootCount = "single";
-    classification.relationship = `${activeMutation.sourceElements.map((element) => ELEMENT_META[element].label).join("·")} 완전 융합`;
-  } else if (likelyMutation && roots.effective.length === 2) {
-    classification.displayName = `${classification.displayName} · ${likelyMutation.name}영근 유력`;
+  const classification = classifyRootCount(
+    roots.effective,
+    roots.potential,
+    evidence,
+    relations,
+    activeMutation ?? likelyMutation,
+  );
+  if (!awakening.passed) {
+    classification.displayName = "무영근 — 쇄맥무근";
+    classification.adaptability = "외부 기연이나 특수 개맥법에 의존";
   }
 
   const conflictCount = relations.clashes.length + relations.punishments.length + relations.harms.length + relations.breaks.length;
-  const confidence = calculateConfidence(input, calculation, evidence, mutations, conflictCount);
-  const primary = roots.effective.length ? roots.effective : roots.potential;
+  const resolvedEffective = classification.qualityTier === "heavenly" && roots.effective.length > 1
+    ? [[...roots.effective].sort((a, b) => evidence[b].score - evidence[a].score)[0]]
+    : roots.effective;
+  const absorbedElements = classification.qualityTier === "heavenly"
+    ? roots.effective.filter((element) => !resolvedEffective.includes(element))
+    : [];
+  const resolvedPotential = distinct([...roots.potential, ...absorbedElements]);
+  const resolvedEvidence = Object.fromEntries(Object.entries(evidence).map(([element, item]) => [
+    element,
+    absorbedElements.includes(element as Element) ? { ...item, effective: false, potential: true } : item,
+  ])) as typeof evidence;
+  const confidence = calculateConfidence(input, calculation, resolvedEvidence, mutations, conflictCount);
+  const primary = resolvedEffective.length ? resolvedEffective : resolvedPotential.slice(0, 1);
   const strongest = primary[0];
-  const weakestEffective = roots.effective.at(-1);
+  const weakestEffective = resolvedEffective.at(-1);
   const presentShensha = shensha.filter((item) => item.present);
   const strengths = [
     strongest ? `${ELEMENT_META[strongest].label} 기맥이 가장 선명함` : "외부 기연에 따라 여러 방향으로 개통 가능",
@@ -72,7 +87,7 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
   const weaknesses = [
     classification.missingElement ? `${ELEMENT_META[classification.missingElement].label} 속성 결핍` : "상극 속성 간 균형 관리 필요",
     conflictCount > 0 ? `충·형·파·해 ${conflictCount}건으로 기맥 변동성 존재` : "변화 대응력이 낮아질 수 있음",
-    roots.potential.length ? `${roots.potential.map((element) => ELEMENT_META[element].label).join("·")} 잠재근의 불안정성` : "과도한 단일 속성 운용 주의",
+    resolvedPotential.length ? `${resolvedPotential.map((element) => ELEMENT_META[element].label).join("·")} 잠재근의 불안정성` : "과도한 단일 속성 운용 주의",
   ];
   const recommendedPaths = distinct(primary.flatMap((element) => PATHS[element])).slice(0, 5);
   const risks = [
@@ -91,27 +106,28 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
     result: {
       rootCount: classification.rootCount,
       displayName,
-      primaryElements: roots.effective,
-      potentialElements: roots.potential,
+      primaryElements: resolvedEffective,
+      potentialElements: resolvedPotential,
       grade: classification.grade,
       relationship: classification.relationship,
       mutations,
       confidence: confidence.confidence,
       confidenceLabel: confidence.label,
       confidenceBreakdown: confidence.breakdown,
-      elementEvidence: evidence,
+      elementEvidence: resolvedEvidence,
       strengths: distinct(strengths),
       weaknesses: distinct(weaknesses),
       recommendedPaths,
       recommendedWeapons: distinct(primary.map((element) => WEAPONS[element])).slice(0, 3),
       recommendedTechniques: distinct(primary.map((element) => TECHNIQUES[element])).slice(0, 4),
       risks,
-      growthDirection: roots.potential.length
-        ? `${roots.potential.map((element) => ELEMENT_META[element].label).join("·")} 잠재근을 보조하되 주영근의 순도를 해치지 않는 방향`
+      growthDirection: resolvedPotential.length
+        ? `${resolvedPotential.map((element) => ELEMENT_META[element].label).join("·")} 잠재근을 보조하되 주영근의 순도를 해치지 않는 방향`
         : "주영근의 통근을 강화하고 상극 기운을 완충하는 방향",
-      explanations: generateExplanation(evidence),
+      explanations: generateExplanation(resolvedEvidence),
       disclaimer: "이 결과는 전통 명리학의 간지·오행 구조를 바탕으로 만든 선협 세계관용 창작 판정입니다.",
       classification,
+      awakening,
     },
   };
 }
