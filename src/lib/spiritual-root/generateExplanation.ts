@@ -22,7 +22,7 @@ export function generateExplanation(evidence: Record<Element, ElementEvidence>):
       const absorbedByPurity = item.potentialReasons.some((reason) => reason.includes("순도장"));
       const status = item.effective ? "유효 영근으로 성립했습니다"
         : absorbedByPurity ? "독립 통로는 있으나 천영근의 순도장 안에서 잠재 기맥으로 남았습니다"
-          : item.structuralEligible ? "삼관은 완성됐으나 선택한 영규 관문에서 잠재 통로로 남았습니다"
+          : item.structuralEligible ? "기맥 구조는 완성됐으나 선택한 선천 기감 관문에서 잠재 통로로 남았습니다"
           : item.potential ? `${item.potentialReasons[0] ?? "독립 활성도는 낮지만 연결 흔적이 남아"} 잠재 영근입니다`
         : "독립된 영기 통로를 만들지 못해 영근에서 제외했습니다";
       return `${label} 오행은 원국 구성 ${item.presenceRatio.toFixed(1)}%이며, ${facts.length ? facts.join(" ") : "뚜렷한 투출·통근 기반이 부족해"} 기맥 활성 ${item.score.toFixed(1)}점·삼관 완성도 ${item.channel.completion.toFixed(1)}로 ${status}.`;

@@ -7,6 +7,8 @@ function signed(value: number | string): string { const numeric = Number(value);
 export function RuleBreakdown({ data }: { data: StoredAnalysis }) {
   const { calculation, analysis } = data;
   const dao = analysis.result.awakening.dao;
+  const awakening = analysis.result.awakening;
+  const preHeaven = awakening.preHeaven;
   const daoLabel = dao.path === "natural" ? "순천도맥" : "역천도맥";
   return (
     <section className="surface overflow-hidden">
@@ -17,16 +19,18 @@ export function RuleBreakdown({ data }: { data: StoredAnalysis }) {
         </summary>
         <div className="grid gap-6 border-t border-white/6 p-5 sm:p-7">
           <div className="surface-soft p-4 text-sm leading-7 text-[#aab9bf]">
-            <strong className="block text-[#e2d4ae]">영규 발현 관문 · {analysis.result.awakening.label}</strong>
-            <p>{analysis.result.awakening.explanation}</p>
-            <p className="text-xs text-[#8fa2a9]">최고 삼관 완성도 {analysis.result.awakening.apertureScore.toFixed(1)} / 통과선 {analysis.result.awakening.threshold.toFixed(1)} · 완성 기맥 {analysis.result.awakening.completeChannels.length}개 · 잠재 기맥 {analysis.result.awakening.potentialChannels.length}개</p>
+            <strong className="block text-[#e2d4ae]">선천 기감 발현 관문 · {awakening.label}</strong>
+            <p>{awakening.explanation}</p>
+            <div className="my-3 grid gap-2 sm:grid-cols-3">{Object.values(preHeaven.nodes).map((node) => <div key={node.id} className="rounded-lg border border-white/6 bg-black/10 px-3 py-2"><span className="text-[10px] font-bold text-[#78909a]">{node.name}</span><strong className="ml-2 text-[#e5d4a8]">{node.ganZhi}</strong><p className="text-xs text-[#9fb0b7]">{node.naYin} · {ELEMENT_META[node.element].label}</p></div>)}</div>
+            <ul className="grid gap-1 text-xs text-[#8fa2a9]">{awakening.conditions.map((condition) => <li key={condition.id}><b className={condition.met ? "text-[#79c9b0]" : "text-[#e39188]"}>{condition.met ? "충족" : "미충족"}</b> · {condition.label}</li>)}</ul>
+            <p className="mt-2 text-xs text-[#8fa2a9]">완성 기맥 {awakening.completeChannels.length}개 · 잠재 기맥 {awakening.potentialChannels.length}개 · 실제 합 {preHeaven.trueBondCount}건 · 삼원 파손 {preHeaven.disruptionCount}건</p>
             <p className="mt-2 border-t border-white/6 pt-2 text-xs text-[#8fa2a9]">{daoLabel}은 영근 유무가 아니라 발현 뒤의 수련 성향입니다. 순천 {dao.naturalScore.toFixed(1)} · 역천 {dao.defiantScore.toFixed(1)}</p>
           </div>
           <div>
-            <h3 className="font-bold text-[#e7dcc0]">도맥 판정 근거</h3>
+            <h3 className="font-bold text-[#e7dcc0]">선천 기감과 도맥 근거</h3>
             <div className="mt-3 grid gap-3 md:grid-cols-2">
-              <div className="surface-soft p-4"><strong className="text-[#9fc0e8]">핵심 근거</strong><ul className="mt-3 grid gap-2 text-xs leading-6 text-[#aab9bf]">{dao.reasons.map((reason) => <li key={reason}>· {reason}</li>)}</ul></div>
-              <div className="surface-soft p-4"><strong className="text-[#dfc57f]">전체 가감</strong><ul className="mt-3 grid gap-1.5 text-xs text-[#aab9bf]">{dao.contributions.map((item, index) => <li key={`${item.path}-${item.label}-${index}`} className="flex justify-between gap-3"><span><b>{item.path === "natural" ? "순천" : "역천"}</b> · {item.label}</span><b className={item.value < 0 ? "text-[#e39188]" : "text-[#79c9b0]"}>{signed(item.value)}</b></li>)}</ul></div>
+              <div className="surface-soft p-4"><strong className="text-[#9fc0e8]">선천 기감 근거</strong><ul className="mt-3 grid gap-2 text-xs leading-6 text-[#aab9bf]">{[...preHeaven.reasons, ...preHeaven.blockers].map((reason) => <li key={reason}>· {reason}</li>)}</ul></div>
+              <div className="surface-soft p-4"><strong className="text-[#dfc57f]">도맥 전체 가감</strong><ul className="mt-3 grid gap-1.5 text-xs text-[#aab9bf]">{dao.contributions.map((item, index) => <li key={`${item.path}-${item.label}-${index}`} className="flex justify-between gap-3"><span><b>{item.path === "natural" ? "순천" : "역천"}</b> · {item.label}</span><b className={item.value < 0 ? "text-[#e39188]" : "text-[#79c9b0]"}>{signed(item.value)}</b></li>)}</ul></div>
             </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -60,7 +64,7 @@ export function RuleBreakdown({ data }: { data: StoredAnalysis }) {
               ...analysis.relations.stemCombinations, ...analysis.relations.clashes, ...analysis.relations.punishments,
               ...analysis.relations.breaks, ...analysis.relations.harms,
             ].map((item) => <li key={item}>{item}</li>)}{analysis.relations.dynamicCount === 0 && <li>뚜렷한 합충형파해 없음</li>}</ul></div>
-            <div className="surface-soft p-4"><h3 className="font-bold text-[#e7dcc0]">신뢰도 구성</h3><ul className="mt-3 grid gap-2 text-xs text-[#9fb0b7]">{Object.entries(analysis.result.confidenceBreakdown).map(([key, value]) => <li key={key} className="flex justify-between"><span>{{ timeAccuracy: "출생 시간", locationQuality: "위치 정보", boundarySafety: "경계 안전성", scoreClarity: "점수 명확성", mutationClarity: "변이 명확성", ruleConsistency: "규칙 일관성" }[key]}</span><b className="text-[#dfc57f]">+{value}</b></li>)}</ul></div>
+            <div className="surface-soft p-4"><h3 className="font-bold text-[#e7dcc0]">신뢰도 구성</h3><ul className="mt-3 grid gap-2 text-xs text-[#9fb0b7]">{Object.entries(analysis.result.confidenceBreakdown).map(([key, value]) => <li key={key} className="flex justify-between"><span>{{ timeAccuracy: "출생 시간", locationQuality: "위치 정보", boundarySafety: "경계 안전성", scoreClarity: "판정 경계", mutationClarity: "변이 명확성", ruleConsistency: "규칙 일관성" }[key]}</span><b className="text-[#dfc57f]">+{value}</b></li>)}</ul></div>
           </div>
           <div>
             <h3 className="font-bold text-[#e7dcc0]">신살·선협 재능 합성 근거</h3>
