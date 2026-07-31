@@ -9,7 +9,6 @@ import { FourPillarsTable } from "@/components/FourPillarsTable";
 import { ElementScoreChart } from "@/components/ElementScoreChart";
 import { MutationAnalysis } from "@/components/MutationAnalysis";
 import { RuleBreakdown } from "@/components/RuleBreakdown";
-import { Disclaimer } from "@/components/Disclaimer";
 import { ResultShareButton } from "@/components/ResultShareButton";
 import { MultiRootProfileCard } from "@/components/MultiRootProfileCard";
 import { CultivationTalentPanel } from "@/components/CultivationTalentPanel";
@@ -43,7 +42,7 @@ export default function ResultPage() {
         <MutationAnalysis candidates={result.mutations} />
 
         <section className="surface p-5 sm:p-7">
-          <span className="eyebrow">Cultivation route</span><h2 className="section-title mt-2">수련 설정 추천</h2><p className="muted mt-2 text-sm">운세가 아닌 캐릭터·세계관 설정 아이디어입니다.</p>
+          <span className="eyebrow">Cultivation route</span><h2 className="section-title mt-2">수련 설정 추천</h2>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             <article className="surface-soft p-4"><h3 className="flex items-center gap-2 font-bold text-[#e6d8b4]"><Sparkles size={15} />추천 공법</h3><ul className="mt-3 grid gap-2 text-sm text-[#aebdc2]">{result.recommendedPaths.map((path) => <li key={path}>· {path}</li>)}</ul></article>
             <article className="surface-soft p-4"><h3 className="font-bold text-[#e6d8b4]">무기와 술법</h3><p className="muted mt-3 text-sm leading-7">{result.recommendedWeapons.join(" · ") || "기맥을 먼저 개통할 법구"}<br />{result.recommendedTechniques.join(" · ") || "기초 납기술"}</p></article>
@@ -54,7 +53,6 @@ export default function ResultPage() {
         </section>
 
         <RuleBreakdown data={data} />
-        <Disclaimer />
       </div>
     </main>
   );
