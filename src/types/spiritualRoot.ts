@@ -6,6 +6,8 @@ export type RootQualityTier = "none" | "heavenly" | "mutation" | "dual" | "tripl
 export type DaoPath = "natural" | "defiant";
 export type RootConflictLevel = "stable" | "mixed" | "turbulent";
 export type RootCycleState = "broken" | "partial" | "strong" | "complete";
+export type TalentDimensionId = "rootBone" | "insight" | "combat" | "soul" | "providence";
+export type TalentTier = "unawakened" | "ordinary" | "promising" | "tianjiao" | "peerless" | "heavenly-favored";
 
 export interface DaoContribution {
   path: DaoPath;
@@ -156,6 +158,32 @@ export interface ConfidenceBreakdown {
   ruleConsistency: number;
 }
 
+export interface TalentDimension {
+  id: TalentDimensionId;
+  name: string;
+  score: number;
+  label: string;
+  description: string;
+  reasons: string[];
+}
+
+export interface TalentSpecialEffect {
+  id: string;
+  name: string;
+  rarity: "uncommon" | "rare" | "very-rare" | "mythic";
+  description: string;
+  evidence: string[];
+  effects: string[];
+}
+
+export interface CultivationTalentProfile {
+  tier: TalentTier;
+  title: string;
+  summary: string;
+  dimensions: Record<TalentDimensionId, TalentDimension>;
+  specialEffects: TalentSpecialEffect[];
+}
+
 export interface SpiritualRootResult {
   rootCount: RootCount;
   displayName: string;
@@ -179,6 +207,7 @@ export interface SpiritualRootResult {
   disclaimer: string;
   classification: RootClassification;
   awakening: AwakeningResult;
+  talentProfile: CultivationTalentProfile;
 }
 
 export interface AnalysisContext {

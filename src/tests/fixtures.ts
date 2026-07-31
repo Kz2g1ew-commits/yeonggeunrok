@@ -11,7 +11,7 @@ export function birthInput(overrides: Partial<BirthInput> = {}): BirthInput {
     timezone: "Asia/Seoul", country: "대한민국", city: "서울", longitude: 126.978,
     longitudeIsApproximate: true, gender: "unspecified", applyLateZi: false,
     applyTrueSolarTime: false, timeAccuracy: "exact",
-    shensha: { enabled: true, huagai: true, guimen: true, yima: true },
+    shensha: { enabled: true, huagai: true, guimen: true, yima: true, noble: true, scholar: true, martial: true, charisma: true },
     ...overrides,
   };
 }
@@ -52,9 +52,9 @@ export function evidenceSet(scores: Partial<Record<Element, number>>, potentials
 }
 
 const blankShensha: ShenshaResult[] = [
-  { id: "huagai", name: "화개살", present: false, evidence: [], traits: [] },
-  { id: "guimen", name: "귀문관살", present: false, evidence: [], traits: [] },
-  { id: "yima", name: "역마살", present: false, evidence: [], traits: [] },
+  { id: "huagai", name: "화개살", category: "mystic", polarity: "mixed", present: false, evidence: [], traits: [], paths: [], weapons: [], techniques: [], risks: [] },
+  { id: "guimen", name: "귀문관살", category: "mystic", polarity: "mixed", present: false, evidence: [], traits: [], paths: [], weapons: [], techniques: [], risks: [] },
+  { id: "yima", name: "역마살", category: "mobility", polarity: "mixed", present: false, evidence: [], traits: [], paths: [], weapons: [], techniques: [], risks: [] },
 ];
 
 export function analysisContext(
