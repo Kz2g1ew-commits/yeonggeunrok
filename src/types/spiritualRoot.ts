@@ -8,6 +8,46 @@ export type RootConflictLevel = "stable" | "mixed" | "turbulent";
 export type RootCycleState = "broken" | "partial" | "strong" | "complete";
 export type TalentDimensionId = "rootBone" | "insight" | "combat" | "soul" | "providence";
 export type TalentTier = "unawakened" | "ordinary" | "promising" | "tianjiao" | "peerless" | "heavenly-favored";
+export type PreHeavenNodeId = "taiYuan" | "taiXi" | "mingGong";
+export type PreHeavenQiState = "dormant" | "responsive" | "condensed";
+
+export interface PreHeavenNode {
+  id: PreHeavenNodeId;
+  name: string;
+  ganZhi: string;
+  naYin: string;
+  element: Element;
+}
+
+export interface PreHeavenLink {
+  from: PreHeavenNodeId;
+  to: PreHeavenNodeId;
+  label: string;
+  kinds: Array<"same-qi" | "generation" | "stem-combination" | "branch-combination" | "same-stem" | "same-branch" | "clash" | "harm" | "break">;
+}
+
+export interface PreHeavenQiResult {
+  state: PreHeavenQiState;
+  stateLabel: string;
+  nodes: Record<PreHeavenNodeId, PreHeavenNode>;
+  flowFromTaiYuan: boolean;
+  flowIntoMingGong: boolean;
+  adjacentClash: boolean;
+  balancedFlow: boolean;
+  connectedResonance: boolean;
+  trueBondCount: number;
+  disruptionCount: number;
+  strictCondensation: boolean;
+  links: PreHeavenLink[];
+  reasons: string[];
+  blockers: string[];
+}
+
+export interface AwakeningCondition {
+  id: string;
+  label: string;
+  met: boolean;
+}
 
 export interface DaoContribution {
   path: DaoPath;
@@ -28,13 +68,13 @@ export interface DaoAffinityResult {
 export interface AwakeningResult {
   mode: RootJudgmentMode;
   passed: boolean;
-  threshold: number;
-  apertureScore: number;
   populationRate: number;
   label: string;
   explanation: string;
   completeChannels: Element[];
   potentialChannels: Element[];
+  conditions: AwakeningCondition[];
+  preHeaven: PreHeavenQiResult;
   dao: DaoAffinityResult;
 }
 

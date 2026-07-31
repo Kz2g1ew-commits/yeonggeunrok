@@ -39,7 +39,7 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
   const relations = analyzeRelations(calculation.pillars);
   const rawEvidence = calculateElementScores(calculation.pillars);
   const dao = calculateDaoAffinity(calculation.pillars, rawEvidence, relations);
-  const awakening = determineAwakening(input.judgmentMode, rawEvidence, dao);
+  const awakening = determineAwakening(input.judgmentMode, calculation.pillars, rawEvidence, dao);
   const roots = determineEffectiveRoots(rawEvidence, awakening.passed);
   const evidence = roots.evidence;
   const shensha = detectShensha(calculation.pillars, input.shensha);

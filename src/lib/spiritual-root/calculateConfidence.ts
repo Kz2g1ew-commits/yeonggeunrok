@@ -35,9 +35,10 @@ export function calculateConfidence(
   const effectiveScores = ELEMENTS.filter((element) => evidence[element].effective).map((element) => evidence[element].score).sort((a, b) => b - a);
   const scoreGap = effectiveScores.length >= 2 ? Math.abs(effectiveScores[0] - effectiveScores[1]) : closestThreshold;
   const structuralClarity = closestThreshold >= 2 && scoreGap >= 2 ? 20 : closestThreshold >= 1 ? 15 : 9;
-  const apertureDistance = awakening ? Math.abs(awakening.apertureScore - awakening.threshold) : Number.POSITIVE_INFINITY;
+  const missingAwakeningConditions = awakening?.conditions.filter((condition) => !condition.met).length ?? 0;
   const scoreClarity = awakening && awakening.mode !== "generous"
-    ? apertureDistance >= 6 ? 20 : apertureDistance >= 3 ? 15 : 9
+    ? missingAwakeningConditions === 0 || missingAwakeningConditions >= 3 ? 20
+      : missingAwakeningConditions === 2 ? 15 : 9
     : structuralClarity;
 
   const activeMutations = mutations.filter((candidate) => candidate.status !== "rejected");

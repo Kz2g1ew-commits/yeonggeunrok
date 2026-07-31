@@ -1,7 +1,20 @@
 import { describe, expect, it } from "vitest";
 import { determineAwakening } from "@/lib/spiritual-root/determineAwakening";
 import type { DaoAffinityResult } from "@/types/spiritualRoot";
-import { evidenceSet } from "@/tests/fixtures";
+import type { FourPillars } from "@/types/bazi";
+import { evidenceSet, pillar } from "@/tests/fixtures";
+
+const dormantPillars: FourPillars = {
+  year: pillar("乙", "酉"), month: pillar("壬", "午"), day: pillar("乙", "丑"), hour: pillar("甲", "申"),
+};
+
+const balancedPillars: FourPillars = {
+  year: pillar("丙", "午"), month: pillar("辛", "卯"), day: pillar("甲", "申"), hour: pillar("庚", "午"),
+};
+
+const strictPillars: FourPillars = {
+  year: pillar("乙", "酉"), month: pillar("戊", "寅"), day: pillar("己", "卯"), hour: pillar("丙", "子"),
+};
 
 function dao(score: number): DaoAffinityResult {
   return {
@@ -12,23 +25,25 @@ function dao(score: number): DaoAffinityResult {
 
 describe("determineAwakening", () => {
   it("opens the generous gate when at least one three-gate channel is complete", () => {
-    expect(determineAwakening("generous", evidenceSet({ wood: 7 }), dao(-10)).passed).toBe(true);
-    expect(determineAwakening("generous", evidenceSet({}), dao(100)).passed).toBe(false);
+    expect(determineAwakening("generous", dormantPillars, evidenceSet({ wood: 7 }), dao(-10)).passed).toBe(true);
+    expect(determineAwakening("generous", strictPillars, evidenceSet({}), dao(100)).passed).toBe(false);
   });
 
-  it("uses channel completion rather than Dao score for balanced mode", () => {
+  it("opens balanced mode only when Tai Yuan flows through Tai Xi into Ming Gong", () => {
     const evidence = evidenceSet({ wood: 7 });
-    evidence.wood.channel.completion = 63.1;
-    expect(determineAwakening("balanced", evidence, dao(100)).passed).toBe(false);
-    evidence.wood.channel.completion = 63.2;
-    expect(determineAwakening("balanced", evidence, dao(-10)).passed).toBe(true);
+    expect(determineAwakening("balanced", dormantPillars, evidence, dao(100)).passed).toBe(false);
+    const result = determineAwakening("balanced", balancedPillars, evidence, dao(-10));
+    expect(result.passed).toBe(true);
+    expect(result.preHeaven.state).toBe("responsive");
   });
 
-  it("uses a stricter three-gate completion boundary in strict mode", () => {
+  it("requires a connected and undamaged three-origin network in strict mode", () => {
     const evidence = evidenceSet({ water: 10 });
-    evidence.water.channel.completion = 71;
-    expect(determineAwakening("strict", evidence, dao(100)).passed).toBe(false);
-    evidence.water.channel.completion = 71.1;
-    expect(determineAwakening("strict", evidence, dao(-10)).passed).toBe(true);
+    expect(determineAwakening("strict", balancedPillars, evidence, dao(100)).passed).toBe(false);
+    const result = determineAwakening("strict", strictPillars, evidence, dao(-10));
+    expect(result.passed).toBe(true);
+    expect(result.preHeaven.state).toBe("condensed");
+    expect(result.preHeaven.trueBondCount).toBeGreaterThanOrEqual(1);
+    expect(result.preHeaven.disruptionCount).toBe(0);
   });
 });

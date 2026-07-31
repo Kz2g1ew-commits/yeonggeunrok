@@ -23,6 +23,7 @@ const shareResultDetails = {
   weaknesses: ["화 속성에 취약함"],
   risks: ["기맥 과부하"],
   growthDirection: "금생수의 흐름을 굳혀 빙계 변이를 완성하는 방향",
+  awakening: { label: "균형 판정 · 선천 기감 개방", preHeaven: { stateLabel: "선천 기감 감응" } },
 };
 
 describe("result share card privacy model", () => {
@@ -43,6 +44,7 @@ describe("result share card privacy model", () => {
       "serviceName",
       "rootName",
       "rootProfile",
+      "awakening",
       "quality",
       "primaryRoots",
       "potentialRoots",
@@ -55,6 +57,7 @@ describe("result share card privacy model", () => {
     ]);
     expect(model.rootName).toBe("금수 이영근");
     expect(model.rootProfile).toBe("기본 영근형");
+    expect(model.awakening).toBe("균형 판정 · 선천 기감 개방");
     expect(model.quality).toBe("상등 · 희귀");
     expect(model.primaryRoots).toBe("금(金) · 수(水)");
     expect(model.potentialRoots).toBe("토(土)");
