@@ -24,7 +24,7 @@ function dimensionLabel(id: TalentDimensionId, score: number): string {
   const labels: Record<TalentDimensionId, string[]> = {
     rootBone: ["범골", "중등 근골", "상등 근골", "천품 근골", "선천도체급 근골"],
     insight: ["오성이 평범함", "오성이 예민함", "오성이 발달함", "오성이 비범함", "오성이 역천에 가까움"],
-    combat: ["전투 감각이 평범함", "전투 감각이 민감함", "전투 재능이 발달함", "전투 재능이 비범함", "천생 전골"],
+    combat: ["전투 감각이 평범함", "전투 감각이 민감함", "전투 재능이 발달함", "전투 재능이 비범함", "천생 투골"],
     soul: ["신혼 감응이 평범함", "신혼 감응이 예민함", "신혼 자질이 발달함", "신혼 자질이 비범함", "선천 신혼체"],
     providence: ["기운이 평범함", "기연 감응이 있음", "기운이 두터움", "천운이 강함", "천도 호도가 짙음"],
   };
@@ -116,7 +116,7 @@ export function synthesizeCultivationTalent(
   }
   if (has("yangren") && (has("jiangxing") || has("kuigang"))) {
     scores.combat += RULES.synergies.combatBladeCommand;
-    reasons.combat.push(`양인과 장성·괴강의 전골 결합 +${RULES.synergies.combatBladeCommand}`);
+    reasons.combat.push(`양인과 장성·괴강의 투골 결합 +${RULES.synergies.combatBladeCommand}`);
   }
   if (has("tianyi") && has("tiande") && has("yuede")) {
     scores.providence += RULES.synergies.providenceHeavenMonthVirtue;
@@ -128,7 +128,7 @@ export function synthesizeCultivationTalent(
   const dimensions = {
     rootBone: makeDimension("rootBone", "근골", scores.rootBone, "영근·체질이 영기를 담고 버티는 선천 기반", reasons.rootBone),
     insight: makeDimension("insight", "오성", scores.insight, "공법을 이해하고 추연·융합하는 능력", reasons.insight),
-    combat: makeDimension("combat", "전골", scores.combat, "실전 판단·폭발력·전투 술식 적응력", reasons.combat),
+    combat: makeDimension("combat", "투골", scores.combat, "실전 판단·폭발력·전투 술식 적응력", reasons.combat),
     soul: makeDimension("soul", "신혼", scores.soul, "정신계·환술·도법 감응과 심마 저항의 기반", reasons.soul),
     providence: makeDimension("providence", "기운", scores.providence, "귀인·기연·호도와 인과 완충의 선협적 표현", reasons.providence),
   } satisfies Record<TalentDimensionId, TalentDimension>;
@@ -179,7 +179,7 @@ export function synthesizeCultivationTalent(
     effects: ["영혼·환술 감응", "음계 탐지", "주화입마 위험"],
   });
   if (has("yangren") && (has("kuigang") || strong("jiangxing")) && dimensions.combat.score >= 70) addEffect({
-    id: "battle-bone", name: "천생전골 天生戰骨", rarity: "rare",
+    id: "battle-bone", name: "천생투골 天生鬪骨", rarity: "rare",
     description: "양인의 폭발력이 장성·괴강의 통솔과 강기에 결속된 전투형 체질입니다.",
     evidence: present.filter((item) => ["yangren", "jiangxing", "kuigang"].includes(item.id)).map((item) => item.name),
     effects: ["근접전 폭발력", "전장 적응", "혈기 폭주 위험"],
