@@ -1,5 +1,6 @@
 import { Brain, Clover, Dna, Ghost, Sparkles, Swords } from "lucide-react";
 import type { ShenshaResult } from "@/types/bazi";
+import { SHENSHA_STATUS_LABELS } from "@/lib/bazi/shenshaRules";
 import type { CultivationTalentProfile, TalentDimensionId } from "@/types/spiritualRoot";
 
 const DIMENSION_ICON = {
@@ -58,10 +59,10 @@ export function CultivationTalentPanel({ profile, shensha }: { profile: Cultivat
       <div className="border-t border-white/6 px-5 py-6 sm:px-7">
         <h3 className="font-bold text-[#e7dcc0]">적용된 신살과 수련 전환</h3>
         {present.length ? <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3">{present.map((item) => <details key={item.id} className="surface-soft p-4">
-          <summary className="cursor-pointer list-none"><span className="text-[10px] font-bold text-[#758b94]">{CATEGORY_LABEL[item.category]}</span><strong className="mt-1 block text-sm text-[#dce3e3]">{item.name}</strong><p className="mt-2 text-xs leading-5 text-[#93a6ad]">{item.traits.slice(0, 4).join(" · ")}</p></summary>
-          <div className="mt-3 border-t border-white/6 pt-3 text-[11px] leading-5 text-[#80949b]"><p>판정 근거 · {item.evidence.join(" / ")}</p><p className="mt-1 text-[#a8c8bd]">추천 · {[...item.paths, ...item.weapons, ...item.techniques].slice(0, 5).join(" · ")}</p>{item.risks.length > 0 && <p className="mt-1 text-[#c2a6a2]">주의 · {item.risks.join(" · ")}</p>}</div>
+          <summary className="cursor-pointer list-none"><span className="text-[10px] font-bold text-[#758b94]">{CATEGORY_LABEL[item.category]}</span><span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-bold ${item.effective ? "bg-[#62c6a5]/10 text-[#8bd5bd]" : "bg-[#d96d62]/10 text-[#e8a29b]"}`}>{SHENSHA_STATUS_LABELS[item.status]}</span><strong className="mt-1 block text-sm text-[#dce3e3]">{item.name}</strong><p className="mt-2 text-xs leading-5 text-[#93a6ad]">{item.traits.slice(0, 4).join(" · ")}</p><p className="mt-2 text-[11px] text-[#81979f]">작용도 {item.strength} · 보존도 {item.integrity} · 출현 {item.occurrenceCount}자리</p></summary>
+          <div className="mt-3 border-t border-white/6 pt-3 text-[11px] leading-5 text-[#80949b]"><p>판정 근거 · {item.evidence.join(" / ")}</p>{item.damage.length > 0 && <p className="mt-1 text-[#d9a09a]">충손 · {item.damage.join(" · ")}</p>}{item.effective ? <p className="mt-1 text-[#a8c8bd]">추천 · {[...item.paths, ...item.weapons, ...item.techniques].slice(0, 5).join(" · ")}</p> : <p className="mt-1 text-[#a99490]">손상으로 직접 재능 가산에서 제외됨</p>}{item.risks.length > 0 && <p className="mt-1 text-[#c2a6a2]">주의 · {item.risks.join(" · ")}</p>}</div>
         </details>)}</div> : <p className="muted mt-3 text-sm">선택한 유파 기준에서 뚜렷하게 성립한 신살 부가 성향이 없습니다.</p>}
-        <p className="mt-4 text-xs leading-6 text-[#748991]">신살은 영근 개수와 품질을 바꾸지 않고 오성·투골·신혼·기운의 수련 성향에만 반영됩니다. 신살 판정은 유파에 따라 달라질 수 있습니다.</p>
+        <p className="mt-4 text-xs leading-6 text-[#748991]">작용도는 자리와 중첩을, 보존도는 해당 자리의 충·형·파·해를 반영합니다. 손상된 길성은 재능 가산에서 제외되고, 살성의 충손은 격동으로 작용합니다. 신살은 영근 개수와 품질을 바꾸지 않으며 판정은 유파에 따라 달라질 수 있습니다.</p>
       </div>
     </section>
   );

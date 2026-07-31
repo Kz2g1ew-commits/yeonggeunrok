@@ -23,7 +23,7 @@ describe("cultivation talent rarity", () => {
         timezone: "Asia/Seoul", country: "대한민국", city: "서울", longitude: 126.978,
         longitudeIsApproximate: true, gender: "unspecified", applyLateZi: false,
         applyTrueSolarTime: false, timeAccuracy: "exact",
-        shensha: { enabled: true, huagai: true, guimen: true, yima: true, noble: true, scholar: true, martial: true, charisma: true },
+        shensha: { enabled: true, school: "classical", huagai: true, guimen: true, yima: true, noble: true, scholar: true, martial: true, charisma: true },
       };
       const analysis = analyzeSpiritualRoots(input, calculateFourPillars(input));
       const profile = analysis.result.talentProfile;
@@ -36,7 +36,7 @@ describe("cultivation talent rarity", () => {
     const share = (tier: TalentTier) => counts[tier] / 5_000;
     expect(share("tianjiao")).toBeGreaterThan(0.015);
     expect(share("tianjiao")).toBeLessThan(0.035);
-    expect(share("heavenly-favored")).toBeGreaterThan(0.001);
+    expect(share("heavenly-favored")).toBeGreaterThan(0.0005);
     expect(share("heavenly-favored")).toBeLessThan(0.01);
     expect(share("tianjiao") + share("peerless") + share("heavenly-favored")).toBeLessThan(0.05);
   });

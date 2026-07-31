@@ -1,6 +1,7 @@
 import { ChevronDown } from "lucide-react";
 import type { StoredAnalysis } from "@/lib/analysisStore";
 import { ELEMENT_META, ELEMENTS } from "@/lib/bazi/elementMeta";
+import { SHENSHA_STATUS_LABELS } from "@/lib/bazi/shenshaRules";
 
 function signed(value: number | string): string { const numeric = Number(value); return `${numeric > 0 ? "+" : ""}${value}`; }
 
@@ -70,7 +71,7 @@ export function RuleBreakdown({ data }: { data: StoredAnalysis }) {
             <h3 className="font-bold text-[#e7dcc0]">신살·선협 재능 합성 근거</h3>
             <div className="mt-3 grid gap-3 md:grid-cols-2">
               <div className="surface-soft p-4"><strong className="text-[#dfc57f]">{analysis.result.talentProfile.title}</strong><ul className="mt-3 grid gap-3 text-xs leading-6 text-[#9fb0b7]">{Object.values(analysis.result.talentProfile.dimensions).map((dimension) => <li key={dimension.id}><div className="flex justify-between gap-3"><b>{dimension.name} · {dimension.label}</b><b className="text-[#dfc57f]">{dimension.score}</b></div><span>{dimension.reasons.join(" · ") || "기본값"}</span></li>)}</ul></div>
-              <div className="surface-soft p-4"><strong className="text-[#dfc57f]">성립 신살</strong><ul className="mt-3 grid gap-2 text-xs leading-6 text-[#9fb0b7]">{analysis.shensha.filter((item) => item.present).map((item) => <li key={item.id}><b>{item.name}</b><br />{item.evidence.join(" · ")}</li>)}{!analysis.shensha.some((item) => item.present) && <li>선택한 기준에서 성립한 신살 없음</li>}</ul></div>
+              <div className="surface-soft p-4"><strong className="text-[#dfc57f]">성립 신살</strong><ul className="mt-3 grid gap-2 text-xs leading-6 text-[#9fb0b7]">{analysis.shensha.filter((item) => item.present).map((item) => <li key={item.id}><b>{item.name} · {SHENSHA_STATUS_LABELS[item.status]}</b><br />작용도 {item.strength} · 보존도 {item.integrity} · {item.evidence.join(" · ")}{item.damage.length > 0 && <><br /><span className="text-[#d9a09a]">충손 {item.damage.join(" · ")}</span></>}</li>)}{!analysis.shensha.some((item) => item.present) && <li>선택한 기준에서 성립한 신살 없음</li>}</ul></div>
             </div>
           </div>
         </div>

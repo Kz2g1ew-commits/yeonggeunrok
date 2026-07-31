@@ -1,4 +1,4 @@
-import type { ShenshaCategory, ShenshaId, ShenshaPolarity } from "@/types/bazi";
+import type { ShenshaCategory, ShenshaId, ShenshaPolarity, ShenshaStatus } from "@/types/bazi";
 
 export interface ShenshaDescriptor {
   id: ShenshaId;
@@ -39,8 +39,39 @@ export const TAIJI_BRANCHES: Record<string, readonly string[]> = {
   庚: ["寅", "亥"], 辛: ["寅", "亥"], 壬: ["巳", "申"], 癸: ["巳", "申"],
 };
 
+// 《연해자평》의 양인은 다섯 양간에만 둔다.
 export const YANGREN_BRANCHES: Record<string, string> = {
-  甲: "卯", 乙: "寅", 丙: "午", 丁: "巳", 戊: "午", 己: "巳", 庚: "酉", 辛: "申", 壬: "子", 癸: "亥",
+  甲: "卯", 丙: "午", 戊: "午", 庚: "酉", 壬: "子",
+};
+
+// 확장형에서만 음간의 제왕지를 별도 음인으로 표시한다.
+export const YINREN_BRANCHES: Record<string, string> = {
+  乙: "寅", 丁: "巳", 己: "巳", 辛: "申", 癸: "亥",
+};
+
+export const SHENSHA_STRENGTH_RULES = {
+  base: 55,
+  positionBonus: { year: 0, month: 4, day: 10, hour: 7 },
+  extraOccurrenceBonus: 8,
+  extraOccurrenceMaximum: 16,
+  extraAnchorBonus: 4,
+  extraAnchorMaximum: 8,
+  dynamicActivationFactor: 0.4,
+  dynamicActivationMaximum: 12,
+  effectiveMinimum: 50,
+  strongMinimum: 72,
+  auspiciousIntegrityMinimum: 50,
+  damagePenalty: { clash: 24, punishment: 18, harm: 12, break: 10 },
+  talentMultiplier: { center: 65, minimum: 0.35, maximum: 1.2 },
+} as const;
+
+export const SHENSHA_STATUS_LABELS: Record<ShenshaStatus, string> = {
+  inactive: "미성립",
+  weak: "미약",
+  active: "성립",
+  strong: "강성",
+  damaged: "손상",
+  agitated: "격동",
 };
 
 export const TIANDE_RULES: Record<string, { kind: "stem" | "branch"; value: string }> = {
@@ -104,6 +135,11 @@ export const SHENSHA_DESCRIPTORS: Record<ShenshaId, ShenshaDescriptor> = {
     id: "yangren", name: "양인살 羊刃", category: "martial", polarity: "challenging",
     traits: ["폭발력", "근접전", "결단", "혈기", "강체 수련"],
     paths: ["패체·혈련공", "근접 파군도"], weapons: ["패도", "중극"], techniques: ["폭혈술", "단맥일격"], risks: ["혈기 폭주와 무리한 돌파"],
+  },
+  yinren: {
+    id: "yinren", name: "음인 陰刃", category: "martial", polarity: "challenging",
+    traits: ["응축력", "은밀한 폭발", "지구전", "내기 운용"],
+    paths: ["음맥응력공", "잠경·축기술"], weapons: ["세검", "암기"], techniques: ["축기폭발", "잠맥보"], risks: ["내상 누적과 음맥 역류"],
   },
   kuigang: {
     id: "kuigang", name: "괴강 魁罡", category: "martial", polarity: "mixed",
