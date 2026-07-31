@@ -159,6 +159,8 @@ export interface MultiRootProfile {
   subtype: string;
   dominantElement: Element;
   weakestElement: Element;
+  preserveAllRoots: boolean;
+  refinementPath: string;
   scoreSpread: number;
   generatingLinks: string[];
   cycleState: RootCycleState;

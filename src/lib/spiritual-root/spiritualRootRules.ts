@@ -120,6 +120,8 @@ export const SPIRITUAL_ROOT_RULES = {
     fourStrongFlowMinimum: 3,
     fiveStrongFlowMinimum: 4,
     completeCycleLinks: 5,
+    // 다섯 기맥을 함께 보존할 수 있는 오영근 예외형. 나머지 다근은 약근 정련을 기본으로 한다.
+    preserveAllFiveSubtypes: ["오기조원형", "오행원융형", "정적균형형"],
   },
   stemCombination: {
     requireAdjacency: true,

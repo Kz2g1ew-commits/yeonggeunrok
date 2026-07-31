@@ -48,7 +48,7 @@ export default function ResultPage() {
             <article className="surface-soft p-4"><h3 className="font-bold text-[#e6d8b4]">무기와 술법</h3><p className="muted mt-3 text-sm leading-7">{result.recommendedWeapons.join(" · ") || "기맥을 먼저 개통할 법구"}<br />{result.recommendedTechniques.join(" · ") || "기초 납기술"}</p></article>
             <article className="surface-soft p-4"><h3 className="flex items-center gap-2 font-bold text-[#e6d8b4]"><ShieldAlert size={15} />약점과 위험</h3><ul className="mt-3 grid gap-2 text-sm text-[#c2a6a2]">{result.weaknesses.slice(0, 2).map((item) => <li key={item}>· {item}</li>)}{result.risks.map((item) => <li key={item}>· {item}</li>)}</ul></article>
           </div>
-          <div className="mt-4 rounded-xl border border-[#62c6a5]/15 bg-[#62c6a5]/5 p-4 text-sm leading-7 text-[#afd0c5]"><strong>성장 방향</strong><br />{result.growthDirection}</div>
+          <div className="mt-4 rounded-xl border border-[#62c6a5]/15 bg-[#62c6a5]/5 p-4 text-sm leading-7 text-[#afd0c5]"><strong>정련 방향</strong><br />{result.growthDirection}</div>
           <p className="mt-4 text-xs text-[#748991]">추천은 오행 영근을 중심에 두고, 성립한 신살의 선협적 성향을 보조로 합성합니다.</p>
         </section>
 
