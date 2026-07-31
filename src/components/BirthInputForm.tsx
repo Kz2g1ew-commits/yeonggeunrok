@@ -19,6 +19,16 @@ const CITIES = [
   { id: "sydney", name: "호주 · 시드니", country: "호주", timezone: "Australia/Sydney", longitude: 151.209 },
 ] as const;
 
+const SHENSHA_OPTION_GROUPS = [
+  { key: "huagai", label: "화개살" },
+  { key: "guimen", label: "귀문관살" },
+  { key: "yima", label: "역마살" },
+  { key: "noble", label: "귀인·덕성" },
+  { key: "scholar", label: "오성·현학" },
+  { key: "martial", label: "전투·동세" },
+  { key: "charisma", label: "도화·교섭" },
+] as const;
+
 const initialInput: BirthInput = {
   judgmentMode: "generous",
   calendarType: "solar", isLeapMonth: false,
@@ -26,7 +36,7 @@ const initialInput: BirthInput = {
   timezone: "Asia/Seoul", country: "대한민국", city: "서울", longitude: 126.978,
   longitudeIsApproximate: true, gender: "unspecified", applyLateZi: false,
   applyTrueSolarTime: false, timeAccuracy: "exact",
-  shensha: { enabled: true, huagai: true, guimen: true, yima: true },
+  shensha: { enabled: true, huagai: true, guimen: true, yima: true, noble: true, scholar: true, martial: true, charisma: true },
 };
 
 export function BirthInputForm() {
@@ -159,8 +169,9 @@ export function BirthInputForm() {
             <select className="form-control" value={input.gender} onChange={(e) => setInput((current) => ({ ...current, gender: e.target.value as BirthInput["gender"] }))}><option value="unspecified">선택 안 함</option><option value="female">여성</option><option value="male">남성</option></select>
           </label>
           <label className="check-row"><input type="checkbox" checked={input.shensha.enabled} onChange={(e) => setInput((current) => ({ ...current, shensha: { ...current.shensha, enabled: e.target.checked } }))} /><span><strong className="text-[#e7ecec]">신살 부가 성향 사용</strong><br />영근 수에는 영향을 주지 않습니다.</span></label>
-          {input.shensha.enabled && <div className="flex flex-wrap gap-4 pl-7 text-xs text-[#aab9bf]">
-            {(["huagai", "guimen", "yima"] as const).map((key) => <label key={key} className="flex items-center gap-1.5"><input type="checkbox" checked={input.shensha[key]} onChange={(e) => setInput((current) => ({ ...current, shensha: { ...current.shensha, [key]: e.target.checked } }))} />{key === "huagai" ? "화개살" : key === "guimen" ? "귀문관살" : "역마살"}</label>)}
+          {input.shensha.enabled && <div className="pl-7">
+            <p className="mb-2 text-[11px] leading-5 text-[#71858e]">유파 차이가 큰 항목은 묶음별로 제외할 수 있습니다.</p>
+            <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-[#aab9bf]">{SHENSHA_OPTION_GROUPS.map(({ key, label }) => <label key={key} className="flex items-center gap-1.5"><input type="checkbox" checked={input.shensha[key] !== false} onChange={(e) => setInput((current) => ({ ...current, shensha: { ...current.shensha, [key]: e.target.checked } }))} />{label}</label>)}</div>
           </div>}
         </div>}
 

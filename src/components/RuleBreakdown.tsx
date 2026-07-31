@@ -62,6 +62,13 @@ export function RuleBreakdown({ data }: { data: StoredAnalysis }) {
             ].map((item) => <li key={item}>{item}</li>)}{analysis.relations.dynamicCount === 0 && <li>뚜렷한 합충형파해 없음</li>}</ul></div>
             <div className="surface-soft p-4"><h3 className="font-bold text-[#e7dcc0]">신뢰도 구성</h3><ul className="mt-3 grid gap-2 text-xs text-[#9fb0b7]">{Object.entries(analysis.result.confidenceBreakdown).map(([key, value]) => <li key={key} className="flex justify-between"><span>{{ timeAccuracy: "출생 시간", locationQuality: "위치 정보", boundarySafety: "경계 안전성", scoreClarity: "점수 명확성", mutationClarity: "변이 명확성", ruleConsistency: "규칙 일관성" }[key]}</span><b className="text-[#dfc57f]">+{value}</b></li>)}</ul></div>
           </div>
+          <div>
+            <h3 className="font-bold text-[#e7dcc0]">신살·선협 재능 합성 근거</h3>
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+              <div className="surface-soft p-4"><strong className="text-[#dfc57f]">{analysis.result.talentProfile.title}</strong><ul className="mt-3 grid gap-3 text-xs leading-6 text-[#9fb0b7]">{Object.values(analysis.result.talentProfile.dimensions).map((dimension) => <li key={dimension.id}><div className="flex justify-between gap-3"><b>{dimension.name} · {dimension.label}</b><b className="text-[#dfc57f]">{dimension.score}</b></div><span>{dimension.reasons.join(" · ") || "기본값"}</span></li>)}</ul></div>
+              <div className="surface-soft p-4"><strong className="text-[#dfc57f]">성립 신살</strong><ul className="mt-3 grid gap-2 text-xs leading-6 text-[#9fb0b7]">{analysis.shensha.filter((item) => item.present).map((item) => <li key={item.id}><b>{item.name}</b><br />{item.evidence.join(" · ")}</li>)}{!analysis.shensha.some((item) => item.present) && <li>선택한 기준에서 성립한 신살 없음</li>}</ul></div>
+            </div>
+          </div>
         </div>
       </details>
     </section>

@@ -3,6 +3,23 @@ export type YinYang = "yang" | "yin";
 export type CalendarType = "solar" | "lunar";
 export type TimeAccuracy = "exact" | "approximate" | "unknown";
 export type RootJudgmentMode = "generous" | "balanced" | "strict";
+export type ShenshaId =
+  | "huagai" | "guimen" | "yima"
+  | "tianyi" | "tiande" | "yuede" | "wenchang" | "taiji"
+  | "yangren" | "kuigang" | "jiangxing" | "taohua" | "jiesha";
+export type ShenshaCategory = "mystic" | "mobility" | "noble" | "scholar" | "martial" | "charisma";
+export type ShenshaPolarity = "auspicious" | "mixed" | "challenging";
+
+export interface ShenshaOptions {
+  enabled: boolean;
+  huagai: boolean;
+  guimen: boolean;
+  yima: boolean;
+  noble?: boolean;
+  scholar?: boolean;
+  martial?: boolean;
+  charisma?: boolean;
+}
 
 export interface HiddenStem {
   stem: string;
@@ -45,12 +62,7 @@ export interface BirthInput {
   applyLateZi: boolean;
   applyTrueSolarTime: boolean;
   timeAccuracy: TimeAccuracy;
-  shensha: {
-    enabled: boolean;
-    huagai: boolean;
-    guimen: boolean;
-    yima: boolean;
-  };
+  shensha: ShenshaOptions;
 }
 
 export interface TimeCorrection {
@@ -99,9 +111,15 @@ export interface BranchRelations {
 }
 
 export interface ShenshaResult {
-  id: "huagai" | "guimen" | "yima";
+  id: ShenshaId;
   name: string;
+  category: ShenshaCategory;
+  polarity: ShenshaPolarity;
   present: boolean;
   evidence: string[];
   traits: string[];
+  paths: string[];
+  weapons: string[];
+  techniques: string[];
+  risks: string[];
 }
