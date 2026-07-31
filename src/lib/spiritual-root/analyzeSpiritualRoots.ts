@@ -13,6 +13,7 @@ import { generateExplanation } from "./generateExplanation";
 import { determineAwakening } from "./determineAwakening";
 import { calculateDaoAffinity } from "./calculateDaoAffinity";
 import { synthesizeCultivationTalent } from "./synthesizeCultivationTalent";
+import { generateCultivationDirection } from "./generateCultivationDirection";
 
 const PATHS: Record<Element, string[]> = {
   wood: ["목계 생장공", "치유·진법", "풍계 신법"],
@@ -80,10 +81,16 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
     ...talentProfile.specialEffects.slice(0, 2).map((effect) => `${effect.name} 성향`),
   ];
   const weaknesses = [
-    classification.missingElement ? `${ELEMENT_META[classification.missingElement].label} 속성 결핍` : "상극 속성 간 균형 관리 필요",
+    classification.missingElement
+      ? `${ELEMENT_META[classification.missingElement].label} 계통 공법의 직접 운용 폭이 좁음 — 내적 개맥 대상은 아님`
+      : multiRootProfile?.preserveAllRoots
+        ? "한 기맥의 과성으로 전 오행 균형이 무너질 수 있음"
+        : resolvedEffective.length >= 3
+          ? "다중 기맥에 영기와 수련 자원이 분산됨"
+          : "상극 속성 간 균형 관리 필요",
     conflictCount > 0 ? `충·형·파·해 ${conflictCount}건으로 기맥 변동성 존재` : "변화 대응력이 낮아질 수 있음",
     ...(multiRootProfile?.cautions ?? [resolvedPotential.length
-      ? `${resolvedPotential.map((element) => ELEMENT_META[element].label).join("·")} 잠재근의 불안정성`
+      ? `${resolvedPotential.map((element) => ELEMENT_META[element].label).join("·")} 잠재근 각성 시 주근 순도 저하`
       : "과도한 단일 속성 운용 주의"]),
   ];
   const recommendedPaths = distinct([
@@ -128,15 +135,12 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
         ...presentShensha.flatMap((item) => item.techniques),
       ]).slice(0, 7),
       risks: distinct(risks),
-      growthDirection: multiRootProfile
-        ? classification.missingElement
-          ? `${ELEMENT_META[classification.missingElement].label} 결핍을 법보·진법으로 보완하고 ${multiRootProfile.generatingLinks.join("·") || "독립 기맥"}의 안정성을 높이는 방향`
-          : multiRootProfile.cycleState === "complete"
-            ? "다섯 기맥의 동시 축적을 유지하며 완성된 상생환을 합국·통관으로 굳히는 방향"
-            : `미성립한 ${5 - multiRootProfile.generatingLinks.length}개 상생 고리를 보완해 오행 순환을 완성하는 방향`
-        : resolvedPotential.length
-          ? `${resolvedPotential.map((element) => ELEMENT_META[element].label).join("·")} 잠재근을 보조하되 주영근의 순도를 해치지 않는 방향`
-          : "주영근의 통근을 강화하고 상극 기운을 완충하는 방향",
+      growthDirection: generateCultivationDirection(
+        classification,
+        resolvedEffective,
+        resolvedPotential,
+        activeMutation ?? likelyMutation,
+      ),
       explanations: generateExplanation(resolvedEvidence),
       classification,
       awakening,

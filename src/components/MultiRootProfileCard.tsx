@@ -32,7 +32,7 @@ export function MultiRootProfileCard({ classification }: { classification: RootC
           <ul className="mt-3 grid gap-2 text-sm leading-6 text-[#aec2c4]">{profile.strengths.map((item) => <li key={item}>· {item}</li>)}</ul>
         </article>
         <article className="surface-soft p-4">
-          <h3 className="font-bold text-[#dfb39b]">결핍과 주의점</h3>
+          <h3 className="font-bold text-[#dfb39b]">정련과 주의점</h3>
           <ul className="mt-3 grid gap-2 text-sm leading-6 text-[#c5aeaa]">{profile.cautions.map((item) => <li key={item}>· {item}</li>)}</ul>
         </article>
       </div>
