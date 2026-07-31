@@ -1,12 +1,10 @@
 import type { ReactNode } from "react";
-import { Disclaimer } from "./Disclaimer";
 
-export function InfoPageShell({ eyebrow, title, intro, children, disclaimer = false }: { eyebrow: string; title: string; intro: string; children: ReactNode; disclaimer?: boolean }) {
+export function InfoPageShell({ eyebrow, title, intro, children }: { eyebrow: string; title: string; intro: string; children: ReactNode }) {
   return (
     <main className="shell py-14 sm:py-20">
       <header className="max-w-3xl"><span className="eyebrow">{eyebrow}</span><h1 className="display-serif text-balance mt-5 text-4xl font-semibold tracking-[-.055em] sm:text-6xl">{title}</h1><p className="muted mt-5 text-base leading-8 sm:text-lg">{intro}</p></header>
       <div className="mt-10 grid gap-5">{children}</div>
-      {disclaimer && <div className="mt-6"><Disclaimer /></div>}
     </main>
   );
 }

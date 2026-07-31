@@ -98,7 +98,7 @@ export function buildResultShareCardModel(result: SpiritualRootResult): ResultSh
       growthDirection: result.growthDirection,
     },
     activationNote: "기맥 활성은 월령·통근·생조·극제·합충을 반영한 판정 점수입니다.",
-    privacyNote: "출생정보·사주 원문 미포함 · 선협 세계관용 창작 결과",
+    privacyNote: "출생정보·사주 원문 미포함 · 사주 기반 선협식 영근 판별",
   };
 }
 
