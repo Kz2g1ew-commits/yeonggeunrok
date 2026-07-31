@@ -36,7 +36,7 @@ export function MultiRootProfileCard({ classification }: { classification: RootC
           <ul className="mt-3 grid gap-2 text-sm leading-6 text-[#c5aeaa]">{profile.cautions.map((item) => <li key={item}>· {item}</li>)}</ul>
         </article>
       </div>
-      <p className="mt-4 text-xs leading-6 text-[#748991]">이 세부 유형은 사·오영근의 작동 방식을 구분하는 선협 세계관용 해석이며 실제 성격이나 운명을 뜻하지 않습니다.</p>
+      <p className="mt-4 text-xs leading-6 text-[#748991]">세부 유형은 상생 고리와 기맥 편차, 충극의 정도에 따라 달라집니다.</p>
     </section>
   );
 }

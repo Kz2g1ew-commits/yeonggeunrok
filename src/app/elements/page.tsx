@@ -13,10 +13,10 @@ const elements = [
 ] as const;
 
 export default function ElementsPage() {
-  return <InfoPageShell eyebrow="Five elements" title="오행에서 영근으로" intro="오행은 색만으로 구별하지 않습니다. 글자, 이름, 아이콘과 상생·상극 관계를 함께 표시합니다." disclaimer>
+  return <InfoPageShell eyebrow="Five elements" title="오행에서 영근으로" intro="오행은 색만으로 구별하지 않습니다. 글자, 이름, 아이콘과 상생·상극 관계를 함께 표시합니다.">
     <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">{elements.map(([Icon, name, mapping, nature, path]) => <article key={name} className="surface p-5"><Icon className="text-[#d8b66a]" /><h2 className="display-serif mt-4 text-2xl text-[#eee2c5]">{name}</h2><p className="mt-2 text-xs font-bold text-[#71858e]">{mapping}</p><p className="muted mt-4 text-sm leading-6">{nature}</p><p className="mt-4 border-t border-white/6 pt-3 text-xs text-[#bfae7e]">{path}</p></article>)}</section>
     <InfoSection title="상생과 상극"><p><strong className="text-[#e0ce9f]">상생:</strong> 목→화→토→금→수→목. 앞 오행이 뒤 오행의 발현을 돕습니다.</p><p className="mt-2"><strong className="text-[#e0ce9f]">상극:</strong> 목→토→수→화→금→목. 제어는 무조건 나쁜 것이 아니지만, 구원 없이 지나치면 영기 통로를 손상시킬 수 있습니다.</p></InfoSection>
     <InfoSection title="지장간은 숨은 재료입니다"><p>지지 속에 감춰진 천간을 본기·중기·여기로 나눕니다. 원국 구성비에서는 숨은 재료의 양을 보존하고, 기맥 활성도에서는 본·중·여기와 자리·충손에 따라 통근 강도를 다르게 계산합니다. 지장간에 희미하게 존재한다는 사실만으로 유효 영근이 되지는 않지만, 투간과 약근이 함께 남으면 계절에 눌린 잠재 영근이 될 수 있습니다.</p></InfoSection>
-    <InfoSection title="사·오영근의 넓음도 서로 다릅니다"><p>사영근은 없는 오행이 끊는 두 상생 고리와 가장 강한 주도 기맥을 함께 봅니다. 오영근은 다섯 속성을 가졌다는 사실보다 실제 생조가 몇 고리 이어지는지, 점수 편차가 얼마나 작은지, 충극이 순환을 흔드는지가 중요합니다. 결과의 세부 구조 카드는 운용 강점과 결핍·주의점을 선협 세계관용 문장으로 풀어 줍니다.</p></InfoSection>
+    <InfoSection title="사·오영근의 넓음도 서로 다릅니다"><p>사영근은 없는 오행이 끊는 두 상생 고리와 가장 강한 주도 기맥을 함께 봅니다. 오영근은 다섯 속성을 가졌다는 사실보다 실제 생조가 몇 고리 이어지는지, 점수 편차가 얼마나 작은지, 충극이 순환을 흔드는지가 중요합니다. 결과의 세부 구조 카드에서 운용 강점과 결핍·주의점을 함께 확인할 수 있습니다.</p></InfoSection>
   </InfoPageShell>;
 }

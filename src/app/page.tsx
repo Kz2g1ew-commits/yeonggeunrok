@@ -20,11 +20,11 @@ export default function HomePage() {
           <h1 className="display-serif text-balance mt-6 max-w-3xl text-5xl font-semibold leading-[1.08] tracking-[-.06em] sm:text-6xl lg:text-[4.8rem]">
             팔자에 흐르는 기운,<br /><span className="gold">어떤 영근</span>으로<br className="sm:hidden" /> 깨어날까
           </h1>
-          <p className="mt-7 max-w-xl text-balance text-base leading-8 text-[#9fb0b7] sm:text-lg">사주팔자의 간지와 오행 구조를 정밀하게 읽고, 선협 소설의 영근·공법·술법 설정으로 재해석하는 창작 도구입니다.</p>
+          <p className="mt-7 max-w-xl text-balance text-base leading-8 text-[#9fb0b7] sm:text-lg">사주팔자의 간지와 오행 구조를 정밀하게 읽고, 선협의 영근·공법·술법으로 펼쳐 봅니다.</p>
           <div className="mt-8 flex flex-wrap gap-3 text-xs font-semibold text-[#aebdc2]">
             <span className="surface-soft flex items-center gap-2 px-3 py-2"><ShieldCheck size={14} className="text-[#62c6a5]" />서버 전송 없음</span>
             <span className="surface-soft flex items-center gap-2 px-3 py-2"><CircleDot size={14} className="text-[#d8b66a]" />절기 시각 반영</span>
-            <span className="surface-soft flex items-center gap-2 px-3 py-2"><Sparkles size={14} className="text-[#d96d62]" />창작용 판정</span>
+            <span className="surface-soft flex items-center gap-2 px-3 py-2"><Sparkles size={14} className="text-[#d96d62]" />선협식 판별</span>
           </div>
           <Link href="/guide" className="mt-8 inline-flex items-center gap-2 text-sm font-bold text-[#dfc57f]">판정 기준 먼저 보기 <ArrowUpRight size={15} /></Link>
         </div>
@@ -49,8 +49,8 @@ export default function HomePage() {
       </section>
 
       <section className="shell grid gap-7 py-16 md:grid-cols-[.7fr_1.3fr] md:items-center">
-        <div><BookOpen className="text-[#d8b66a]" /><h2 className="section-title mt-4">전통 규칙과 창작 규칙을 분리했습니다</h2></div>
-        <p className="muted leading-8">연주·월주·일주·시주의 계산과 간지·오행 매핑은 전통 달력 체계를 따릅니다. 영근 점수와 빙·뇌·풍 같은 변이영근은 선협 세계관을 위한 별도 규칙입니다. 결과의 상세 계산에서 어느 규칙이 적용되었는지 확인할 수 있습니다.</p>
+        <div><BookOpen className="text-[#d8b66a]" /><h2 className="section-title mt-4">간지에서 영근까지 흐름을 잇습니다</h2></div>
+        <p className="muted leading-8">입춘·절입으로 네 기둥을 세우고 월령·통근·생극·합충으로 오행의 기맥을 읽습니다. 그 흐름이 응축되고 융합되는 모양에 따라 천영근과 다중 영근, 빙·뇌·풍 등의 변이영근을 가릅니다.</p>
       </section>
     </main>
   );

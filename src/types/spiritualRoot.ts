@@ -204,7 +204,6 @@ export interface SpiritualRootResult {
   risks: string[];
   growthDirection: string;
   explanations: string[];
-  disclaimer: string;
   classification: RootClassification;
   awakening: AwakeningResult;
   talentProfile: CultivationTalentProfile;

@@ -138,7 +138,6 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
           ? `${resolvedPotential.map((element) => ELEMENT_META[element].label).join("·")} 잠재근을 보조하되 주영근의 순도를 해치지 않는 방향`
           : "주영근의 통근을 강화하고 상극 기운을 완충하는 방향",
       explanations: generateExplanation(resolvedEvidence),
-      disclaimer: "이 결과는 전통 명리학의 간지·오행 구조를 바탕으로 만든 선협 세계관용 창작 판정입니다.",
       classification,
       awakening,
       talentProfile,
