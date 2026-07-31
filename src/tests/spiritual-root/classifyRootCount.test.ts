@@ -44,6 +44,8 @@ describe("classifyRootCount", () => {
     expect(result.displayName).toBe("사영근 — 수 결핍 · 균형순생형");
     expect(result.multiRootProfile?.generatingLinks).toEqual(["목생화", "화생토", "토생금"]);
     expect(result.multiRootProfile?.cautions[0]).toContain("금생수·수생목");
+    expect(result.multiRootProfile?.preserveAllRoots).toBe(false);
+    expect(result.multiRootProfile?.refinementPath).toContain("수 결핍은 내적 개맥 없이 유지");
   });
 
   it("marks a strongly dominant four-root structure with its leading element", () => {
@@ -60,6 +62,8 @@ describe("classifyRootCount", () => {
     expect(result.displayName).toBe("오행균형영근 — 오행원융형");
     expect(result.multiRootProfile?.cycleState).toBe("complete");
     expect(result.multiRootProfile?.formationSupport).toBe(false);
+    expect(result.multiRootProfile?.preserveAllRoots).toBe(true);
+    expect(result.multiRootProfile?.refinementPath).toContain("다섯 기맥을 모두 보전");
   });
 
   it("distinguishes turbulent five-root qi from a balanced root", () => {

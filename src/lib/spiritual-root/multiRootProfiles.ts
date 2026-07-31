@@ -116,6 +116,15 @@ export function buildMultiRootProfile(
   const missingElement = effective.length === 4
     ? ELEMENTS.find((element) => !effective.includes(element))
     : undefined;
+  const preserveAllRoots = effective.length === 5 &&
+    (SPIRITUAL_ROOT_RULES.multiRootProfiles.preserveAllFiveSubtypes as readonly string[]).includes(subtype);
+  const refinementPath = missingElement
+    ? `${ELEMENT_META[missingElement].label} 결핍은 내적 개맥 없이 유지하고, 필요한 속성은 법보·진법으로만 빌립니다. ${ELEMENT_META[weakestElement].label} 약근을 먼저 봉근·세맥해 ${ELEMENT_META[dominantElement].label} 주근 중심의 삼영근으로 정련하는 길이 알맞습니다.`
+    : preserveAllRoots
+      ? subtype === "오기조원형"
+        ? "다섯 기맥을 잘라내지 않고 보전하며, 완성된 오기 상생환을 합국과 통관으로 굳히는 혼원 수련이 알맞습니다."
+        : "다섯 기맥을 모두 보전하되 어느 한 기맥도 과성하지 않게 편차를 좁혀, 오행균형에서 오기조원으로 나아가는 길이 알맞습니다."
+      : `${ELEMENT_META[weakestElement].label} 약근을 첫 봉근 대상으로 삼고 ${ELEMENT_META[dominantElement].label} 주근을 정련합니다. 오영근에서 사영근·삼영근으로 기맥 수를 줄여 영기 분산을 낮추는 길이 알맞습니다.`;
 
   const strengths = [
     `${ELEMENT_META[dominantElement].label} 기맥이 ${evidence[dominantElement].score.toFixed(1)}점으로 운용의 중심을 이룸`,
@@ -132,11 +141,17 @@ export function buildMultiRootProfile(
   if (missingElement) {
     const source = generatorOf(missingElement);
     const target = GENERATES[missingElement];
-    cautions.unshift(`${ELEMENT_META[missingElement].label} 결핍으로 ${ELEMENT_META[source].label}생${ELEMENT_META[missingElement].label}·${ELEMENT_META[missingElement].label}생${ELEMENT_META[target].label} 고리가 비어 ${ELEMENT_THEMES[missingElement]} 계통이 약점이 됨`);
+    cautions.unshift(`${ELEMENT_META[missingElement].label} 결핍으로 ${ELEMENT_META[source].label}생${ELEMENT_META[missingElement].label}·${ELEMENT_META[missingElement].label}생${ELEMENT_META[target].label} 고리가 비어 ${ELEMENT_THEMES[missingElement]} 계통의 직접 운용 폭이 좁음 — 결핍 자체는 새 영근을 깨울 대상이 아님`);
   } else if (cycle.state === "complete") {
     strengths.push("목→화→토→금→수→목의 오기 순환이 끊기지 않음");
   } else {
     cautions.unshift(`다섯 오행은 모두 유효하지만 ${5 - generatingLinks.length}개 상생 고리가 실질 유통에 이르지 못함`);
+  }
+
+  if (preserveAllRoots) {
+    cautions.push("전 오행 보존형은 한 기맥의 과성이나 충손이 전체 균형을 깨뜨리지 않게 해야 함");
+  } else {
+    cautions.push(`${ELEMENT_META[weakestElement].label} 기맥이 우선 정련 후보이며, 잠재근을 추가 각성하면 주근 순도가 더 낮아질 수 있음`);
   }
 
   const summary = effective.length === 4
@@ -147,6 +162,8 @@ export function buildMultiRootProfile(
     subtype,
     dominantElement,
     weakestElement,
+    preserveAllRoots,
+    refinementPath,
     scoreSpread,
     generatingLinks,
     cycleState: cycle.state,
