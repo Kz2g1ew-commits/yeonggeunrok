@@ -12,6 +12,7 @@ import { calculateConfidence } from "./calculateConfidence";
 import { generateExplanation } from "./generateExplanation";
 import { determineAwakening } from "./determineAwakening";
 import { calculateDaoAffinity } from "./calculateDaoAffinity";
+import { synthesizeCultivationTalent } from "./synthesizeCultivationTalent";
 
 const PATHS: Record<Element, string[]> = {
   wood: ["목계 생장공", "치유·진법", "풍계 신법"],
@@ -59,6 +60,7 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
     relations,
     activeMutation ?? likelyMutation,
   );
+  const talentProfile = synthesizeCultivationTalent(classification, evidence, shensha, awakening, relations);
 
   const conflictCount = relations.clashes.length + relations.punishments.length + relations.harms.length + relations.breaks.length;
   const resolvedEffective = roots.effective;
@@ -75,6 +77,7 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
     classification.relationship?.includes("순생") ? "상생 흐름이 연속됨" : classification.adaptability,
     ...(multiRootProfile?.strengths ?? []),
     ...presentShensha.flatMap((item) => item.traits.slice(0, 2)),
+    ...talentProfile.specialEffects.slice(0, 2).map((effect) => `${effect.name} 성향`),
   ];
   const weaknesses = [
     classification.missingElement ? `${ELEMENT_META[classification.missingElement].label} 속성 결핍` : "상극 속성 간 균형 관리 필요",
@@ -83,10 +86,14 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
       ? `${resolvedPotential.map((element) => ELEMENT_META[element].label).join("·")} 잠재근의 불안정성`
       : "과도한 단일 속성 운용 주의"]),
   ];
-  const recommendedPaths = distinct(primary.flatMap((element) => PATHS[element])).slice(0, 5);
+  const recommendedPaths = distinct([
+    ...primary.flatMap((element) => PATHS[element]).slice(0, 4),
+    ...presentShensha.flatMap((item) => item.paths),
+  ]).slice(0, 7);
   const risks = [
     weakestEffective ? `${ELEMENT_META[weakestEffective].label} 기맥 과부하` : "무리한 강제 개맥",
     presentShensha.some((item) => item.id === "guimen") ? "정신계 술법 사용 시 주화입마 위험 증가" : "상극 공법 동시 운용 시 기혈 역류",
+    ...presentShensha.flatMap((item) => item.risks),
   ];
 
   let displayName = classification.displayName;
@@ -112,9 +119,15 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
       strengths: distinct(strengths),
       weaknesses: distinct(weaknesses),
       recommendedPaths,
-      recommendedWeapons: distinct(primary.map((element) => WEAPONS[element])).slice(0, 3),
-      recommendedTechniques: distinct(primary.map((element) => TECHNIQUES[element])).slice(0, 4),
-      risks,
+      recommendedWeapons: distinct([
+        ...primary.map((element) => WEAPONS[element]),
+        ...presentShensha.flatMap((item) => item.weapons),
+      ]).slice(0, 5),
+      recommendedTechniques: distinct([
+        ...primary.map((element) => TECHNIQUES[element]),
+        ...presentShensha.flatMap((item) => item.techniques),
+      ]).slice(0, 7),
+      risks: distinct(risks),
       growthDirection: multiRootProfile
         ? classification.missingElement
           ? `${ELEMENT_META[classification.missingElement].label} 결핍을 법보·진법으로 보완하고 ${multiRootProfile.generatingLinks.join("·") || "독립 기맥"}의 안정성을 높이는 방향`
@@ -128,6 +141,7 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
       disclaimer: "이 결과는 전통 명리학의 간지·오행 구조를 바탕으로 만든 선협 세계관용 창작 판정입니다.",
       classification,
       awakening,
+      talentProfile,
     },
   };
 }
