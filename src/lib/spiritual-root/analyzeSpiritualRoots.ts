@@ -72,12 +72,13 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
   const strongest = primary[0];
   const weakestEffective = resolvedEffective.at(-1);
   const presentShensha = shensha.filter((item) => item.present);
+  const effectiveShensha = shensha.filter((item) => item.effective);
   const multiRootProfile = classification.multiRootProfile;
   const strengths = [
     strongest ? `${ELEMENT_META[strongest].label} 기맥이 가장 선명함` : "외부 기연에 따라 여러 방향으로 개통 가능",
     classification.relationship?.includes("순생") ? "상생 흐름이 연속됨" : classification.adaptability,
     ...(multiRootProfile?.strengths ?? []),
-    ...presentShensha.flatMap((item) => item.traits.slice(0, 2)),
+    ...effectiveShensha.flatMap((item) => item.traits.slice(0, 2)),
     ...talentProfile.specialEffects.slice(0, 2).map((effect) => `${effect.name} 성향`),
   ];
   const weaknesses = [
@@ -92,14 +93,15 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
     ...(multiRootProfile?.cautions ?? [resolvedPotential.length
       ? `${resolvedPotential.map((element) => ELEMENT_META[element].label).join("·")} 잠재근 각성 시 주근 순도 저하`
       : "과도한 단일 속성 운용 주의"]),
+    ...presentShensha.filter((item) => item.damage.length > 0).map((item) => `${item.name}이 ${item.damage.join("·")}으로 ${item.status === "damaged" ? "손상됨" : "격동함"}`),
   ];
   const recommendedPaths = distinct([
     ...primary.flatMap((element) => PATHS[element]).slice(0, 4),
-    ...presentShensha.flatMap((item) => item.paths),
+    ...effectiveShensha.flatMap((item) => item.paths),
   ]).slice(0, 7);
   const risks = [
     weakestEffective ? `${ELEMENT_META[weakestEffective].label} 기맥 과부하` : "무리한 강제 개맥",
-    presentShensha.some((item) => item.id === "guimen") ? "정신계 술법 사용 시 주화입마 위험 증가" : "상극 공법 동시 운용 시 기혈 역류",
+    effectiveShensha.some((item) => item.id === "guimen") ? "정신계 술법 사용 시 주화입마 위험 증가" : "상극 공법 동시 운용 시 기혈 역류",
     ...presentShensha.flatMap((item) => item.risks),
   ];
 
@@ -128,11 +130,11 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
       recommendedPaths,
       recommendedWeapons: distinct([
         ...primary.map((element) => WEAPONS[element]),
-        ...presentShensha.flatMap((item) => item.weapons),
+        ...effectiveShensha.flatMap((item) => item.weapons),
       ]).slice(0, 5),
       recommendedTechniques: distinct([
         ...primary.map((element) => TECHNIQUES[element]),
-        ...presentShensha.flatMap((item) => item.techniques),
+        ...effectiveShensha.flatMap((item) => item.techniques),
       ]).slice(0, 7),
       risks: distinct(risks),
       growthDirection: generateCultivationDirection(

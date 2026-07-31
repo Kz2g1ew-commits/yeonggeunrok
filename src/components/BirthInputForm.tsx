@@ -36,7 +36,7 @@ const initialInput: BirthInput = {
   timezone: "Asia/Seoul", country: "대한민국", city: "서울", longitude: 126.978,
   longitudeIsApproximate: true, gender: "unspecified", applyLateZi: false,
   applyTrueSolarTime: false, timeAccuracy: "exact",
-  shensha: { enabled: true, huagai: true, guimen: true, yima: true, noble: true, scholar: true, martial: true, charisma: true },
+  shensha: { enabled: true, school: "classical", huagai: true, guimen: true, yima: true, noble: true, scholar: true, martial: true, charisma: true },
 };
 
 export function BirthInputForm() {
@@ -170,6 +170,13 @@ export function BirthInputForm() {
           </label>
           <label className="check-row"><input type="checkbox" checked={input.shensha.enabled} onChange={(e) => setInput((current) => ({ ...current, shensha: { ...current.shensha, enabled: e.target.checked } }))} /><span><strong className="text-[#e7ecec]">신살 부가 성향 사용</strong><br />영근 수에는 영향을 주지 않습니다.</span></label>
           {input.shensha.enabled && <div className="pl-7">
+            <label className="form-label mb-3">신살 판정 기준
+              <select className="form-control" value={input.shensha.school ?? "classical"} onChange={(e) => setInput((current) => ({ ...current, shensha: { ...current.shensha, school: e.target.value as "classical" | "expanded" } }))}>
+                <option value="classical">고전 기준 · 권장</option>
+                <option value="expanded">확장 기준</option>
+              </select>
+              <span className="text-[11px] font-normal leading-5 text-[#71858e]">고전 기준은 태극귀인을 연간에서 찾고 양인은 다섯 양간만 봅니다. 확장 기준은 일간 태극과 음간의 음인을 별도로 더합니다.</span>
+            </label>
             <p className="mb-2 text-[11px] leading-5 text-[#71858e]">유파 차이가 큰 항목은 묶음별로 제외할 수 있습니다.</p>
             <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-[#aab9bf]">{SHENSHA_OPTION_GROUPS.map(({ key, label }) => <label key={key} className="flex items-center gap-1.5"><input type="checkbox" checked={input.shensha[key] !== false} onChange={(e) => setInput((current) => ({ ...current, shensha: { ...current.shensha, [key]: e.target.checked } }))} />{label}</label>)}</div>
           </div>}

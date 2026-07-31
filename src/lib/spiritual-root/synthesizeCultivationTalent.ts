@@ -9,10 +9,22 @@ import type {
   TalentSpecialEffect,
 } from "@/types/spiritualRoot";
 import { ELEMENTS } from "@/lib/bazi/elementMeta";
+import { SHENSHA_STRENGTH_RULES } from "@/lib/bazi/shenshaRules";
 import { CULTIVATION_TALENT_RULES as RULES } from "./cultivationTalentRules";
 
 function clamp(value: number): number {
   return Math.round(Math.max(0, Math.min(100, value)));
+}
+
+function shenshaMultiplier(item: ShenshaResult): number {
+  const rules = SHENSHA_STRENGTH_RULES.talentMultiplier;
+  const strength = Math.max(rules.minimum, Math.min(rules.maximum, item.strength / rules.center));
+  const integrity = item.polarity === "auspicious" ? item.integrity / 100 : 1;
+  return strength * integrity;
+}
+
+function rounded(value: number): number {
+  return Math.round(value * 10) / 10;
 }
 
 function dimensionLabel(id: TalentDimensionId, score: number): string {
@@ -49,10 +61,10 @@ export function synthesizeCultivationTalent(
   awakening: AwakeningResult,
   relations: BranchRelations,
 ): CultivationTalentProfile {
-  const present = shensha.filter((item) => item.present);
-  const byId = new Map(present.map((item) => [item.id, item]));
+  const effectiveShensha = shensha.filter((item) => item.effective);
+  const byId = new Map(effectiveShensha.map((item) => [item.id, item]));
   const has = (id: ShenshaId) => byId.has(id);
-  const strong = (id: ShenshaId) => (byId.get(id)?.evidence.length ?? 0) >= 2;
+  const strong = (id: ShenshaId) => byId.get(id)?.status === "strong";
   const reasons: Record<TalentDimensionId, string[]> = {
     rootBone: [`${classification.displayName}의 영근 품질을 근골 기반으로 환산`],
     insight: [], combat: [], soul: [], providence: [],
@@ -85,14 +97,16 @@ export function synthesizeCultivationTalent(
   }
   if (!awakening.passed) scores.rootBone = Math.min(scores.rootBone, 35);
 
-  for (const item of present) {
+  for (const item of effectiveShensha) {
     const bonuses = RULES.shenshaBonuses[item.id];
+    const multiplier = shenshaMultiplier(item);
     for (const [dimension, value] of Object.entries(bonuses) as Array<[Exclude<TalentDimensionId, "rootBone">, number]>) {
-      scores[dimension] += value;
-      reasons[dimension].push(`${item.name} ${value >= 0 ? "+" : ""}${value}`);
+      const applied = rounded(value * multiplier);
+      scores[dimension] += applied;
+      reasons[dimension].push(`${item.name} 작용도 ${item.strength}·보존도 ${item.integrity} ${applied >= 0 ? "+" : ""}${applied}`);
     }
-    const extraOccurrences = Math.max(0, item.evidence.length - 1);
-    const occurrenceBonus = Math.min(RULES.extraOccurrenceMaximum, extraOccurrences * RULES.extraOccurrenceBonus);
+    const extraOccurrences = Math.max(0, item.occurrenceCount - 1);
+    const occurrenceBonus = rounded(Math.min(RULES.extraOccurrenceMaximum, extraOccurrences * RULES.extraOccurrenceBonus) * multiplier);
     if (occurrenceBonus > 0) {
       const primaryDimension: Record<typeof item.category, Exclude<TalentDimensionId, "rootBone">> = {
         mystic: "soul", mobility: "combat", noble: "providence", scholar: "insight", martial: "combat", charisma: "soul",
@@ -153,7 +167,7 @@ export function synthesizeCultivationTalent(
   if (heavenlyFavored) addEffect({
     id: "heavenly-dao-child", name: "천도지자 天道之子", rarity: "mythic",
     description: "여러 귀인성이 겹치고 실제 영근 각성까지 받쳐 주어 천도의 호도를 받는 주인공형 기운입니다.",
-    evidence: present.filter((item) => ["tianyi", "tiande", "yuede", "taiji", "wenchang"].includes(item.id)).map((item) => item.name),
+    evidence: effectiveShensha.filter((item) => ["tianyi", "tiande", "yuede", "taiji", "wenchang"].includes(item.id)).map((item) => item.name),
     effects: ["치명적 기연의 생환 보정", "사문·전승과의 강한 인연", "큰 인과를 짊어질 위험"],
   });
   if (dimensions.insight.score >= RULES.dimensions.outstanding + 6) addEffect({
@@ -164,7 +178,7 @@ export function synthesizeCultivationTalent(
   if (has("tianyi") && has("tiande") && has("yuede")) addEffect({
     id: "noble-protection", name: "귀인호도 貴人護道", rarity: "rare",
     description: "천을귀인에 천덕·월덕이 호응해 스승·사문·호도자와의 인연이 두터운 형상입니다.",
-    evidence: present.filter((item) => ["tianyi", "tiande", "yuede"].includes(item.id)).map((item) => item.name),
+    evidence: effectiveShensha.filter((item) => ["tianyi", "tiande", "yuede"].includes(item.id)).map((item) => item.name),
     effects: ["사문 인연", "위기 완충", "은혜와 인과의 부채"],
   });
   if (has("taiji") && has("huagai") && has("wenchang") && dimensions.insight.score >= 70) addEffect({
@@ -175,13 +189,13 @@ export function synthesizeCultivationTalent(
   if (strong("guimen") && (has("taiji") || has("huagai"))) addEffect({
     id: "mystic-soul", name: "통유신혼 通幽神魂", rarity: "rare",
     description: "음계·꿈·영혼의 파동을 감지하기 쉬운 대신 심마와 오염에도 민감한 신혼형 자질입니다.",
-    evidence: present.filter((item) => ["guimen", "taiji", "huagai"].includes(item.id)).map((item) => item.name),
+    evidence: effectiveShensha.filter((item) => ["guimen", "taiji", "huagai"].includes(item.id)).map((item) => item.name),
     effects: ["영혼·환술 감응", "음계 탐지", "주화입마 위험"],
   });
   if (has("yangren") && (has("kuigang") || strong("jiangxing")) && dimensions.combat.score >= 70) addEffect({
     id: "battle-bone", name: "천생투골 天生鬪骨", rarity: "rare",
     description: "양인의 폭발력이 장성·괴강의 통솔과 강기에 결속된 전투형 체질입니다.",
-    evidence: present.filter((item) => ["yangren", "jiangxing", "kuigang"].includes(item.id)).map((item) => item.name),
+    evidence: effectiveShensha.filter((item) => ["yangren", "jiangxing", "kuigang"].includes(item.id)).map((item) => item.name),
     effects: ["근접전 폭발력", "전장 적응", "혈기 폭주 위험"],
   });
   const metalFocused = classification.originalElements.includes("metal") &&

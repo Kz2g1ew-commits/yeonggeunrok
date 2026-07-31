@@ -35,6 +35,7 @@ export const CULTIVATION_TALENT_RULES = {
     wenchang: { insight: 14 },
     taiji: { insight: 10, soul: 8, providence: 4 },
     yangren: { combat: 14 },
+    yinren: { combat: 8, soul: 2 },
     kuigang: { combat: 16, soul: 3 },
     jiangxing: { combat: 10, providence: 2 },
     taohua: { insight: 2, soul: 3, providence: 2 },

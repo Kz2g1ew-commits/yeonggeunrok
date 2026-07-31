@@ -13,9 +13,15 @@ const classification = {
 const awakening = { passed: true } as AwakeningResult;
 
 function stars(ids: ShenshaId[], strongIds: ShenshaId[] = []): ShenshaResult[] {
-  return (Object.keys(SHENSHA_DESCRIPTORS) as ShenshaId[]).map((id) => ({
-    ...SHENSHA_DESCRIPTORS[id], present: ids.includes(id), evidence: ids.includes(id) ? strongIds.includes(id) ? [`${id} 근거1`, `${id} 근거2`] : [`${id} 근거`] : [],
-  }));
+  return (Object.keys(SHENSHA_DESCRIPTORS) as ShenshaId[]).map((id) => {
+    const present = ids.includes(id);
+    const strong = strongIds.includes(id);
+    return {
+      ...SHENSHA_DESCRIPTORS[id], present, effective: present, status: present ? strong ? "strong" : "active" : "inactive",
+      strength: present ? strong ? 78 : 65 : 0, integrity: 100, occurrenceCount: present ? strong ? 2 : 1 : 0,
+      damage: [], matches: [], evidence: present ? strong ? [`${id} 근거1`, `${id} 근거2`] : [`${id} 근거`] : [],
+    };
+  });
 }
 
 describe("cultivation talent synthesis", () => {

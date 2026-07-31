@@ -28,8 +28,8 @@ function evaluateSpecialConditions(
   const earthStrong = evidence.earth.effective && evidence.earth.score >= 10;
   const moist = season === "winter" || evidence.water.monthCommand;
   const dryHot = season === "summer" && evidence.fire.score >= 8;
-  const hasYima = shensha.some((item) => item.id === "yima" && item.present);
-  const hasGuimen = shensha.some((item) => item.id === "guimen" && item.present);
+  const hasYima = shensha.some((item) => item.id === "yima" && item.effective);
+  const hasGuimen = shensha.some((item) => item.id === "guimen" && item.effective);
   const hasConflict = relations.clashes.length + relations.punishments.length + relations.harms.length > 0;
   let points = 0;
 

@@ -3,15 +3,18 @@ export type YinYang = "yang" | "yin";
 export type CalendarType = "solar" | "lunar";
 export type TimeAccuracy = "exact" | "approximate" | "unknown";
 export type RootJudgmentMode = "generous" | "balanced" | "strict";
+export type ShenshaSchool = "classical" | "expanded";
 export type ShenshaId =
   | "huagai" | "guimen" | "yima"
   | "tianyi" | "tiande" | "yuede" | "wenchang" | "taiji"
-  | "yangren" | "kuigang" | "jiangxing" | "taohua" | "jiesha";
+  | "yangren" | "yinren" | "kuigang" | "jiangxing" | "taohua" | "jiesha";
 export type ShenshaCategory = "mystic" | "mobility" | "noble" | "scholar" | "martial" | "charisma";
 export type ShenshaPolarity = "auspicious" | "mixed" | "challenging";
+export type ShenshaStatus = "inactive" | "weak" | "active" | "strong" | "damaged" | "agitated";
 
 export interface ShenshaOptions {
   enabled: boolean;
+  school?: ShenshaSchool;
   huagai: boolean;
   guimen: boolean;
   yima: boolean;
@@ -19,6 +22,13 @@ export interface ShenshaOptions {
   scholar?: boolean;
   martial?: boolean;
   charisma?: boolean;
+}
+
+export interface ShenshaMatch {
+  anchor: string;
+  target: string;
+  pillars: Array<"year" | "month" | "day" | "hour">;
+  evidence: string;
 }
 
 export interface HiddenStem {
@@ -116,6 +126,13 @@ export interface ShenshaResult {
   category: ShenshaCategory;
   polarity: ShenshaPolarity;
   present: boolean;
+  effective: boolean;
+  status: ShenshaStatus;
+  strength: number;
+  integrity: number;
+  occurrenceCount: number;
+  damage: string[];
+  matches: ShenshaMatch[];
   evidence: string[];
   traits: string[];
   paths: string[];
