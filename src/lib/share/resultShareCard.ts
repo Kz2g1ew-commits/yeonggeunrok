@@ -39,6 +39,7 @@ export interface ResultShareCardModel {
   serviceName: "영근록";
   rootName: string;
   rootProfile: string;
+  awakening: string;
   quality: string;
   primaryRoots: string;
   potentialRoots: string;
@@ -71,6 +72,7 @@ export function buildResultShareCardModel(result: SpiritualRootResult): ResultSh
     serviceName: "영근록",
     rootName: result.displayName,
     rootProfile: result.classification.multiRootProfile?.subtype ?? result.classification.relationship ?? "기본 영근형",
+    awakening: result.awakening.label,
     quality: `${result.classification.qualityLabel} · ${result.classification.rarityLabel}`,
     primaryRoots: elementNames(result.primaryElements, "미성립"),
     potentialRoots: elementNames(result.potentialElements, "없음"),
@@ -248,7 +250,7 @@ export async function renderResultShareImage(result: SpiritualRootResult): Promi
 
   context.fillStyle = "#9fc0b7";
   context.font = '700 24px "Noto Sans KR", "Apple SD Gothic Neo", sans-serif';
-  context.fillText(`세부 구조 · ${model.rootProfile}`, 104, 416, 872);
+  context.fillText(`세부 구조 · ${model.rootProfile} / ${model.awakening}`, 104, 416, 872);
 
   context.fillStyle = "rgba(255,255,255,0.032)";
   roundedRect(context, 88, 448, 904, 150, 22);

@@ -42,8 +42,8 @@ describe("spiritual-root population balance", () => {
         expect(result.classification.multiRootProfile).toBeDefined();
         fiveSubtypes.add(result.classification.multiRootProfile!.subtype);
       }
-      if (determineAwakening("balanced", result.elementEvidence, result.awakening.dao).passed) balancedPasses += 1;
-      if (determineAwakening("strict", result.elementEvidence, result.awakening.dao).passed) {
+      if (determineAwakening("balanced", calculation.pillars, result.elementEvidence, result.awakening.dao).passed) balancedPasses += 1;
+      if (determineAwakening("strict", calculation.pillars, result.elementEvidence, result.awakening.dao).passed) {
         const strictResult = analyzeSpiritualRoots({ ...input, judgmentMode: "strict" }, calculation).result;
         expect(strictResult.classification.qualityTier).toBe(result.classification.qualityTier);
         expect(strictResult.primaryElements).toEqual(result.primaryElements);
@@ -73,8 +73,8 @@ describe("spiritual-root population balance", () => {
     expect(share("quadruple")).toBeLessThan(share("five"));
     expect(quadrupleSubtypes.size).toBeGreaterThanOrEqual(5);
     expect(fiveSubtypes.size).toBeGreaterThanOrEqual(5);
-    expect(balancedPasses / 5_000).toBeGreaterThan(0.13);
-    expect(balancedPasses / 5_000).toBeLessThan(0.17);
+    expect(balancedPasses / 5_000).toBeGreaterThan(0.11);
+    expect(balancedPasses / 5_000).toBeLessThan(0.15);
     expect(strictPasses / 5_000).toBeGreaterThan(0.005);
     expect(strictPasses / 5_000).toBeLessThan(0.015);
     expect(strictComparisons).toBeGreaterThan(35);

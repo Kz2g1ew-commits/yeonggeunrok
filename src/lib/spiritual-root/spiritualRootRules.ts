@@ -129,13 +129,8 @@ export const SPIRITUAL_ROOT_RULES = {
   awakening: {
     populationRates: {
       generous: 100,
-      balanced: 15,
+      balanced: 13.2,
       strict: 1,
-    },
-    apertureThresholds: {
-      generous: 0,
-      balanced: 63.2,
-      strict: 71.1,
     },
   },
   daoAffinity: {

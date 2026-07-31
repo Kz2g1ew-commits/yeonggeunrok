@@ -34,7 +34,7 @@ export function SpiritualRootResultCard({ result }: { result: SpiritualRootResul
         {[
           [Sparkles, "변이 가능성", mutation ? `${mutation.name}영근 ${mutation.status === "confirmed" ? "확정" : mutation.status === "likely" ? "유력" : "후보"} ${mutation.confidence}%` : "뚜렷한 후보 없음"],
           [Trophy, "품질 서열", `${result.classification.qualityRank}단계 · ${result.classification.qualityLabel}`],
-          [ShieldCheck, "영규 관문", `삼관 ${result.awakening.apertureScore.toFixed(1)} · ${result.awakening.passed ? "통과" : "미통과"}`],
+          [ShieldCheck, "선천 기감", `${result.awakening.preHeaven.stateLabel} · ${result.awakening.passed ? "발현" : "미발현"}`],
           [Activity, "주영근", primary ? ELEMENT_META[primary].label : "미성립"],
           [Layers3, "부·잠재 영근", secondary ? ELEMENT_META[secondary].label : result.potentialElements[0] ? `${ELEMENT_META[result.potentialElements[0]].label}(잠재)` : "없음"],
           [Gauge, "수련 흐름", result.classification.cultivationSpeed],
