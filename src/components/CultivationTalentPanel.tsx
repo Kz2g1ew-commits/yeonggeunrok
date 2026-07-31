@@ -61,7 +61,7 @@ export function CultivationTalentPanel({ profile, shensha }: { profile: Cultivat
           <summary className="cursor-pointer list-none"><span className="text-[10px] font-bold text-[#758b94]">{CATEGORY_LABEL[item.category]}</span><strong className="mt-1 block text-sm text-[#dce3e3]">{item.name}</strong><p className="mt-2 text-xs leading-5 text-[#93a6ad]">{item.traits.slice(0, 4).join(" · ")}</p></summary>
           <div className="mt-3 border-t border-white/6 pt-3 text-[11px] leading-5 text-[#80949b]"><p>판정 근거 · {item.evidence.join(" / ")}</p><p className="mt-1 text-[#a8c8bd]">추천 · {[...item.paths, ...item.weapons, ...item.techniques].slice(0, 5).join(" · ")}</p>{item.risks.length > 0 && <p className="mt-1 text-[#c2a6a2]">주의 · {item.risks.join(" · ")}</p>}</div>
         </details>)}</div> : <p className="muted mt-3 text-sm">선택한 유파 기준에서 뚜렷하게 성립한 신살 부가 성향이 없습니다.</p>}
-        <p className="mt-4 text-xs leading-6 text-[#748991]">신살은 영근 개수와 품질을 바꾸지 않습니다. 근골은 영근 구조, 오성·전골·신혼·기운은 신살의 상징을 선협 설정으로 변환한 값이며 실제 성격·지능·행운을 단정하지 않습니다. 신살 판정은 유파에 따라 달라질 수 있습니다.</p>
+        <p className="mt-4 text-xs leading-6 text-[#748991]">신살은 영근 개수와 품질을 바꾸지 않습니다. 근골은 영근 구조, 오성·투골·신혼·기운은 신살의 상징을 선협 설정으로 변환한 값이며 실제 성격·지능·행운을 단정하지 않습니다. 신살 판정은 유파에 따라 달라질 수 있습니다.</p>
       </div>
     </section>
   );
