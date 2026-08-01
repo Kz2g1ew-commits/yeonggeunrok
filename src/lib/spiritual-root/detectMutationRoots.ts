@@ -4,6 +4,9 @@ import { MUTATION_RULES, type MutationRule } from "./mutationRules";
 import { SPIRITUAL_ROOT_RULES } from "./spiritualRootRules";
 
 const clamp = (value: number, min = 0, max = 100) => Math.min(max, Math.max(min, value));
+const MUTATION_STATUS_RANK: Record<MutationCandidate["status"], number> = {
+  confirmed: 3, likely: 2, possible: 1, rejected: 0,
+};
 
 function addCondition(target: string[], condition: boolean, yes: string, no: string, missing: string[]): number {
   if (condition) {
@@ -91,9 +94,16 @@ function evaluateSpecialConditions(
       if (fireStrong) blockers.push("강한 화기가 은폐성을 해침");
       break;
     case "light":
-      points += 9 * addCondition(satisfied, relations.dynamicCount <= 2, "방출과 응축의 충돌이 제어됨", "화금 충돌이 지나치게 거침", missing);
+      points += 10 * addCondition(
+        satisfied,
+        relations.clashes.length === 0 && relations.dynamicCount <= 2,
+        "직접 충이 없어 화의 방출과 금의 응축이 광휘로 제어됨",
+        "직접 충 또는 과도한 동세가 광휘의 안정성을 깨뜨림",
+        missing,
+      );
       if (evidence.earth.potential) { satisfied.push("잠재 토가 완충함"); points += 5; }
       if (waterStrong) blockers.push("강한 수기가 화의 방출을 끔");
+      if (relations.clashes.length > 0) blockers.push("지지 충이 광기의 안정된 응축을 자뢰성 폭발로 바꿈");
       if (relations.dynamicCount >= 4) blockers.push("동적 충돌이 광 변이의 균형을 깨뜨림");
       break;
     case "purple-lightning":
@@ -196,6 +206,15 @@ function evaluateRule(rule: MutationRule, context: AnalysisContext): MutationCan
 
 export function detectMutationRoots(context: AnalysisContext): MutationCandidate[] {
   return MUTATION_RULES.map((rule) => ({ rule, candidate: evaluateRule(rule, context) }))
-    .sort((a, b) => b.candidate.confidence - a.candidate.confidence || b.rule.priority - a.rule.priority)
+    .sort((a, b) => {
+      const statusDelta = MUTATION_STATUS_RANK[b.candidate.status] - MUTATION_STATUS_RANK[a.candidate.status];
+      if (statusDelta !== 0) return statusDelta;
+      // 같은 원재료에서 갈라지는 변이 계열만 설정 우선순위로 판별한다.
+      // 서로 다른 계열은 충족도가 높은 후보를 앞세워 불필요한 간섭을 막는다.
+      if (a.candidate.status === "confirmed" && a.rule.selectionGroup && a.rule.selectionGroup === b.rule.selectionGroup) {
+        return b.rule.priority - a.rule.priority || b.candidate.confidence - a.candidate.confidence;
+      }
+      return b.candidate.confidence - a.candidate.confidence || b.rule.priority - a.rule.priority;
+    })
     .map(({ candidate }) => candidate);
 }

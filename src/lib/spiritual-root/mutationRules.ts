@@ -6,6 +6,7 @@ export interface MutationRule {
   sourceElements: Element[];
   requiredRelations: string[];
   relationMode?: "support" | "inherent" | "wood-metal-clash";
+  selectionGroup?: "wood-fire-motion" | "fire-metal-polarity";
   preferredSeasons?: string[];
   requiredBranches?: string[];
   optionalMarkers?: string[];
@@ -26,7 +27,7 @@ export const MUTATION_RULES: MutationRule[] = [
   },
   {
     id: "lightning", name: "뇌", sourceElements: ["wood", "fire"], requiredRelations: ["목생화", "동적 충형"],
-    relationMode: "inherent",
+    relationMode: "inherent", selectionGroup: "wood-fire-motion",
     optionalMarkers: ["역마", "잠재 수"], blockers: ["과다한 토", "과다한 수", "제3 유효 영근"],
     minimumScore: 4, maximumScoreGap: 3.5, priority: 95, description: "목의 상승성과 화의 폭발성이 동적인 기맥에서 뇌기로 융합됩니다.",
   },
@@ -38,7 +39,7 @@ export const MUTATION_RULES: MutationRule[] = [
   },
   {
     id: "wind-hot", name: "풍", sourceElements: ["wood", "fire"], requiredRelations: ["목생화", "이동성"],
-    relationMode: "inherent",
+    relationMode: "inherent", selectionGroup: "wood-fire-motion",
     requiredBranches: ["寅", "卯"], optionalMarkers: ["역마"], blockers: ["토의 심한 정체", "제3 유효 영근"],
     minimumScore: 4, maximumScoreGap: 4, priority: 79, description: "목화의 상승과 방출이 빠르고 거센 열풍으로 이어집니다.",
   },
@@ -67,13 +68,13 @@ export const MUTATION_RULES: MutationRule[] = [
   },
   {
     id: "light", name: "광", sourceElements: ["fire", "metal"], requiredRelations: ["방출·응축 균형"],
-    relationMode: "inherent",
-    optionalMarkers: ["잠재 토"], blockers: ["강한 수", "과도한 충돌", "제3 유효 영근"],
-    minimumScore: 4, maximumScoreGap: 2.5, priority: 84, description: "화의 방출성과 금의 응축성이 균형을 이루어 광휘를 발합니다.",
+    relationMode: "inherent", selectionGroup: "fire-metal-polarity",
+    optionalMarkers: ["잠재 토"], blockers: ["직접 충", "강한 수", "과도한 동세", "제3 유효 영근"],
+    minimumScore: 4, maximumScoreGap: 4, priority: 84, description: "화의 방출성과 금의 응축성이 균형을 이루어 광휘를 발합니다.",
   },
   {
     id: "purple-lightning", name: "자뢰", sourceElements: ["fire", "metal"], requiredRelations: ["화금 상극", "충"],
-    relationMode: "inherent",
+    relationMode: "inherent", selectionGroup: "fire-metal-polarity",
     optionalMarkers: ["잠재 토"], blockers: ["완충 없는 기맥", "제3 유효 영근"],
     minimumScore: 4, maximumScoreGap: 3.5, priority: 86, description: "화금 상극이 토의 완충 아래 폭발적으로 순환하며 자뢰를 이룹니다.",
   },
