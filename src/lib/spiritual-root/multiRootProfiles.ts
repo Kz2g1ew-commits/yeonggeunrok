@@ -1,5 +1,5 @@
 import type { BranchRelations, Element } from "@/types/bazi";
-import type { ElementEvidence, MultiRootProfile, RootConflictLevel, RootCycleState } from "@/types/spiritualRoot";
+import type { ElementEvidence, FiveRootVariant, MultiRootProfile, RootConflictLevel, RootCycleState } from "@/types/spiritualRoot";
 import { ELEMENT_META, ELEMENTS, GENERATES, generatorOf } from "@/lib/bazi/elementMeta";
 import { SPIRITUAL_ROOT_RULES } from "./spiritualRootRules";
 
@@ -75,23 +75,37 @@ function fourRootSubtype(
   return "다맥병립형";
 }
 
-function fiveRootSubtype(
+function fiveRootProfile(
   spread: number,
   dominant: Element,
   cycleState: RootCycleState,
   conflictLevel: RootConflictLevel,
   supportedByFormation: boolean,
-): string {
+): { subtype: string; variant?: FiveRootVariant; hunyuanQualified: boolean } {
   const rules = SPIRITUAL_ROOT_RULES;
-  if (cycleState === "complete" && spread <= rules.thresholds.hunyuanSpread &&
-      conflictLevel === "stable" && supportedByFormation) return "오기조원형";
-  if (spread <= rules.thresholds.fiveBalanceSpread && conflictLevel !== "turbulent") {
-    return cycleState === "complete" || cycleState === "strong" ? "오행원융형" : "정적균형형";
+  if (cycleState === "complete") {
+    const hunyuanQualified = spread <= rules.thresholds.hunyuanSpread &&
+      conflictLevel === "stable" && supportedByFormation;
+    const variant: FiveRootVariant = hunyuanQualified
+      ? "혼원"
+      : conflictLevel === "turbulent"
+        ? "탁류"
+        : spread >= rules.multiRootProfiles.dominantSpread
+          ? "편기"
+          : spread <= rules.thresholds.fiveBalanceSpread && conflictLevel === "stable"
+            ? "원융"
+            : "유통";
+    return { subtype: "오기조원형", variant, hunyuanQualified };
   }
-  if (conflictLevel === "turbulent") return "충극혼탁형";
-  if (spread >= rules.multiRootProfiles.dominantSpread) return `${ELEMENT_META[dominant].label} 편기주도형`;
-  if (cycleState === "complete" || cycleState === "strong") return "순환편중형";
-  return "다맥혼재형";
+  if (spread <= rules.thresholds.fiveBalanceSpread && conflictLevel !== "turbulent") {
+    return { subtype: cycleState === "strong" ? "오행원융형" : "정적균형형", hunyuanQualified: false };
+  }
+  if (conflictLevel === "turbulent") return { subtype: "충극혼탁형", hunyuanQualified: false };
+  if (spread >= rules.multiRootProfiles.dominantSpread) {
+    return { subtype: `${ELEMENT_META[dominant].label} 편기주도형`, hunyuanQualified: false };
+  }
+  if (cycleState === "strong") return { subtype: "순환편중형", hunyuanQualified: false };
+  return { subtype: "다맥혼재형", hunyuanQualified: false };
 }
 
 export function buildMultiRootProfile(
@@ -110,9 +124,12 @@ export function buildMultiRootProfile(
   const cycle = cycleProfile(effective.length, generatingLinks.length);
   const conflict = conflictProfile(relations);
   const supportedByFormation = formationSupport(evidence, relations);
+  const fiveRoot = effective.length === 5
+    ? fiveRootProfile(scoreSpread, dominantElement, cycle.state, conflict.level, supportedByFormation)
+    : undefined;
   const subtype = effective.length === 4
     ? fourRootSubtype(scoreSpread, dominantElement, cycle.state, conflict.level)
-    : fiveRootSubtype(scoreSpread, dominantElement, cycle.state, conflict.level, supportedByFormation);
+    : fiveRoot!.subtype;
   const missingElement = effective.length === 4
     ? ELEMENTS.find((element) => !effective.includes(element))
     : undefined;
@@ -122,7 +139,9 @@ export function buildMultiRootProfile(
     ? `${ELEMENT_META[missingElement].label} 결핍은 내적 개맥 없이 유지하고, 필요한 속성은 법보·진법으로만 빌립니다. ${ELEMENT_META[weakestElement].label} 약근을 먼저 봉근·세맥해 ${ELEMENT_META[dominantElement].label} 주근 중심의 삼영근으로 정련하는 길이 알맞습니다.`
     : preserveAllRoots
       ? subtype === "오기조원형"
-        ? "다섯 기맥을 잘라내지 않고 보전하며, 완성된 오기 상생환을 합국과 통관으로 굳히는 혼원 수련이 알맞습니다."
+        ? fiveRoot?.hunyuanQualified
+          ? "다섯 기맥을 잘라내지 않고 보전하며, 완성된 오기 상생환을 합국과 통관으로 굳히는 혼원 수련이 알맞습니다."
+          : "다섯 기맥을 모두 보전하고 완성된 상생환을 끊지 않습니다. 편기와 충극을 다스려 유통형 오기조원을 원융·혼원 경지로 정련하는 길이 알맞습니다."
         : "다섯 기맥을 모두 보전하되 어느 한 기맥도 과성하지 않게 편차를 좁혀, 오행균형에서 오기조원으로 나아가는 길이 알맞습니다."
       : `${ELEMENT_META[weakestElement].label} 약근을 첫 봉근 대상으로 삼고 ${ELEMENT_META[dominantElement].label} 주근을 정련합니다. 오영근에서 사영근·삼영근으로 기맥 수를 줄여 영기 분산을 낮추는 길이 알맞습니다.`;
 
@@ -149,17 +168,21 @@ export function buildMultiRootProfile(
   }
 
   if (preserveAllRoots) {
-    cautions.push("전 오행 보존형은 한 기맥의 과성이나 충손이 전체 균형을 깨뜨리지 않게 해야 함");
+    cautions.push(cycle.state === "complete"
+      ? "상생환은 완성됐으나 편기나 충손이 크면 순환 속도와 영기 손실이 고르지 않을 수 있음"
+      : "전 오행 보존형은 한 기맥의 과성이나 충손이 전체 균형을 깨뜨리지 않게 해야 함");
   } else {
     cautions.push(`${ELEMENT_META[weakestElement].label} 기맥이 우선 정련 후보이며, 잠재근을 추가 각성하면 주근 순도가 더 낮아질 수 있음`);
   }
 
   const summary = effective.length === 4
     ? `${ELEMENT_META[missingElement!].label} 기맥이 비어 있으나 ${ELEMENT_META[dominantElement].label}을 중심으로 ${cycle.label} 상태를 보이는 사영근입니다.`
-    : `${ELEMENT_META[dominantElement].label} 기맥을 중심으로 ${cycle.label} 상태이며, 점수 편차 ${scoreSpread.toFixed(1)}의 ${subtype} 오영근입니다.`;
+    : `${ELEMENT_META[dominantElement].label} 기맥을 중심으로 ${cycle.label} 상태이며, 점수 편차 ${scoreSpread.toFixed(1)}의 ${subtype}${fiveRoot?.variant ? `·${fiveRoot.variant}` : ""} 오영근입니다.`;
 
   return {
     subtype,
+    fiveRootVariant: fiveRoot?.variant,
+    hunyuanQualified: fiveRoot?.hunyuanQualified ?? false,
     dominantElement,
     weakestElement,
     preserveAllRoots,

@@ -7,6 +7,9 @@ export function MultiRootProfileCard({ classification }: { classification: RootC
   if (!profile) return null;
 
   const maximumLinks = classification.rootCount === "five" ? 5 : 3;
+  const subtypeLabel = profile.fiveRootVariant
+    ? `${profile.subtype}·${profile.fiveRootVariant}`
+    : profile.subtype;
   return (
     <section className="surface p-5 sm:p-7">
       <span className="eyebrow">Multi-root structure</span>
@@ -15,7 +18,7 @@ export function MultiRootProfileCard({ classification }: { classification: RootC
 
       <div className="mt-6 grid gap-px overflow-hidden rounded-xl border border-white/7 bg-white/7 sm:grid-cols-2 lg:grid-cols-5">
         {[
-          [Sparkles, "세부 유형", profile.subtype],
+          [Sparkles, "세부 유형", subtypeLabel],
           [Activity, "주도 기맥", `${ELEMENT_META[profile.dominantElement].label} ${profile.scoreSpread.toFixed(1)}점 편차`],
           [GitBranch, "상생 유통", `${profile.generatingLinks.length}/${maximumLinks}고리`],
           [ShieldCheck, "순환 상태", profile.cycleLabel],
@@ -36,7 +39,7 @@ export function MultiRootProfileCard({ classification }: { classification: RootC
           <ul className="mt-3 grid gap-2 text-sm leading-6 text-[#c5aeaa]">{profile.cautions.map((item) => <li key={item}>· {item}</li>)}</ul>
         </article>
       </div>
-      <p className="mt-4 text-xs leading-6 text-[#748991]">세부 유형은 상생 고리와 기맥 편차, 충극의 정도에 따라 달라집니다.</p>
+      <p className="mt-4 text-xs leading-6 text-[#748991]">오기조원은 다섯 상생 고리의 완성을 기준으로 하며, 기맥 편차·충극·합국은 유통의 품질과 혼원 여부를 가릅니다.</p>
     </section>
   );
 }

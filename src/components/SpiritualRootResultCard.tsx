@@ -8,6 +8,9 @@ export function SpiritualRootResultCard({ result }: { result: SpiritualRootResul
   const primary = result.primaryElements[0];
   const secondary = result.primaryElements[1];
   const daoLabel = result.awakening.dao.path === "natural" ? "순천도맥" : "역천도맥";
+  const multiRootSubtype = result.classification.multiRootProfile
+    ? `${result.classification.multiRootProfile.subtype}${result.classification.multiRootProfile.fiveRootVariant ? `·${result.classification.multiRootProfile.fiveRootVariant}` : ""}`
+    : undefined;
   return (
     <section className="surface relative overflow-hidden p-5 sm:p-8">
       <div className="pointer-events-none absolute -right-10 -top-16 grid size-64 place-items-center rounded-full border border-[#d8b66a]/10 text-[7rem] text-[#d8b66a]/[.035] display-serif">根</div>
@@ -38,8 +41,8 @@ export function SpiritualRootResultCard({ result }: { result: SpiritualRootResul
           [Activity, "주영근", primary ? ELEMENT_META[primary].label : "미성립"],
           [Layers3, "부·잠재 영근", secondary ? ELEMENT_META[secondary].label : result.potentialElements[0] ? `${ELEMENT_META[result.potentialElements[0]].label}(잠재)` : "없음"],
           [Gauge, "수련 흐름", result.classification.cultivationSpeed],
-          ...(result.classification.multiRootProfile
-            ? [[GitBranch, "세부 구조", result.classification.multiRootProfile.subtype] as const]
+          ...(multiRootSubtype
+            ? [[GitBranch, "세부 구조", multiRootSubtype] as const]
             : []),
         ].map(([Icon, label, value]) => { const C = Icon as typeof Sparkles; return <div key={String(label)} className="bg-[#0d1d25] p-4"><span className="flex items-center gap-1.5 text-[11px] font-bold text-[#758b94]"><C size={13} />{String(label)}</span><strong className="mt-2 block text-sm text-[#dce3e3]">{String(value)}</strong></div>; })}
       </div>
