@@ -36,6 +36,8 @@ describe("classifyRootCount", () => {
     expect(result.displayName).toBe("오기조원영근 — 오기조원형·원융");
     expect(result.multiRootProfile?.generatingLinks).toHaveLength(5);
     expect(result.multiRootProfile?.formationSupport).toBe(true);
+    expect(result.qualityRank).toBe(2);
+    expect(result.qualityLabel).toBe("천영근 준급");
   });
 
   it("distinguishes a balanced generating four-root structure by its missing element", () => {
@@ -75,13 +77,23 @@ describe("classifyRootCount", () => {
     const result = classifyRootCount(elements, [], evidenceSet({ wood: 8, fire: 8, earth: 8, metal: 8, water: 8 }), turbulent);
     expect(result.displayName).toBe("오기조원영근 — 오기조원형·탁류");
     expect(result.multiRootProfile?.conflictLevel).toBe("turbulent");
+    expect(result.qualityRank).toBe(5);
   });
 
   it("keeps a strongly biased complete cycle as a biased five-qi convergence", () => {
     const elements: Element[] = ["wood", "fire", "earth", "metal", "water"];
     const result = classifyRootCount(elements, [], evidenceSet({ wood: 8, fire: 8, earth: 14, metal: 8, water: 8 }), relations);
     expect(result.displayName).toBe("오기조원영근 — 오기조원형·편기");
-    expect(result.qualityLabel).toBe("오영근 특수형");
+    expect(result.qualityRank).toBe(4);
+    expect(result.qualityLabel).toBe("오기조원 중등형");
+  });
+
+  it("places a stable flowing cycle between harmonious and biased five-qi roots", () => {
+    const elements: Element[] = ["wood", "fire", "earth", "metal", "water"];
+    const result = classifyRootCount(elements, [], evidenceSet({ wood: 7, fire: 7, earth: 7, metal: 10.5, water: 7 }), relations);
+    expect(result.displayName).toBe("오기조원영근 — 오기조원형·유통");
+    expect(result.qualityRank).toBe(3);
+    expect(result.qualityLabel).toBe("오기조원 상등형");
   });
 
   it("does not grant five-qi convergence when one generating link is inactive", () => {

@@ -1,5 +1,5 @@
 import type { ShenshaId } from "@/types/bazi";
-import type { RootQualityTier, TalentDimensionId } from "@/types/spiritualRoot";
+import type { FiveRootVariant, RootQualityTier, TalentDimensionId } from "@/types/spiritualRoot";
 
 export const CULTIVATION_TALENT_RULES = {
   rootBoneBase: {
@@ -14,7 +14,12 @@ export const CULTIVATION_TALENT_RULES = {
   rootGradeBonus: { low: 0, middle: 3, high: 6, supreme: 10 },
   specialRootBonus: {
     balancedFive: 12,
-    completeCycleFive: 16,
+    fiveQiCycle: {
+      "탁류": 18,
+      "편기": 26,
+      "유통": 38,
+      "원융": 46,
+    } satisfies Record<FiveRootVariant, number>,
     strongCycle: 5,
   },
   dimensionBase: {

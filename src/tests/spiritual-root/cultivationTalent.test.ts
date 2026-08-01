@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { AwakeningResult, RootClassification } from "@/types/spiritualRoot";
-import type { ShenshaId, ShenshaResult } from "@/types/bazi";
+import type { BranchRelations, Element, ShenshaId, ShenshaResult } from "@/types/bazi";
 import { SHENSHA_DESCRIPTORS } from "@/lib/bazi/shenshaRules";
 import { synthesizeCultivationTalent } from "@/lib/spiritual-root/synthesizeCultivationTalent";
+import { classifyRootCount } from "@/lib/spiritual-root/classifyRootCount";
 import { evidenceSet } from "@/tests/fixtures";
 
-const relations = { combinations: [], halfCombinations: [], archingCombinations: [], directionalCombinations: [], sixCombinations: [], clashes: [], punishments: [], harms: [], breaks: [], stemCombinations: [], dynamicCount: 0 };
+const relations: BranchRelations = { combinations: [], halfCombinations: [], archingCombinations: [], directionalCombinations: [], sixCombinations: [], clashes: [], punishments: [], harms: [], breaks: [], stemCombinations: [], dynamicCount: 0 };
 const classification = {
   rootCount: "single", displayName: "상품 금 천영근", originalElements: ["metal"], workingElements: ["금"], grade: "high",
   cultivationSpeed: "매우 빠름", adaptability: "금계", qualityTier: "heavenly", qualityRank: 1, qualityLabel: "최상급", rarityLabel: "희귀",
@@ -25,6 +26,41 @@ function stars(ids: ShenshaId[], strongIds: ShenshaId[] = []): ShenshaResult[] {
 }
 
 describe("cultivation talent synthesis", () => {
+  it("lets a refined five-qi circuit approach heavenly-root bone without lifting unstable variants equally", () => {
+    const elements: Element[] = ["wood", "fire", "earth", "metal", "water"];
+    const harmoniousEvidence = evidenceSet({ wood: 8, fire: 8, earth: 8, metal: 8, water: 8 });
+    const flowingEvidence = evidenceSet({ wood: 7, fire: 7, earth: 7, metal: 10.5, water: 7 });
+    const biasedEvidence = evidenceSet({ wood: 8, fire: 8, earth: 14, metal: 8, water: 8 });
+    const turbulentEvidence = evidenceSet({ wood: 8, fire: 8, earth: 8, metal: 8, water: 8 });
+    const turbulentRelations = {
+      ...relations,
+      clashes: ["충1", "충2"], punishments: ["형1"], harms: ["해1"], dynamicCount: 4,
+    };
+    const talent = (
+      evidence: ReturnType<typeof evidenceSet>,
+      activeRelations = relations,
+    ) => synthesizeCultivationTalent(
+      classifyRootCount(elements, [], evidence, activeRelations),
+      evidence,
+      stars([]),
+      awakening,
+      activeRelations,
+    );
+
+    const harmonious = talent(harmoniousEvidence);
+    const flowing = talent(flowingEvidence);
+    const biased = talent(biasedEvidence);
+    const turbulent = talent(turbulentEvidence, turbulentRelations);
+    const heavenly = synthesizeCultivationTalent(classification, evidenceSet({ metal: 8 }), stars([]), awakening, relations);
+
+    expect(harmonious.dimensions.rootBone.score).toBeGreaterThanOrEqual(86);
+    expect(heavenly.dimensions.rootBone.score - harmonious.dimensions.rootBone.score).toBeLessThanOrEqual(10);
+    expect(flowing.dimensions.rootBone.score).toBeGreaterThan(biased.dimensions.rootBone.score);
+    expect(biased.dimensions.rootBone.score).toBeGreaterThan(turbulent.dimensions.rootBone.score);
+    expect(harmonious.specialEffects.some((effect) => effect.id === "five-qi-circuit")).toBe(true);
+    expect(harmonious.specialEffects.find((effect) => effect.id === "five-qi-circuit")?.effects).toContain("후기 천영근급 잠재력");
+  });
+
   it("treats layered noble protection as heavenly favor, not as root quality", () => {
     const evidence = evidenceSet({ metal: 15 });
     const profile = synthesizeCultivationTalent(

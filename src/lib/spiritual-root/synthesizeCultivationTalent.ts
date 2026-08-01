@@ -88,8 +88,10 @@ export function synthesizeCultivationTalent(
 
   if (rootClassification.grade) scores.rootBone += RULES.rootGradeBonus[rootClassification.grade];
   if (rootClassification.multiRootProfile?.subtype === "오기조원형") {
-    scores.rootBone += RULES.specialRootBonus.completeCycleFive;
-    reasons.rootBone.push("끊김 없는 오기 상생환이 오영근의 영기 분산을 되돌림");
+    const variant = rootClassification.multiRootProfile.fiveRootVariant ?? "유통";
+    const bonus = RULES.specialRootBonus.fiveQiCycle[variant];
+    scores.rootBone += bonus;
+    reasons.rootBone.push(`오기조원 ${variant}형의 완전 상생환이 영기 분산을 되돌림 +${bonus}`);
   } else if (rootClassification.displayName.startsWith("오행균형영근")) {
     scores.rootBone += RULES.specialRootBonus.balancedFive;
     reasons.rootBone.push("오행균형영근의 균일한 기맥이 근골을 보정함");
@@ -172,6 +174,22 @@ export function synthesizeCultivationTalent(
 
   const specialEffects: TalentSpecialEffect[] = [];
   const addEffect = (effect: TalentSpecialEffect) => specialEffects.push(effect);
+  const fiveQiVariant = rootClassification.multiRootProfile?.subtype === "오기조원형"
+    ? rootClassification.multiRootProfile.fiveRootVariant ?? "유통"
+    : undefined;
+  if (fiveQiVariant) addEffect({
+    id: "five-qi-circuit", name: "오기주천 五氣周天",
+    rarity: fiveQiVariant === "원융" || fiveQiVariant === "유통" ? "very-rare" : "rare",
+    description: fiveQiVariant === "원융"
+      ? "다섯 기맥이 원융하게 맞물려 주천이 완성되면 천영근에 견줄 만한 영기 처리량을 내는 후기형 자질입니다."
+      : "다섯 기맥이 서로를 생하며 끊김 없이 순환해, 정련이 깊어질수록 다근의 분산을 주천의 증폭으로 바꾸는 자질입니다.",
+    evidence: [rootClassification.multiRootProfile!.cycleLabel, `${fiveQiVariant}형`, ...rootClassification.multiRootProfile!.generatingLinks],
+    effects: fiveQiVariant === "탁류"
+      ? ["오행공법 연환", "충극 정련 후 잠재력 상승", "기맥 역류 위험"]
+      : fiveQiVariant === "편기"
+        ? ["오행공법 연환", "편기 통관 후 수련 가속", "주도 기맥 과성 주의"]
+        : ["오행공법 연환", "주천 정착 후 영기 처리량 급증", "후기 천영근급 잠재력"],
+  });
   if (heavenlyFavored) addEffect({
     id: "heavenly-dao-child", name: "천도지자 天道之子", rarity: "mythic",
     description: "여러 귀인성이 겹치고 실제 영근 각성까지 받쳐 주어 천도의 호도를 받는 주인공형 기운입니다.",
