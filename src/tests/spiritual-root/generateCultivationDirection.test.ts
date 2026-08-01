@@ -37,7 +37,7 @@ describe("generateCultivationDirection", () => {
     expect(result).not.toContain("상생 고리를 보완");
   });
 
-  it("preserves all five roots only for a balanced five-root exception", () => {
+  it("preserves all five roots when their generating cycle is complete", () => {
     const result = direction(
       ["wood", "fire", "earth", "metal", "water"],
       { wood: 8, fire: 8, earth: 8, metal: 8, water: 8 },

@@ -21,6 +21,8 @@ describe("spiritual-root population balance", () => {
     let strictPasses = 0;
     const quadrupleSubtypes = new Set<string>();
     const fiveSubtypes = new Set<string>();
+    const fiveQiVariants = new Set<string>();
+    let fiveQiCycles = 0;
 
     for (let index = 0; index < 5_000; index += 1) {
       const input: BirthInput = {
@@ -42,7 +44,12 @@ describe("spiritual-root population balance", () => {
       }
       if (result.classification.qualityTier === "five") {
         expect(result.classification.multiRootProfile).toBeDefined();
-        fiveSubtypes.add(result.classification.multiRootProfile!.subtype);
+        const profile = result.classification.multiRootProfile!;
+        fiveSubtypes.add(profile.subtype);
+        if (profile.subtype === "오기조원형") {
+          fiveQiCycles += 1;
+          if (profile.fiveRootVariant) fiveQiVariants.add(profile.fiveRootVariant);
+        }
       }
       if (determineAwakening("balanced", calculation.pillars, result.elementEvidence, result.awakening.dao).passed) balancedPasses += 1;
       if (determineAwakening("strict", calculation.pillars, result.elementEvidence, result.awakening.dao).passed) {
@@ -74,6 +81,9 @@ describe("spiritual-root population balance", () => {
     expect(share("five") + share("quadruple")).toBeGreaterThan(0.5);
     expect(quadrupleSubtypes.size).toBeGreaterThanOrEqual(5);
     expect(fiveSubtypes.size).toBeGreaterThanOrEqual(5);
+    expect(fiveQiCycles / 5_000).toBeGreaterThan(0.005);
+    expect(fiveQiCycles / 5_000).toBeLessThan(0.04);
+    expect(fiveQiVariants.size).toBeGreaterThanOrEqual(2);
     expect(balancedPasses / 5_000).toBeGreaterThan(0.11);
     expect(balancedPasses / 5_000).toBeLessThan(0.15);
     expect(strictPasses / 5_000).toBeGreaterThan(0.005);

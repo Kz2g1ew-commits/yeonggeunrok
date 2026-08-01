@@ -14,6 +14,7 @@ export const CULTIVATION_TALENT_RULES = {
   rootGradeBonus: { low: 0, middle: 3, high: 6, supreme: 10 },
   specialRootBonus: {
     balancedFive: 12,
+    completeCycleFive: 16,
     hunyuanFive: 24,
     strongCycle: 5,
   },
