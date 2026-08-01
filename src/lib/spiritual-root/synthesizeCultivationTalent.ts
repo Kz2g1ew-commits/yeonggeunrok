@@ -87,10 +87,7 @@ export function synthesizeCultivationTalent(
   };
 
   if (rootClassification.grade) scores.rootBone += RULES.rootGradeBonus[rootClassification.grade];
-  if (rootClassification.multiRootProfile?.hunyuanQualified) {
-    scores.rootBone += RULES.specialRootBonus.hunyuanFive;
-    reasons.rootBone.push("오기조원형 혼원 순환이 다근의 한계를 뒤집음");
-  } else if (rootClassification.multiRootProfile?.subtype === "오기조원형") {
+  if (rootClassification.multiRootProfile?.subtype === "오기조원형") {
     scores.rootBone += RULES.specialRootBonus.completeCycleFive;
     reasons.rootBone.push("끊김 없는 오기 상생환이 오영근의 영기 분산을 되돌림");
   } else if (rootClassification.displayName.startsWith("오행균형영근")) {

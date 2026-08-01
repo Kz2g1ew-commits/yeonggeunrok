@@ -80,32 +80,27 @@ function fiveRootProfile(
   dominant: Element,
   cycleState: RootCycleState,
   conflictLevel: RootConflictLevel,
-  supportedByFormation: boolean,
-): { subtype: string; variant?: FiveRootVariant; hunyuanQualified: boolean } {
+): { subtype: string; variant?: FiveRootVariant } {
   const rules = SPIRITUAL_ROOT_RULES;
   if (cycleState === "complete") {
-    const hunyuanQualified = spread <= rules.thresholds.hunyuanSpread &&
-      conflictLevel === "stable" && supportedByFormation;
-    const variant: FiveRootVariant = hunyuanQualified
-      ? "혼원"
-      : conflictLevel === "turbulent"
-        ? "탁류"
-        : spread >= rules.multiRootProfiles.dominantSpread
-          ? "편기"
-          : spread <= rules.thresholds.fiveBalanceSpread && conflictLevel === "stable"
-            ? "원융"
-            : "유통";
-    return { subtype: "오기조원형", variant, hunyuanQualified };
+    const variant: FiveRootVariant = conflictLevel === "turbulent"
+      ? "탁류"
+      : spread >= rules.multiRootProfiles.dominantSpread
+        ? "편기"
+        : spread <= rules.thresholds.fiveBalanceSpread && conflictLevel === "stable"
+          ? "원융"
+          : "유통";
+    return { subtype: "오기조원형", variant };
   }
   if (spread <= rules.thresholds.fiveBalanceSpread && conflictLevel !== "turbulent") {
-    return { subtype: cycleState === "strong" ? "오행원융형" : "정적균형형", hunyuanQualified: false };
+    return { subtype: cycleState === "strong" ? "오행원융형" : "정적균형형" };
   }
-  if (conflictLevel === "turbulent") return { subtype: "충극혼탁형", hunyuanQualified: false };
+  if (conflictLevel === "turbulent") return { subtype: "충극혼탁형" };
   if (spread >= rules.multiRootProfiles.dominantSpread) {
-    return { subtype: `${ELEMENT_META[dominant].label} 편기주도형`, hunyuanQualified: false };
+    return { subtype: `${ELEMENT_META[dominant].label} 편기주도형` };
   }
-  if (cycleState === "strong") return { subtype: "순환편중형", hunyuanQualified: false };
-  return { subtype: "다맥혼재형", hunyuanQualified: false };
+  if (cycleState === "strong") return { subtype: "순환편중형" };
+  return { subtype: "다맥혼재형" };
 }
 
 export function buildMultiRootProfile(
@@ -125,7 +120,7 @@ export function buildMultiRootProfile(
   const conflict = conflictProfile(relations);
   const supportedByFormation = formationSupport(evidence, relations);
   const fiveRoot = effective.length === 5
-    ? fiveRootProfile(scoreSpread, dominantElement, cycle.state, conflict.level, supportedByFormation)
+    ? fiveRootProfile(scoreSpread, dominantElement, cycle.state, conflict.level)
     : undefined;
   const subtype = effective.length === 4
     ? fourRootSubtype(scoreSpread, dominantElement, cycle.state, conflict.level)
@@ -139,9 +134,7 @@ export function buildMultiRootProfile(
     ? `${ELEMENT_META[missingElement].label} 결핍은 내적 개맥 없이 유지하고, 필요한 속성은 법보·진법으로만 빌립니다. ${ELEMENT_META[weakestElement].label} 약근을 먼저 봉근·세맥해 ${ELEMENT_META[dominantElement].label} 주근 중심의 삼영근으로 정련하는 길이 알맞습니다.`
     : preserveAllRoots
       ? subtype === "오기조원형"
-        ? fiveRoot?.hunyuanQualified
-          ? "다섯 기맥을 잘라내지 않고 보전하며, 완성된 오기 상생환을 합국과 통관으로 굳히는 혼원 수련이 알맞습니다."
-          : "다섯 기맥을 모두 보전하고 완성된 상생환을 끊지 않습니다. 편기와 충극을 다스려 유통형 오기조원을 원융·혼원 경지로 정련하는 길이 알맞습니다."
+        ? "다섯 기맥을 모두 보전하고 완성된 상생환을 끊지 않습니다. 편기와 충극을 다스려 오기조원의 유통을 원융하게 정련하는 길이 알맞습니다."
         : "다섯 기맥을 모두 보전하되 어느 한 기맥도 과성하지 않게 편차를 좁혀, 오행균형에서 오기조원으로 나아가는 길이 알맞습니다."
       : `${ELEMENT_META[weakestElement].label} 약근을 첫 봉근 대상으로 삼고 ${ELEMENT_META[dominantElement].label} 주근을 정련합니다. 오영근에서 사영근·삼영근으로 기맥 수를 줄여 영기 분산을 낮추는 길이 알맞습니다.`;
 
@@ -182,7 +175,6 @@ export function buildMultiRootProfile(
   return {
     subtype,
     fiveRootVariant: fiveRoot?.variant,
-    hunyuanQualified: fiveRoot?.hunyuanQualified ?? false,
     dominantElement,
     weakestElement,
     preserveAllRoots,
