@@ -14,6 +14,25 @@ function addCondition(target: string[], condition: boolean, yes: string, no: str
   return 0;
 }
 
+function hasWoodMetalClash(context: AnalysisContext): boolean {
+  const branches = Object.values(context.pillars).map((pillar) => pillar.branch);
+  return ([
+    ["寅", "申"],
+    ["卯", "酉"],
+  ] as const).some(([wood, metal]) => branches.includes(wood) && branches.includes(metal));
+}
+
+function relationSatisfied(rule: MutationRule, context: AnalysisContext): boolean {
+  switch (rule.relationMode ?? "support") {
+    case "inherent":
+      return true;
+    case "wood-metal-clash":
+      return hasWoodMetalClash(context);
+    case "support":
+      return rule.sourceElements.some((source) => context.evidence[source].supportScore > 0);
+  }
+}
+
 function evaluateSpecialConditions(
   rule: MutationRule,
   context: AnalysisContext,
@@ -30,6 +49,7 @@ function evaluateSpecialConditions(
   const dryHot = season === "summer" && evidence.fire.score >= 8;
   const hasYima = shensha.some((item) => item.id === "yima" && item.effective);
   const hasGuimen = shensha.some((item) => item.id === "guimen" && item.effective);
+  const hasSwordMarker = shensha.some((item) => ["yangren", "kuigang", "jiangxing"].includes(item.id) && item.effective);
   const hasConflict = relations.clashes.length + relations.punishments.length + relations.harms.length > 0;
   let points = 0;
 
@@ -84,6 +104,28 @@ function evaluateSpecialConditions(
         blockers.push("토의 완충이 부족함");
       }
       break;
+    case "sword": {
+      const cuttingClash = hasWoodMetalClash(context);
+      const bothRooted = evidence.wood.rootStrength >= 0.8 && evidence.metal.rootStrength >= 0.8;
+      points += 12 * addCondition(
+        satisfied,
+        cuttingClash,
+        "인·신 또는 묘·유 충이 금목의 절단 상극을 활성화함",
+        "금목을 직접 벼리는 인·신·묘·유 충이 부족함",
+        missing,
+      );
+      points += 8 * addCondition(
+        satisfied,
+        bothRooted,
+        "목과 금이 모두 독립된 뿌리를 가져 절단과 재생을 견딤",
+        "목근과 금근 중 하나가 약해 반복 정련을 견디기 어려움",
+        missing,
+      );
+      if (!bothRooted) blockers.push("목의 재생근 또는 금의 정련근이 부족함");
+      if (hasSwordMarker) { satisfied.push("양인·괴강·장성이 검기의 살벌성과 결단을 보조함"); points += 4; }
+      if (fireStrong && evidence.fire.score > evidence.metal.score + 2) blockers.push("강한 화기가 금의 날을 무르게 함");
+      break;
+    }
   }
   return points;
 }
@@ -108,11 +150,8 @@ function evaluateRule(rule: MutationRule, context: AnalysisContext): MutationCan
     blockers.push("점수 편중이 커서 두 기운의 안정적인 융합이 어려움");
   }
 
-  const relationSatisfied = rule.id === "light" || rule.id === "purple-lightning"
-    ? true
-    : rule.sourceElements.some((source) => context.evidence[source].supportScore > 0) ||
-      ["ice", "lightning", "wind-moist", "wind-hot", "lava"].includes(rule.id);
-  if (relationSatisfied) { satisfied.push(`${rule.requiredRelations[0]} 구조를 확인함`); score += 15; }
+  const hasRequiredRelation = relationSatisfied(rule, context);
+  if (hasRequiredRelation) { satisfied.push(`${rule.requiredRelations[0]} 구조를 확인함`); score += 15; }
   else missing.push(`${rule.requiredRelations[0]} 구조가 약함`);
 
   if (rule.preferredSeasons?.includes(context.season)) {

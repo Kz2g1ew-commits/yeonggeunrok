@@ -47,4 +47,22 @@ describe("detectMutationRoots", () => {
     })).filter((item) => ["light", "purple-lightning"].includes(item.id) && item.status !== "rejected");
     expect(active).toHaveLength(2);
   });
+
+  it("confirms sword root when rooted wood and metal are forged through a cutting clash", () => {
+    const sword = candidate("sword", { wood: 9, metal: 9 }, {
+      relations: { combinations: [], halfCombinations: [], archingCombinations: [], directionalCombinations: [], sixCombinations: [], clashes: ["인·신 충"], punishments: [], harms: [], breaks: [], stemCombinations: [], dynamicCount: 2 },
+    });
+    expect(sword.status).toBe("confirmed");
+    expect(sword.satisfiedConditions).toContain("인·신 또는 묘·유 충이 금목의 절단 상극을 활성화함");
+  });
+
+  it("keeps balanced wood-metal as only a sword candidate without a cutting clash", () => {
+    const pillars: FourPillars = {
+      ...testPillars,
+      hour: { ...testPillars.hour, branch: "酉", branchElement: "metal" },
+    };
+    const sword = candidate("sword", { wood: 9, metal: 9 }, { pillars });
+    expect(sword.status).not.toBe("confirmed");
+    expect(sword.missingConditions.some((reason) => reason.includes("절단"))).toBe(true);
+  });
 });
