@@ -29,13 +29,14 @@ describe("classifyRootCount", () => {
     expect(classifyRootCount(elements, [], evidenceSet({ water: 7, wood: 8, fire: 7 }), relations).displayName).toContain("순생");
   });
 
-  it("requires balanced scores, low conflict and structural support for Hunyuan", () => {
+  it("reserves Hunyuan for a balanced, stable and formation-supported complete cycle", () => {
     const elements: Element[] = ["wood", "fire", "earth", "metal", "water"];
     const supported = { ...relations, combinations: ["삼합"] };
     const result = classifyRootCount(elements, [], evidenceSet({ wood: 8, fire: 8, earth: 7.5, metal: 7, water: 8 }), supported);
-    expect(result.displayName).toBe("혼원오행영근 — 오기조원형");
+    expect(result.displayName).toBe("혼원오행영근 — 오기조원형·혼원");
     expect(result.multiRootProfile?.generatingLinks).toHaveLength(5);
     expect(result.multiRootProfile?.formationSupport).toBe(true);
+    expect(result.multiRootProfile?.hunyuanQualified).toBe(true);
   });
 
   it("distinguishes a balanced generating four-root structure by its missing element", () => {
@@ -56,25 +57,45 @@ describe("classifyRootCount", () => {
     expect(result.multiRootProfile?.scoreSpread).toBe(7);
   });
 
-  it("keeps a balanced complete cycle below Hunyuan without formation support", () => {
+  it("opens a harmonious five-qi convergence through a complete cycle without formation support", () => {
     const elements: Element[] = ["wood", "fire", "earth", "metal", "water"];
     const result = classifyRootCount(elements, [], evidenceSet({ wood: 8, fire: 8, earth: 8, metal: 8, water: 8 }), relations);
-    expect(result.displayName).toBe("오행균형영근 — 오행원융형");
+    expect(result.displayName).toBe("오기조원영근 — 오기조원형·원융");
     expect(result.multiRootProfile?.cycleState).toBe("complete");
     expect(result.multiRootProfile?.formationSupport).toBe(false);
+    expect(result.multiRootProfile?.hunyuanQualified).toBe(false);
     expect(result.multiRootProfile?.preserveAllRoots).toBe(true);
-    expect(result.multiRootProfile?.refinementPath).toContain("다섯 기맥을 모두 보전");
+    expect(result.multiRootProfile?.refinementPath).toContain("완성된 상생환을 끊지");
   });
 
-  it("distinguishes turbulent five-root qi from a balanced root", () => {
+  it("keeps a turbulent complete cycle as a five-qi convergence with a turbid-flow warning", () => {
     const elements: Element[] = ["wood", "fire", "earth", "metal", "water"];
     const turbulent = {
       ...relations,
       clashes: ["충1", "충2"], punishments: ["형1"], harms: ["해1"], dynamicCount: 4,
     };
     const result = classifyRootCount(elements, [], evidenceSet({ wood: 8, fire: 8, earth: 8, metal: 8, water: 8 }), turbulent);
-    expect(result.displayName).toBe("오행잡영근 — 충극혼탁형");
+    expect(result.displayName).toBe("오기조원영근 — 오기조원형·탁류");
     expect(result.multiRootProfile?.conflictLevel).toBe("turbulent");
+    expect(result.multiRootProfile?.hunyuanQualified).toBe(false);
+  });
+
+  it("keeps a strongly biased complete cycle as a biased five-qi convergence", () => {
+    const elements: Element[] = ["wood", "fire", "earth", "metal", "water"];
+    const result = classifyRootCount(elements, [], evidenceSet({ wood: 8, fire: 8, earth: 14, metal: 8, water: 8 }), relations);
+    expect(result.displayName).toBe("오기조원영근 — 오기조원형·편기");
+    expect(result.multiRootProfile?.hunyuanQualified).toBe(false);
+    expect(result.qualityLabel).toBe("오영근 특수형");
+  });
+
+  it("does not grant five-qi convergence when one generating link is inactive", () => {
+    const elements: Element[] = ["wood", "fire", "earth", "metal", "water"];
+    const evidence = evidenceSet({ wood: 8, fire: 8, earth: 8, metal: 8, water: 8 });
+    evidence.water = { ...evidence.water, supportScore: 0, contributions: [] };
+    const result = classifyRootCount(elements, [], evidence, relations);
+    expect(result.displayName).toBe("오행균형영근 — 오행원융형");
+    expect(result.multiRootProfile?.cycleState).toBe("strong");
+    expect(result.multiRootProfile?.generatingLinks).toHaveLength(4);
   });
 
   it("does not erase a second effective root without a heavenly condensation result", () => {
