@@ -111,20 +111,19 @@ export function classifyRootCount(
 
   const multiRootProfile = buildMultiRootProfile(ordered, evidence, relations)!;
   const fiveQiCycle = multiRootProfile.subtype === "오기조원형";
-  const hunyuan = multiRootProfile.hunyuanQualified;
   const balanced = multiRootProfile.scoreSpread <= SPIRITUAL_ROOT_RULES.thresholds.fiveBalanceSpread &&
     multiRootProfile.conflictLevel !== "turbulent";
-  const baseName = hunyuan ? "혼원오행영근" : fiveQiCycle ? "오기조원영근" : balanced ? "오행균형영근" : "오행잡영근";
+  const baseName = fiveQiCycle ? "오기조원영근" : balanced ? "오행균형영근" : "오행잡영근";
   const subtypeLabel = fiveQiCycle && multiRootProfile.fiveRootVariant
     ? `${multiRootProfile.subtype}·${multiRootProfile.fiveRootVariant}`
     : multiRootProfile.subtype;
   return {
     ...base, multiRootProfile, displayName: `${baseName} — ${subtypeLabel}`,
     relationship: `${multiRootProfile.cycleLabel} · ${multiRootProfile.conflictLabel}`,
-    cultivationSpeed: hunyuan ? "초반은 느리나 후반 잠재력이 큼" : fiveQiCycle ? "초반은 느리나 상생환이 자리 잡으면 빨라짐" : "가장 느림",
+    cultivationSpeed: fiveQiCycle ? "초반은 느리나 상생환이 자리 잡으면 빨라짐" : "가장 느림",
     adaptability: fiveQiCycle ? "완성된 상생환을 이용하는 오행공법에 높은 궁합" : `대부분의 오행공법에 적응 · ${multiRootProfile.subtype}`,
     qualityTier: "five", qualityRank: 6,
-    qualityLabel: hunyuan ? "오영근 최상 예외" : fiveQiCycle ? "오영근 특수형" : "최하급",
-    rarityLabel: hunyuan ? "극히 드문 혼원 예외" : fiveQiCycle ? "오영근 중 드문 완전 순환형" : "유연 표본 약 24~30%",
+    qualityLabel: fiveQiCycle ? "오영근 특수형" : "최하급",
+    rarityLabel: fiveQiCycle ? "오영근 중 드문 완전 순환형" : "유연 표본 약 24~30%",
   };
 }

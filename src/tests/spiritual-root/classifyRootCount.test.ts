@@ -29,14 +29,13 @@ describe("classifyRootCount", () => {
     expect(classifyRootCount(elements, [], evidenceSet({ water: 7, wood: 8, fire: 7 }), relations).displayName).toContain("순생");
   });
 
-  it("reserves Hunyuan for a balanced, stable and formation-supported complete cycle", () => {
+  it("keeps a balanced formation-supported complete cycle within five-qi convergence", () => {
     const elements: Element[] = ["wood", "fire", "earth", "metal", "water"];
     const supported = { ...relations, combinations: ["삼합"] };
     const result = classifyRootCount(elements, [], evidenceSet({ wood: 8, fire: 8, earth: 7.5, metal: 7, water: 8 }), supported);
-    expect(result.displayName).toBe("혼원오행영근 — 오기조원형·혼원");
+    expect(result.displayName).toBe("오기조원영근 — 오기조원형·원융");
     expect(result.multiRootProfile?.generatingLinks).toHaveLength(5);
     expect(result.multiRootProfile?.formationSupport).toBe(true);
-    expect(result.multiRootProfile?.hunyuanQualified).toBe(true);
   });
 
   it("distinguishes a balanced generating four-root structure by its missing element", () => {
@@ -63,7 +62,6 @@ describe("classifyRootCount", () => {
     expect(result.displayName).toBe("오기조원영근 — 오기조원형·원융");
     expect(result.multiRootProfile?.cycleState).toBe("complete");
     expect(result.multiRootProfile?.formationSupport).toBe(false);
-    expect(result.multiRootProfile?.hunyuanQualified).toBe(false);
     expect(result.multiRootProfile?.preserveAllRoots).toBe(true);
     expect(result.multiRootProfile?.refinementPath).toContain("완성된 상생환을 끊지");
   });
@@ -77,14 +75,12 @@ describe("classifyRootCount", () => {
     const result = classifyRootCount(elements, [], evidenceSet({ wood: 8, fire: 8, earth: 8, metal: 8, water: 8 }), turbulent);
     expect(result.displayName).toBe("오기조원영근 — 오기조원형·탁류");
     expect(result.multiRootProfile?.conflictLevel).toBe("turbulent");
-    expect(result.multiRootProfile?.hunyuanQualified).toBe(false);
   });
 
   it("keeps a strongly biased complete cycle as a biased five-qi convergence", () => {
     const elements: Element[] = ["wood", "fire", "earth", "metal", "water"];
     const result = classifyRootCount(elements, [], evidenceSet({ wood: 8, fire: 8, earth: 14, metal: 8, water: 8 }), relations);
     expect(result.displayName).toBe("오기조원영근 — 오기조원형·편기");
-    expect(result.multiRootProfile?.hunyuanQualified).toBe(false);
     expect(result.qualityLabel).toBe("오영근 특수형");
   });
 

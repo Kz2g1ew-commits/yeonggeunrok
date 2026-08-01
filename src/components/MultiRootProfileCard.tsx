@@ -39,7 +39,7 @@ export function MultiRootProfileCard({ classification }: { classification: RootC
           <ul className="mt-3 grid gap-2 text-sm leading-6 text-[#c5aeaa]">{profile.cautions.map((item) => <li key={item}>· {item}</li>)}</ul>
         </article>
       </div>
-      <p className="mt-4 text-xs leading-6 text-[#748991]">오기조원은 다섯 상생 고리의 완성을 기준으로 하며, 기맥 편차·충극·합국은 유통의 품질과 혼원 여부를 가릅니다.</p>
+      <p className="mt-4 text-xs leading-6 text-[#748991]">오기조원은 다섯 상생 고리의 완성을 기준으로 하며, 기맥 편차와 충극은 유통·편기·탁류·원융의 세부형을 가릅니다.</p>
     </section>
   );
 }
