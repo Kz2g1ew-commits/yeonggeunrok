@@ -47,7 +47,8 @@ export const SPIRITUAL_ROOT_RULES = {
     independentStrength: 4,
     potential: 2,
     generousChannel: 4,
-    sealedPotential: 0.5,
+    // 저점 실근 예외는 이 값을 엄격히 초과해야 하며 0점은 허용하지 않는다.
+    groundedTraceFloor: 0,
     balanceGap: 2,
     strongBiasGap: 3.5,
     heavenlyPurityGap: 14,

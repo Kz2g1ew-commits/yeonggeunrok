@@ -4,6 +4,7 @@ import type { RootQualityTier } from "@/types/spiritualRoot";
 import { calculateFourPillars } from "@/lib/calendar/calculateFourPillars";
 import { analyzeSpiritualRoots } from "@/lib/spiritual-root/analyzeSpiritualRoots";
 import { determineAwakening } from "@/lib/spiritual-root/determineAwakening";
+import { hasEffectiveActivationBasis } from "@/lib/spiritual-root/rootActivationEligibility";
 
 describe("spiritual-root population balance", () => {
   it("keeps structural results ordered without promoting invalid elements", { timeout: 15_000 }, () => {
@@ -33,7 +34,7 @@ describe("spiritual-root population balance", () => {
       };
       const calculation = calculateFourPillars(input);
       const result = analyzeSpiritualRoots(input, calculation).result;
-      expect(result.primaryElements.every((element) => result.elementEvidence[element].score >= 2)).toBe(true);
+      expect(result.primaryElements.every((element) => hasEffectiveActivationBasis(result.elementEvidence[element]))).toBe(true);
       counts[result.classification.qualityTier] += 1;
       if (result.classification.qualityTier === "quadruple") {
         expect(result.classification.multiRootProfile).toBeDefined();
@@ -57,16 +58,16 @@ describe("spiritual-root population balance", () => {
     expect(share("none")).toBeLessThan(0.002);
     expect(share("heavenly")).toBeGreaterThan(0.008);
     expect(share("heavenly")).toBeLessThan(0.018);
-    expect(share("mutation")).toBeGreaterThan(0.03);
-    expect(share("mutation")).toBeLessThan(0.05);
-    expect(share("dual")).toBeGreaterThan(0.065);
-    expect(share("dual")).toBeLessThan(0.085);
-    expect(share("triple")).toBeGreaterThan(0.3);
-    expect(share("triple")).toBeLessThan(0.35);
-    expect(share("quadruple")).toBeGreaterThan(0.4);
-    expect(share("quadruple")).toBeLessThan(0.45);
-    expect(share("five")).toBeGreaterThan(0.1);
-    expect(share("five")).toBeLessThan(0.14);
+    expect(share("mutation")).toBeGreaterThan(0.025);
+    expect(share("mutation")).toBeLessThan(0.045);
+    expect(share("dual")).toBeGreaterThan(0.055);
+    expect(share("dual")).toBeLessThan(0.08);
+    expect(share("triple")).toBeGreaterThan(0.23);
+    expect(share("triple")).toBeLessThan(0.28);
+    expect(share("quadruple")).toBeGreaterThan(0.34);
+    expect(share("quadruple")).toBeLessThan(0.4);
+    expect(share("five")).toBeGreaterThan(0.24);
+    expect(share("five")).toBeLessThan(0.3);
     expect(share("heavenly")).toBeLessThan(share("mutation"));
     expect(share("mutation")).toBeLessThan(share("dual"));
     expect(share("dual")).toBeLessThan(share("five"));
