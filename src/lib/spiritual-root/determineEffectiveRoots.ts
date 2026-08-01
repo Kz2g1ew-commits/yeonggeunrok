@@ -2,6 +2,7 @@ import type { Element } from "@/types/bazi";
 import type { ElementEvidence } from "@/types/spiritualRoot";
 import { ELEMENTS } from "@/lib/bazi/elementMeta";
 import { SPIRITUAL_ROOT_RULES } from "./spiritualRootRules";
+import { hasEffectiveActivationBasis } from "./rootActivationEligibility";
 
 function rankedElements(evidence: Record<Element, ElementEvidence>): Element[] {
   return [...ELEMENTS].sort((a, b) =>
@@ -22,13 +23,14 @@ export function determineEffectiveRoots(
   const ranked = rankedElements(rawEvidence);
   const direct = ranked.filter((element) =>
     rawEvidence[element].channel.complete &&
-    // 관문 계산의 예외가 바뀌어도 잠재 역치 미만은 유효 영근이 될 수 없다.
-    rawEvidence[element].score >= SPIRITUAL_ROOT_RULES.structure.potentialScore);
+    // 관문 계산의 예외가 바뀌어도 활성 기반이 없는 흔적은 유효 영근이 될 수 없다.
+    hasEffectiveActivationBasis(rawEvidence[element]));
   const channelRules = SPIRITUAL_ROOT_RULES.channelGates;
   const carried = direct.length >= channelRules.mixedNetworkMinimum
     ? ranked.filter((element) => !direct.includes(element) &&
       rawEvidence[element].channel.potential &&
-      rawEvidence[element].score >= channelRules.carriedActivationMinimum &&
+      (rawEvidence[element].score >= channelRules.carriedActivationMinimum ||
+        (direct.length >= 4 && hasEffectiveActivationBasis(rawEvidence[element]))) &&
       rawEvidence[element].channel.integrity >= channelRules.carriedIntegrityMinimum)
     : [];
   const structural = [...direct, ...carried].sort((a, b) => ranked.indexOf(a) - ranked.indexOf(b));

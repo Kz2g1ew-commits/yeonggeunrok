@@ -2,6 +2,7 @@ import type { Element, FourPillars } from "@/types/bazi";
 import type { ElementEvidence, RootChannelEvidence, RootChannelState } from "@/types/spiritualRoot";
 import { CONTROLS, ELEMENTS, GENERATES } from "@/lib/bazi/elementMeta";
 import { SPIRITUAL_ROOT_RULES } from "./spiritualRootRules";
+import { hasEffectiveActivationBasis } from "./rootActivationEligibility";
 
 const rules = SPIRITUAL_ROOT_RULES.channelGates;
 
@@ -49,6 +50,8 @@ export function calculateRootChannels(
   const elementScores = ELEMENTS.map((element) => evidence[element].score);
   const maximumScore = Math.max(...elementScores);
   const scoreSpread = maximumScore - Math.min(...elementScores);
+  const collectiveAnchorCount = elementScores.filter((score) =>
+    score >= SPIRITUAL_ROOT_RULES.structure.potentialScore).length;
 
   return Object.fromEntries(ELEMENTS.map((element) => {
     const item = evidence[element];
@@ -63,8 +66,9 @@ export function calculateRootChannels(
     const hasEarthTrace = item.rootStrength > 0 || item.monthCommand || hasFullFormation;
     const dominantGap = maximumScore - item.score;
     const collectiveFlow = hasTrace && hasEarthTrace && item.presenceScore > 0 &&
-      // 전체 유통은 잠재 활성 역치와 실제 지근을 갖춘 기맥만 보조한다.
-      item.score >= SPIRITUAL_ROOT_RULES.structure.potentialScore &&
+      // 저점 실근은 세 개 이상의 잠재 역치 기맥이 망을 지탱할 때만 합류한다.
+      (item.score >= SPIRITUAL_ROOT_RULES.structure.potentialScore ||
+        (collectiveAnchorCount >= rules.mixedNetworkMinimum && hasEffectiveActivationBasis(item))) &&
       dominantGap < SPIRITUAL_ROOT_RULES.structure.collectiveMaximumSpread &&
       (item.score >= rules.activationMinimum ||
         scoreSpread <= SPIRITUAL_ROOT_RULES.structure.collectiveBuriedMaximumSpread ||
