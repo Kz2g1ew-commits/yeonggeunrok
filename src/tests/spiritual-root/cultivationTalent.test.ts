@@ -56,7 +56,7 @@ describe("cultivation talent synthesis", () => {
     expect(profile.specialEffects.some((effect) => effect.id === "battle-bone")).toBe(true);
   });
 
-  it("never grants an awakened title when the spiritual aperture is closed", () => {
+  it("preserves innate root-bone potential without granting an awakened title", () => {
     const profile = synthesizeCultivationTalent(
       classification,
       evidenceSet({ metal: 15 }),
@@ -66,6 +66,7 @@ describe("cultivation talent synthesis", () => {
     );
 
     expect(profile.tier).toBe("unawakened");
-    expect(profile.title).toContain("미각성");
+    expect(profile.title).toContain("영문미개");
+    expect(profile.dimensions.rootBone.score).toBeGreaterThanOrEqual(88);
   });
 });

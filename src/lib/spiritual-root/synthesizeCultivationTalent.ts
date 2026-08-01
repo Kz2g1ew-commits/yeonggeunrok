@@ -60,42 +60,50 @@ export function synthesizeCultivationTalent(
   shensha: ShenshaResult[],
   awakening: AwakeningResult,
   relations: BranchRelations,
+  innateRoot?: {
+    classification: RootClassification;
+    evidence: Record<Element, ElementEvidence>;
+  },
 ): CultivationTalentProfile {
+  const rootClassification = innateRoot?.classification ?? classification;
+  const rootEvidence = innateRoot?.evidence ?? evidence;
+  const hasInnateRoot = ELEMENTS.some((element) => rootEvidence[element].effective);
   const effectiveShensha = shensha.filter((item) => item.effective);
   const byId = new Map(effectiveShensha.map((item) => [item.id, item]));
   const has = (id: ShenshaId) => byId.has(id);
   const strong = (id: ShenshaId) => byId.get(id)?.status === "strong";
   const reasons: Record<TalentDimensionId, string[]> = {
-    rootBone: [`${classification.displayName}의 영근 품질을 근골 기반으로 환산`],
+    rootBone: [awakening.passed
+      ? `${rootClassification.displayName}의 영근 품질을 근골 기반으로 환산`
+      : `${rootClassification.displayName}의 선천 기맥 잠재치를 발현 관문과 분리해 환산`],
     insight: [], combat: [], soul: [], providence: [],
   };
   const scores: Record<TalentDimensionId, number> = {
-    rootBone: RULES.rootBoneBase[classification.qualityTier],
+    rootBone: RULES.rootBoneBase[rootClassification.qualityTier],
     insight: RULES.dimensionBase.insight,
     combat: RULES.dimensionBase.combat,
     soul: RULES.dimensionBase.soul,
     providence: RULES.dimensionBase.providence,
   };
 
-  if (classification.grade) scores.rootBone += RULES.rootGradeBonus[classification.grade];
-  if (classification.multiRootProfile?.subtype === "오기조원형") {
+  if (rootClassification.grade) scores.rootBone += RULES.rootGradeBonus[rootClassification.grade];
+  if (rootClassification.multiRootProfile?.subtype === "오기조원형") {
     scores.rootBone += RULES.specialRootBonus.hunyuanFive;
     reasons.rootBone.push("오기조원형 혼원 순환이 다근의 한계를 뒤집음");
-  } else if (classification.displayName.startsWith("오행균형영근")) {
+  } else if (rootClassification.displayName.startsWith("오행균형영근")) {
     scores.rootBone += RULES.specialRootBonus.balancedFive;
     reasons.rootBone.push("오행균형영근의 균일한 기맥이 근골을 보정함");
-  } else if (classification.multiRootProfile?.cycleState === "strong") {
+  } else if (rootClassification.multiRootProfile?.cycleState === "strong") {
     scores.rootBone += RULES.specialRootBonus.strongCycle;
     reasons.rootBone.push("강한 상생 연쇄가 복수 영근의 소모를 줄임");
   }
-  const effective = ELEMENTS.filter((element) => evidence[element].effective);
+  const effective = ELEMENTS.filter((element) => rootEvidence[element].effective);
   if (effective.length) {
-    const averageCompletion = effective.reduce((sum, element) => sum + evidence[element].channel.completion, 0) / effective.length;
+    const averageCompletion = effective.reduce((sum, element) => sum + rootEvidence[element].channel.completion, 0) / effective.length;
     const completionAdjustment = Math.max(-8, Math.min(8, (averageCompletion - 55) * 0.16));
     scores.rootBone += completionAdjustment;
     reasons.rootBone.push(`유효 기맥 평균 삼관 완성도 ${averageCompletion.toFixed(1)}`);
   }
-  if (!awakening.passed) scores.rootBone = Math.min(scores.rootBone, 35);
 
   for (const item of effectiveShensha) {
     const bonuses = RULES.shenshaBonuses[item.id];
@@ -213,7 +221,7 @@ export function synthesizeCultivationTalent(
         : tianjiao ? "tianjiao"
           : promising ? "promising" : "ordinary";
   const title = {
-    unawakened: "미각성 범골 未覺醒凡骨",
+    unawakened: hasInnateRoot ? "영문미개 靈門未開" : "미각성 범골 未覺醒凡骨",
     ordinary: "평범한 수선 자질",
     promising: "영수 靈秀",
     tianjiao: "천교 天驕",
