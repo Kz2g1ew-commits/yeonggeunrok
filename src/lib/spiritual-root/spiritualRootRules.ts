@@ -84,7 +84,6 @@ export const SPIRITUAL_ROOT_RULES = {
     mediationElementScore: 4,
     strongControllerScore: 6,
     weakRescueScore: 4,
-    collectiveMinimumScore: -0.5,
     collectiveMaximumSpread: 24,
     collectiveBuriedMaximumSpread: 14.5,
     collectiveModerateGap: 22,
