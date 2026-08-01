@@ -1,10 +1,42 @@
 import type { BranchRelations, Element } from "@/types/bazi";
-import type { ElementEvidence, MutationCandidate, RootClassification, RootCount, RootGrade } from "@/types/spiritualRoot";
+import type { ElementEvidence, FiveRootVariant, MutationCandidate, RootClassification, RootCount, RootGrade } from "@/types/spiritualRoot";
 import { CONTROLS, ELEMENT_META, ELEMENTS, GENERATES } from "@/lib/bazi/elementMeta";
 import { SPIRITUAL_ROOT_RULES } from "./spiritualRootRules";
 import { buildMultiRootProfile } from "./multiRootProfiles";
 
 const GRADE_LABEL: Record<RootGrade, string> = { low: "하품", middle: "중품", high: "상품", supreme: "극품" };
+
+const FIVE_QI_QUALITY: Record<FiveRootVariant, {
+  qualityRank: number;
+  qualityLabel: string;
+  cultivationSpeed: string;
+  rarityLabel: string;
+}> = {
+  "탁류": {
+    qualityRank: 5,
+    qualityLabel: "오기조원 위험형",
+    cultivationSpeed: "초반이 매우 불안정하며 충극 정련이 필수",
+    rarityLabel: "희귀 완전 순환·탁류형",
+  },
+  "편기": {
+    qualityRank: 4,
+    qualityLabel: "오기조원 중등형",
+    cultivationSpeed: "초반은 느리며 편기를 다스리면 크게 상승",
+    rarityLabel: "희귀 완전 순환·편기형",
+  },
+  "유통": {
+    qualityRank: 3,
+    qualityLabel: "오기조원 상등형",
+    cultivationSpeed: "초반은 느리나 상생환이 자리 잡으면 매우 빠름",
+    rarityLabel: "극히 드문 안정 순환형",
+  },
+  "원융": {
+    qualityRank: 2,
+    qualityLabel: "천영근 준급",
+    cultivationSpeed: "초반은 느리나 주천 완성 후 천영근에 견줄 수 있음",
+    rarityLabel: "극희귀 원융 순환형",
+  },
+};
 
 function countType(count: number): RootCount {
   return (["none", "single", "dual", "triple", "quadruple", "five"] as RootCount[])[count];
@@ -117,13 +149,16 @@ export function classifyRootCount(
   const subtypeLabel = fiveQiCycle && multiRootProfile.fiveRootVariant
     ? `${multiRootProfile.subtype}·${multiRootProfile.fiveRootVariant}`
     : multiRootProfile.subtype;
+  const fiveQiQuality = fiveQiCycle
+    ? FIVE_QI_QUALITY[multiRootProfile.fiveRootVariant ?? "유통"]
+    : undefined;
   return {
     ...base, multiRootProfile, displayName: `${baseName} — ${subtypeLabel}`,
     relationship: `${multiRootProfile.cycleLabel} · ${multiRootProfile.conflictLabel}`,
-    cultivationSpeed: fiveQiCycle ? "초반은 느리나 상생환이 자리 잡으면 빨라짐" : "가장 느림",
+    cultivationSpeed: fiveQiQuality?.cultivationSpeed ?? "가장 느림",
     adaptability: fiveQiCycle ? "완성된 상생환을 이용하는 오행공법에 높은 궁합" : `대부분의 오행공법에 적응 · ${multiRootProfile.subtype}`,
-    qualityTier: "five", qualityRank: 6,
-    qualityLabel: fiveQiCycle ? "오영근 특수형" : "최하급",
-    rarityLabel: fiveQiCycle ? "오영근 중 드문 완전 순환형" : "유연 표본 약 24~30%",
+    qualityTier: "five", qualityRank: fiveQiQuality?.qualityRank ?? 6,
+    qualityLabel: fiveQiQuality?.qualityLabel ?? "최하급",
+    rarityLabel: fiveQiQuality?.rarityLabel ?? "유연 표본 약 24~30%",
   };
 }
