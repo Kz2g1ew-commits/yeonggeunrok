@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { FourPillars } from "@/types/bazi";
 import { calculateElementScores } from "@/lib/spiritual-root/calculateElementScores";
+import { calculateRootChannels } from "@/lib/spiritual-root/calculateRootChannels";
 import { determineEffectiveRoots } from "@/lib/spiritual-root/determineEffectiveRoots";
 import { analyzeRelations } from "@/lib/bazi/relations";
 import { classifyRootCount } from "@/lib/spiritual-root/classifyRootCount";
@@ -55,6 +56,44 @@ describe("structural element scoring", () => {
     expect(roots.effective).not.toContain("water");
     expect(roots.potential).toContain("water");
     expect(classifyRootCount(roots.effective, roots.potential, roots.evidence, analyzeRelations(hotFireEarthChart)).rootCount).toBe("dual");
+  });
+
+  it("does not turn sub-potential traces into effective roots through collective flow", () => {
+    const raw = evidenceSet({ wood: 2.5, fire: 13.5, earth: 8, metal: 0, water: 1 });
+    for (const element of ["wood", "metal", "water"] as const) {
+      raw[element].presenceScore = 10;
+      raw[element].visibleStems = ["trace"];
+      raw[element].rootStrength = 0.5;
+      raw[element].rootDetails = [{ branch: "trace", stem: "trace", role: "residual", strength: 0.5, damaged: false }];
+    }
+
+    const evidence = calculateRootChannels(hotFireEarthChart, raw);
+    const roots = determineEffectiveRoots(evidence, true);
+
+    expect(evidence.wood.channel.complete).toBe(true);
+    expect(evidence.metal.channel.complete).toBe(false);
+    expect(evidence.water.channel.complete).toBe(false);
+    expect(roots.effective).toEqual(["fire", "earth", "wood"]);
+    expect(roots.effective.every((element) => evidence[element].score >= 2)).toBe(true);
+    expect(classifyRootCount(roots.effective, roots.potential, roots.evidence, analyzeRelations(hotFireEarthChart)).rootCount).toBe("triple");
+  });
+
+  it("rejects a completed channel below the potential threshold at final selection", () => {
+    const evidence = evidenceSet({ fire: 10, metal: 1 });
+    evidence.metal.channel = {
+      ...evidence.metal.channel,
+      heaven: { score: 2, passed: true, reasons: [] },
+      earth: { score: 1.1, passed: true, reasons: [] },
+      human: { score: 2, passed: true, reasons: [] },
+      completion: 30,
+      state: "complete",
+      complete: true,
+      potential: false,
+    };
+
+    const roots = determineEffectiveRoots(evidence, true);
+    expect(roots.effective).toEqual(["fire"]);
+    expect(roots.effective).not.toContain("metal");
   });
 
   it("does not erase a strong second complete channel", () => {

@@ -60,19 +60,17 @@ export function calculateRootChannels(
     const hasFlow = item.contributions.some(({ label }) => label.includes(" 유통"));
     const hasMediation = item.contributions.some(({ label }) => label.includes("실질 통관"));
     const hasTrace = item.visibleStems.length > 0 || item.rootStrength > 0 || item.monthCommand || item.combinations.length > 0;
+    const hasEarthTrace = item.rootStrength > 0 || item.monthCommand || hasFullFormation;
     const dominantGap = maximumScore - item.score;
-    const sealedBelowPotential = item.score < SPIRITUAL_ROOT_RULES.structure.potentialScore &&
-      scoreSpread > SPIRITUAL_ROOT_RULES.structure.collectiveBuriedMaximumSpread &&
-      (item.visibleStems.length === 0 || item.controlPenalty < 0 || item.combinations.includes("천간합·불화"));
-    const collectiveFlow = hasTrace && item.presenceScore > 0 &&
-      item.score >= SPIRITUAL_ROOT_RULES.structure.collectiveMinimumScore &&
+    const collectiveFlow = hasTrace && hasEarthTrace && item.presenceScore > 0 &&
+      // 전체 유통은 잠재 활성 역치와 실제 지근을 갖춘 기맥만 보조한다.
+      item.score >= SPIRITUAL_ROOT_RULES.structure.potentialScore &&
       dominantGap < SPIRITUAL_ROOT_RULES.structure.collectiveMaximumSpread &&
       (item.score >= rules.activationMinimum ||
         scoreSpread <= SPIRITUAL_ROOT_RULES.structure.collectiveBuriedMaximumSpread ||
         (item.score >= SPIRITUAL_ROOT_RULES.structure.potentialScore &&
           dominantGap < SPIRITUAL_ROOT_RULES.structure.collectiveModerateGap &&
-          !(scoreSpread > SPIRITUAL_ROOT_RULES.structure.collectiveHostileSpread && item.seasonalStrength < 0))) &&
-      !sealedBelowPotential;
+          !(scoreSpread > SPIRITUAL_ROOT_RULES.structure.collectiveHostileSpread && item.seasonalStrength < 0)));
 
     let heavenScore = 0;
     if (item.visibleStems.length > 0) {

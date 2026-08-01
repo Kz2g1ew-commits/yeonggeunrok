@@ -20,7 +20,10 @@ export function determineEffectiveRoots(
   structural: Element[];
 } {
   const ranked = rankedElements(rawEvidence);
-  const direct = ranked.filter((element) => rawEvidence[element].channel.complete);
+  const direct = ranked.filter((element) =>
+    rawEvidence[element].channel.complete &&
+    // 관문 계산의 예외가 바뀌어도 잠재 역치 미만은 유효 영근이 될 수 없다.
+    rawEvidence[element].score >= SPIRITUAL_ROOT_RULES.structure.potentialScore);
   const channelRules = SPIRITUAL_ROOT_RULES.channelGates;
   const carried = direct.length >= channelRules.mixedNetworkMinimum
     ? ranked.filter((element) => !direct.includes(element) &&
