@@ -5,6 +5,7 @@ import { calculateRootChannels } from "@/lib/spiritual-root/calculateRootChannel
 import { determineEffectiveRoots } from "@/lib/spiritual-root/determineEffectiveRoots";
 import { analyzeRelations } from "@/lib/bazi/relations";
 import { classifyRootCount } from "@/lib/spiritual-root/classifyRootCount";
+import { hasEffectiveActivationBasis } from "@/lib/spiritual-root/rootActivationEligibility";
 import { evidenceSet, pillar } from "../fixtures";
 
 const hotFireEarthChart: FourPillars = {
@@ -58,7 +59,7 @@ describe("structural element scoring", () => {
     expect(classifyRootCount(roots.effective, roots.potential, roots.evidence, analyzeRelations(hotFireEarthChart)).rootCount).toBe("dual");
   });
 
-  it("does not turn sub-potential traces into effective roots through collective flow", () => {
+  it("keeps a grounded low channel but rejects a zero-score trace in collective flow", () => {
     const raw = evidenceSet({ wood: 2.5, fire: 13.5, earth: 8, metal: 0, water: 1 });
     for (const element of ["wood", "metal", "water"] as const) {
       raw[element].presenceScore = 10;
@@ -72,13 +73,28 @@ describe("structural element scoring", () => {
 
     expect(evidence.wood.channel.complete).toBe(true);
     expect(evidence.metal.channel.complete).toBe(false);
-    expect(evidence.water.channel.complete).toBe(false);
-    expect(roots.effective).toEqual(["fire", "earth", "wood"]);
-    expect(roots.effective.every((element) => evidence[element].score >= 2)).toBe(true);
-    expect(classifyRootCount(roots.effective, roots.potential, roots.evidence, analyzeRelations(hotFireEarthChart)).rootCount).toBe("triple");
+    expect(evidence.water.channel.complete).toBe(true);
+    expect(roots.effective).toEqual(["fire", "earth", "wood", "water"]);
+    expect(roots.effective.every((element) => hasEffectiveActivationBasis(evidence[element]))).toBe(true);
+    expect(classifyRootCount(roots.effective, roots.potential, roots.evidence, analyzeRelations(hotFireEarthChart)).rootCount).toBe("quadruple");
   });
 
-  it("rejects a completed channel below the potential threshold at final selection", () => {
+  it("does not close a zero-score fifth root even when four anchors are active", () => {
+    const raw = evidenceSet({ wood: 4, fire: 12, earth: 8, metal: 0, water: 4 });
+    raw.metal.presenceScore = 10;
+    raw.metal.visibleStems = ["trace"];
+    raw.metal.rootStrength = 0.5;
+    raw.metal.rootDetails = [{ branch: "trace", stem: "trace", role: "residual", strength: 0.5, damaged: false }];
+
+    const evidence = calculateRootChannels(hotFireEarthChart, raw);
+    const roots = determineEffectiveRoots(evidence, true);
+
+    expect(evidence.metal.channel.complete).toBe(false);
+    expect(roots.effective).toHaveLength(4);
+    expect(roots.effective).not.toContain("metal");
+  });
+
+  it("rejects a completed channel without a grounded activation basis at final selection", () => {
     const evidence = evidenceSet({ fire: 10, metal: 1 });
     evidence.metal.channel = {
       ...evidence.metal.channel,
