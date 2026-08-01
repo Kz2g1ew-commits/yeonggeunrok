@@ -30,6 +30,7 @@ export function CultivationTalentPanel({ profile, shensha }: { profile: Cultivat
           <div><h2 className="section-title">선협 재능 종합 · {profile.title}</h2><p className="muted mt-2 max-w-3xl text-sm leading-7">{profile.summary}</p></div>
           <span className="rounded-full border border-[#d8b66a]/20 bg-[#d8b66a]/7 px-3 py-1.5 text-[11px] font-bold text-[#e5c97f]">영근·신살 분리 판정</span>
         </div>
+        {profile.tier === "unawakened" && <p className="mt-4 rounded-xl border border-[#62c6a5]/12 bg-[#62c6a5]/[.035] px-4 py-3 text-xs leading-6 text-[#91aaa2]">영문은 선택한 발현 관문에서 열리지 않았지만, 근골은 사라지지 않는 선천 기맥 구조와 완성도의 잠재치를 표시합니다. 근골이 높아도 현재 영근이 각성했다는 뜻은 아닙니다.</p>}
       </div>
 
       <div className="grid gap-3 p-5 sm:grid-cols-2 sm:p-7 lg:grid-cols-5">

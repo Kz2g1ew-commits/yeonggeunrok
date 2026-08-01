@@ -41,27 +41,47 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
   const rawEvidence = calculateElementScores(calculation.pillars);
   const dao = calculateDaoAffinity(calculation.pillars, rawEvidence, relations);
   const awakening = determineAwakening(input.judgmentMode, calculation.pillars, rawEvidence, dao);
-  const roots = determineEffectiveRoots(rawEvidence, awakening.passed);
-  const evidence = roots.evidence;
   const shensha = detectShensha(calculation.pillars, input.shensha);
-  const context: AnalysisContext = {
+  const makeContext = (evidence: AnalysisContext["evidence"]): AnalysisContext => ({
     pillars: calculation.pillars,
     evidence,
     relations,
     shensha,
     season: seasonFromMonthBranch(calculation.pillars.month.branch),
-  };
-  const mutations = detectMutationRoots(context);
+  });
+  // 발현 관문과 무관한 선천 기맥 구조를 먼저 보존한다. 균형·엄격 관문은
+  // 실제 영근 개방만 막을 뿐, 근골의 선천 잠재치까지 지우지 않는다.
+  const innateRoots = determineEffectiveRoots(rawEvidence, true);
+  const innateMutations = detectMutationRoots(makeContext(innateRoots.evidence));
+  const innateMutation = innateMutations.find((candidate) => candidate.status === "confirmed") ??
+    innateMutations.find((candidate) => candidate.status === "likely");
+  const innateClassification = classifyRootCount(
+    innateRoots.effective,
+    innateRoots.potential,
+    innateRoots.evidence,
+    relations,
+    innateMutation,
+  );
+  const roots = awakening.passed ? innateRoots : determineEffectiveRoots(rawEvidence, false);
+  const evidence = roots.evidence;
+  const mutations = awakening.passed ? innateMutations : detectMutationRoots(makeContext(evidence));
   const activeMutation = mutations.find((candidate) => candidate.status === "confirmed");
   const likelyMutation = mutations.find((candidate) => candidate.status === "likely");
-  const classification = classifyRootCount(
-    roots.effective,
-    roots.potential,
+  const classification = awakening.passed ? innateClassification : classifyRootCount(
+      roots.effective,
+      roots.potential,
+      evidence,
+      relations,
+      activeMutation ?? likelyMutation,
+    );
+  const talentProfile = synthesizeCultivationTalent(
+    classification,
     evidence,
+    shensha,
+    awakening,
     relations,
-    activeMutation ?? likelyMutation,
+    { classification: innateClassification, evidence: innateRoots.evidence },
   );
-  const talentProfile = synthesizeCultivationTalent(classification, evidence, shensha, awakening, relations);
 
   const conflictCount = relations.clashes.length + relations.punishments.length + relations.harms.length + relations.breaks.length;
   const resolvedEffective = roots.effective;
