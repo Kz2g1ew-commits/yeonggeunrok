@@ -6,7 +6,7 @@ export type RootQualityTier = "none" | "heavenly" | "mutation" | "dual" | "tripl
 export type DaoPath = "natural" | "defiant";
 export type RootConflictLevel = "stable" | "mixed" | "turbulent";
 export type RootCycleState = "broken" | "partial" | "strong" | "complete";
-export type FiveRootVariant = "유통" | "편기" | "탁류" | "원융" | "혼원";
+export type FiveRootVariant = "유통" | "편기" | "탁류" | "원융";
 export type TalentDimensionId = "rootBone" | "insight" | "combat" | "soul" | "providence";
 export type TalentTier = "unawakened" | "ordinary" | "promising" | "tianjiao" | "peerless" | "heavenly-favored";
 export type PreHeavenNodeId = "taiYuan" | "taiXi" | "mingGong";
@@ -159,7 +159,6 @@ export interface MutationCandidate {
 export interface MultiRootProfile {
   subtype: string;
   fiveRootVariant?: FiveRootVariant;
-  hunyuanQualified: boolean;
   dominantElement: Element;
   weakestElement: Element;
   preserveAllRoots: boolean;

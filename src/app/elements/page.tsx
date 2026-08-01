@@ -17,6 +17,6 @@ export default function ElementsPage() {
     <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">{elements.map(([Icon, name, mapping, nature, path]) => <article key={name} className="surface p-5"><Icon className="text-[#d8b66a]" /><h2 className="display-serif mt-4 text-2xl text-[#eee2c5]">{name}</h2><p className="mt-2 text-xs font-bold text-[#71858e]">{mapping}</p><p className="muted mt-4 text-sm leading-6">{nature}</p><p className="mt-4 border-t border-white/6 pt-3 text-xs text-[#bfae7e]">{path}</p></article>)}</section>
     <InfoSection title="상생과 상극"><p><strong className="text-[#e0ce9f]">상생:</strong> 목→화→토→금→수→목. 앞 오행이 뒤 오행의 발현을 돕습니다.</p><p className="mt-2"><strong className="text-[#e0ce9f]">상극:</strong> 목→토→수→화→금→목. 제어는 무조건 나쁜 것이 아니지만, 구원 없이 지나치면 영기 통로를 손상시킬 수 있습니다.</p></InfoSection>
     <InfoSection title="지장간은 숨은 재료입니다"><p>지지 속에 감춰진 천간을 본기·중기·여기로 나눕니다. 원국 구성비에서는 숨은 재료의 양을 보존하고, 기맥 활성도에서는 본·중·여기와 자리·충손에 따라 통근 강도를 다르게 계산합니다. 지장간에 희미하게 존재한다는 사실만으로 유효 영근이 되지는 않지만, 투간과 약근이 함께 남으면 계절에 눌린 잠재 영근이 될 수 있습니다.</p></InfoSection>
-    <InfoSection title="다근은 보완보다 정련이 먼저입니다"><p>사영근은 빈 오행을 새로 깨우지 않고, 최약 기맥을 봉근·세맥해 삼영근으로 응축하는 길을 우선합니다. 오영근도 약근부터 줄여 영기 분산을 낮추되, 다섯 기맥의 편차가 작고 상생환이 안정된 오행균형·혼원 계열만 전 오행을 함께 보전합니다. 결핍 계통의 술법이 필요하면 법보·진법으로 외부 보완합니다.</p></InfoSection>
+    <InfoSection title="다근은 보완보다 정련이 먼저입니다"><p>사영근은 빈 오행을 새로 깨우지 않고, 최약 기맥을 봉근·세맥해 삼영근으로 응축하는 길을 우선합니다. 오영근도 약근부터 줄여 영기 분산을 낮추되, 다섯 기맥의 편차가 작거나 상생환이 완성된 오행균형·오기조원 계열만 전 오행을 함께 보전합니다. 결핍 계통의 술법이 필요하면 법보·진법으로 외부 보완합니다.</p></InfoSection>
   </InfoPageShell>;
 }

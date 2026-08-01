@@ -55,7 +55,6 @@ export const SPIRITUAL_ROOT_RULES = {
     heavenlySecondaryMax: 3.5,
     heavenlyPrimaryMin: 18,
     fiveBalanceSpread: 3,
-    hunyuanSpread: 2.5,
   },
   roots: {
     roleStrength: {
