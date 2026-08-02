@@ -124,7 +124,7 @@ function clashStrengthMultiplier(state: ClashState): number {
 }
 
 function clashStateLabel(state: ClashState): string {
-  return { stable: "안정", activated: "충발", shaken: "충동", damaged: "충손", uprooted: "발근" }[state];
+  return { stable: "안정", activated: "충발", shaken: "충동", damaged: "충손", uprooted: "근절(拔根)" }[state];
 }
 
 function evaluateFormations(pillars: FourPillars, clashes: Record<string, ClashState>): FormationEvaluation[] {
@@ -288,10 +288,10 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
     if (archingCount) contributions.push(contribution("왕지가 빠진 공합 후보", rules.scores.archingHarmony * archingCount));
     if (sixCount) contributions.push(contribution("월령이 돕는 지지 육합", rules.scores.sixHarmony * sixCount));
 
-    if (roots.length === 1 && rootDetails.every((root) => root.damaged)) {
+    if (rootDetails.length === 1 && rootDetails[0].damaged) {
       contributions.push(contribution("유일한 뿌리가 충으로 손상", rules.scores.uniqueRootClash));
     }
-    if (visibleStems.length > 0 && rootStrength < rules.roots.roleStrength.residual) {
+    if (visibleStems.length > 0 && rootDetails.length === 0) {
       contributions.push(contribution("천간에만 있고 뿌리가 없음", rules.scores.stemWithoutRoot));
     }
 

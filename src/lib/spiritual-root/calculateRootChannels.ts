@@ -73,11 +73,15 @@ export function calculateRootChannels(
       item.score <= SPIRITUAL_ROOT_RULES.structure.seasonalNetworkDeepWeakMaximum;
     const seasonallySuppressed = item.seasonalStrength < 0 && dominantSeason &&
       (controlledSuppression || buriedDeepSuppression);
+    const damagedWeakRoot = item.rootDetails.length > 0 &&
+      item.rootDetails.every(({ damaged }) => damaged) &&
+      item.rootStrength < SPIRITUAL_ROOT_RULES.structure.collectiveWeakRootMinimum;
     const collectiveNetworkEligible = hasTrace && hasEarthTrace && item.presenceScore > 0 &&
-      !seasonallySuppressed &&
+      !seasonallySuppressed && !damagedWeakRoot &&
       // 유연 판정의 합류 자격이다. 이는 실제 생조 유통 하나만을 뜻하지 않는다.
       // 일반 잠재근은 자체 활성량으로, 저점 실근은 세 개 이상의 잠재 역치 기맥이
-      // 원국 전체의 기세를 지탱할 때만 공동 지맥에 합류한다.
+      // 원국 전체의 기세를 지탱할 때만 공동 지맥에 합류한다. 충손된 미약근은
+      // 실제 지근이 끊긴 상태이므로 공동 기세가 세 관문이나 활성도를 대신 열지 않는다.
       (item.score >= SPIRITUAL_ROOT_RULES.structure.potentialScore ||
         (collectiveAnchorCount >= rules.mixedNetworkMinimum && hasEffectiveActivationBasis(item) &&
           item.rootStrength >= SPIRITUAL_ROOT_RULES.structure.collectiveWeakRootMinimum)) &&

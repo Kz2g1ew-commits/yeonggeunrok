@@ -194,6 +194,57 @@ describe("structural element scoring", () => {
     expect(evidence.metal.rootDetails.filter((root) => root.branch === "申").every((root) => root.clashState === "activated")).toBe(true);
   });
 
+  it("keeps a damaged hidden root distinct from having no root at all", () => {
+    const damagedRoot = calculateElementScores({
+      year: pillar("甲", "亥"), month: pillar("丙", "巳"),
+      day: pillar("戊", "戌"), hour: pillar("丁", "酉"),
+    });
+    const noRoot = calculateElementScores({
+      year: pillar("甲", "子"), month: pillar("丙", "巳"),
+      day: pillar("戊", "戌"), hour: pillar("丁", "酉"),
+    });
+
+    expect(damagedRoot.wood.rootDetails).toHaveLength(1);
+    expect(damagedRoot.wood.rootDetails[0].damaged).toBe(true);
+    expect(damagedRoot.wood.contributions.some((item) => item.label === "유일한 뿌리가 충으로 손상")).toBe(true);
+    expect(damagedRoot.wood.contributions.some((item) => item.label === "천간에만 있고 뿌리가 없음")).toBe(false);
+    expect(noRoot.wood.rootDetails).toHaveLength(0);
+    expect(noRoot.wood.contributions.some((item) => item.label === "천간에만 있고 뿌리가 없음")).toBe(true);
+  });
+
+  it("counts repeated root seats separately when deciding whether a damaged root is unique", () => {
+    const evidence = calculateElementScores({
+      year: pillar("甲", "亥"), month: pillar("丙", "巳"),
+      day: pillar("戊", "巳"), hour: pillar("甲", "亥"),
+    });
+
+    expect(evidence.wood.roots).toEqual(["亥"]);
+    expect(evidence.wood.rootDetails).toHaveLength(2);
+    expect(evidence.wood.rootDetails.every((root) => root.damaged)).toBe(true);
+    expect(evidence.wood.contributions.some((item) => item.label === "유일한 뿌리가 충으로 손상")).toBe(false);
+  });
+
+  it("does not let the collective network recreate a severed weak root", () => {
+    const raw = evidenceSet({ wood: 2.5, fire: 13.5, earth: 8, metal: 0, water: 1 });
+    raw.wood.presenceScore = 10;
+    raw.wood.visibleStems = ["trace"];
+    raw.wood.rootStrength = 0.1;
+    raw.wood.rootDetails = [{
+      branch: "trace", stem: "trace", role: "middle", strength: 0.1, clashState: "uprooted", damaged: true,
+    }];
+
+    const evidence = calculateRootChannels(hotFireEarthChart, raw);
+
+    expect(evidence.wood.channel.earth.passed).toBe(false);
+    expect(evidence.wood.channel.complete).toBe(false);
+    expect(evidence.wood.activationOrigin).toBe("none");
+    expect([
+      ...evidence.wood.channel.heaven.reasons,
+      ...evidence.wood.channel.earth.reasons,
+      ...evidence.wood.channel.human.reasons,
+    ].some((reason) => reason.includes("공동 기세"))).toBe(false);
+  });
+
   it("distinguishes a gathered harmony from a season-supported transformed formation", () => {
     const gathered = calculateElementScores({
       year: pillar("庚", "申"), month: pillar("丙", "午"),
