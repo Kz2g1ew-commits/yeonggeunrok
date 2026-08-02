@@ -90,10 +90,22 @@ export interface RootEvidence {
   stem: string;
   role: "main" | "middle" | "residual";
   strength: number;
+  clashState: "stable" | "activated" | "shaken" | "damaged" | "uprooted";
   damaged: boolean;
 }
 
 export type RootChannelState = "complete" | "latent" | "hidden" | "floating" | "external" | "sealed" | "dormant";
+export type RootActivationOrigin = "independent" | "network-assisted" | "none";
+
+export interface ClimateProfile {
+  /** 양수는 온열, 음수는 한랭 */
+  temperature: number;
+  /** 양수는 습윤, 음수는 건조 */
+  moisture: number;
+  temperatureLabel: "한랭" | "냉량" | "중화" | "온난" | "조열";
+  moistureLabel: "조고" | "편조" | "중화" | "윤습" | "한습";
+  reasons: string[];
+}
 
 export interface RootChannelGate {
   score: number;
@@ -137,6 +149,7 @@ export interface ElementEvidence {
   contributions: ScoreContribution[];
   monthCommand: boolean;
   structuralEligible: boolean;
+  activationOrigin: RootActivationOrigin;
   eligibilityReasons: string[];
   potentialReasons: string[];
   selectedRoot: boolean;
@@ -239,6 +252,7 @@ export interface SpiritualRootResult {
   confidence: number;
   confidenceLabel: string;
   confidenceBreakdown: ConfidenceBreakdown;
+  climate: ClimateProfile;
   elementEvidence: Record<Element, ElementEvidence>;
   strengths: string[];
   weaknesses: string[];
@@ -259,6 +273,7 @@ export interface AnalysisContext {
   relations: BranchRelations;
   shensha: ShenshaResult[];
   season: "spring" | "summer" | "earth" | "autumn" | "winter";
+  climate: ClimateProfile;
 }
 
 export interface AnalysisBundle {

@@ -3,6 +3,7 @@ import type { AnalysisContext, ElementEvidence } from "@/types/spiritualRoot";
 import { BRANCHES } from "@/lib/bazi/branches";
 import { STEMS } from "@/lib/bazi/stems";
 import { ELEMENTS } from "@/lib/bazi/elementMeta";
+import { calculateClimateProfile } from "@/lib/bazi/monthlyQi";
 
 export function birthInput(overrides: Partial<BirthInput> = {}): BirthInput {
   return {
@@ -34,10 +35,10 @@ export function evidenceSet(scores: Partial<Record<Element, number>>, potentials
       element, presenceScore: score * 10, presenceRatio: score * 2, baseScore: score, score,
       visibleStems: score >= 4 ? ["甲"] : [], roots: score >= 4 ? ["寅"] : [],
       rootStrength: score >= 4 ? 1 : 0,
-      rootDetails: score >= 4 ? [{ branch: "寅", stem: "甲", role: "main", strength: 1, damaged: false }] : [],
+      rootDetails: score >= 4 ? [{ branch: "寅", stem: "甲", role: "main", strength: 1, clashState: "stable", damaged: false }] : [],
       hiddenStems: [], seasonalStrength: 0, supportScore: score >= 7 ? 1 : 0, controlPenalty: 0,
       combinations: [], clashes: [], effective: score >= 4, potential: potentials.includes(element),
-      reasons: [], contributions: [], monthCommand: false, structuralEligible: score >= 4,
+      reasons: [], contributions: [], monthCommand: false, structuralEligible: score >= 4, activationOrigin: score >= 4 ? "independent" : "none",
       eligibilityReasons: score >= 4 ? ["테스트용 투간통근"] : [], potentialReasons: [], selectedRoot: false,
       channel: {
         heaven: { score: score >= 4 ? 4 : 0, passed: score >= 4, reasons: [] },
@@ -61,12 +62,14 @@ export function analysisContext(
   evidence: Record<Element, ElementEvidence>,
   overrides: Partial<AnalysisContext> = {},
 ): AnalysisContext {
+  const pillars = overrides.pillars ?? testPillars;
   return {
-    pillars: testPillars,
     evidence,
     season: "spring",
     relations: { combinations: [], halfCombinations: [], archingCombinations: [], directionalCombinations: [], sixCombinations: [], clashes: [], punishments: [], harms: [], breaks: [], stemCombinations: [], dynamicCount: 0 },
     shensha: blankShensha,
     ...overrides,
+    pillars,
+    climate: overrides.climate ?? calculateClimateProfile(pillars, evidence),
   };
 }
