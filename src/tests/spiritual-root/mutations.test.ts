@@ -20,7 +20,7 @@ describe("detectMutationRoots", () => {
   it("confirms lightning for balanced wood-fire with dynamic clashes", () => {
     const context = { relations: { combinations: [], halfCombinations: [], archingCombinations: [], directionalCombinations: [], sixCombinations: [], clashes: ["인·신 충"], punishments: [], harms: [], breaks: [], stemCombinations: [], dynamicCount: 2 } };
     const lightning = candidate("lightning", { wood: 9, fire: 9 }, context);
-    expect(["confirmed", "likely"]).toContain(lightning.status);
+    expect(lightning.status).toBe("confirmed");
     expect(detectMutationRoots(analysisContext(evidenceSet({ wood: 9, fire: 9 }), context))[0].id).toBe("lightning");
   });
 
@@ -32,7 +32,14 @@ describe("detectMutationRoots", () => {
 
   it("finds a wind candidate for water-wood with movement", () => {
     const wind = candidate("wind-moist", { water: 8, wood: 8 }, { relations: { combinations: [], halfCombinations: [], archingCombinations: [], directionalCombinations: [], sixCombinations: [], clashes: ["인·신 충"], punishments: [], harms: [], breaks: [], stemCombinations: [], dynamicCount: 2 } });
-    expect(["confirmed", "likely", "possible"]).toContain(wind.status);
+    expect(wind.status).toBe("confirmed");
+  });
+
+  it("confirms hot wind when rooted wood-fire rises through a moving structure", () => {
+    const wind = candidate("wind-hot", { wood: 9, fire: 9 }, {
+      relations: { combinations: [], halfCombinations: [], archingCombinations: [], directionalCombinations: [], sixCombinations: [], clashes: ["인·신 충"], punishments: [], harms: [], breaks: [], stemCombinations: [], dynamicCount: 2 },
+    });
+    expect(wind.status).toBe("confirmed");
   });
 
   it("selects liquid poison over wind when damp conflict is stronger than movement", () => {
@@ -50,6 +57,14 @@ describe("detectMutationRoots", () => {
     const candidates = detectMutationRoots(analysisContext(evidenceSet({ water: 9, earth: 9 }), { season: "winter" }));
     expect(candidates[0].id).toBe("shadow");
     expect(candidates[0].status).toBe("confirmed");
+  });
+
+  it("confirms decay poison for rooted wood-earth in a damp damaged structure", () => {
+    const poison = candidate("poison-decay", { wood: 9, earth: 9 }, {
+      climate: { temperature: 0, moisture: 1, temperatureLabel: "중화", moistureLabel: "윤습", reasons: [] },
+      relations: { combinations: [], halfCombinations: [], archingCombinations: [], directionalCombinations: [], sixCombinations: [], clashes: [], punishments: [], harms: ["자·미 해"], breaks: [], stemCombinations: [], dynamicCount: 1 },
+    });
+    expect(poison.status).toBe("confirmed");
   });
 
   it("prevents mutation confirmation when a strong third root is effective", () => {

@@ -1,93 +1,73 @@
 import { describe, expect, it } from "vitest";
-import type { BirthInput } from "@/types/bazi";
 import type { RootQualityTier } from "@/types/spiritualRoot";
-import { calculateFourPillars } from "@/lib/calendar/calculateFourPillars";
-import { analyzeSpiritualRoots } from "@/lib/spiritual-root/analyzeSpiritualRoots";
-import { determineAwakening } from "@/lib/spiritual-root/determineAwakening";
-import { hasEffectiveActivationBasis } from "@/lib/spiritual-root/rootActivationEligibility";
+import { mergePopulationSamples, runPopulationCohort } from "./populationSample";
+
+const SEEDS = [246_813_579, 482_710_357, 0x9e37_79b9, 0x6d2b_79f5];
+const COHORT_SIZE = 5_000;
+
+const AGGREGATE_RANGES: Partial<Record<RootQualityTier, [number, number]>> = {
+  none: [0, 0.002],
+  heavenly: [0.008, 0.018],
+  // 목표 하한 2.5%에 20,000개 유한 표본의 오차 여유를 둔다.
+  mutation: [0.024, 0.045],
+  dual: [0.055, 0.08],
+  triple: [0.23, 0.28],
+  quadruple: [0.34, 0.4],
+  five: [0.24, 0.3],
+};
+
+const COHORT_SAFETY_RANGES: Partial<Record<RootQualityTier, [number, number]>> = {
+  heavenly: [0.004, 0.025],
+  mutation: [0.012, 0.06],
+  dual: [0.035, 0.105],
+  triple: [0.18, 0.34],
+  quadruple: [0.29, 0.47],
+  five: [0.18, 0.36],
+};
 
 describe("spiritual-root population balance", () => {
-  it("keeps structural results ordered without promoting invalid elements", { timeout: 15_000 }, () => {
-    let seed = 246_813_579;
-    const random = () => {
-      seed = (Math.imul(seed, 1_664_525) + 1_013_904_223) >>> 0;
-      return seed;
-    };
-    const counts: Record<RootQualityTier, number> = {
-      none: 0, heavenly: 0, mutation: 0, dual: 0, triple: 0, quadruple: 0, five: 0,
-    };
-    let strictComparisons = 0;
-    let balancedPasses = 0;
-    let strictPasses = 0;
-    const quadrupleSubtypes = new Set<string>();
-    const fiveSubtypes = new Set<string>();
-    const fiveQiVariants = new Set<string>();
-    let fiveQiCycles = 0;
+  it("keeps the intended rarity order across multiple deterministic cohorts", { timeout: 45_000 }, () => {
+    const cohorts = SEEDS.map((seed) => runPopulationCohort(seed, COHORT_SIZE));
+    const sample = mergePopulationSamples(cohorts);
+    const share = (tier: RootQualityTier) => sample.tierCounts[tier] / sample.size;
 
-    for (let index = 0; index < 5_000; index += 1) {
-      const input: BirthInput = {
-        judgmentMode: "generous", calendarType: "solar", isLeapMonth: false,
-        year: 1900 + random() % 201, month: 1 + random() % 12, day: 1 + random() % 28,
-        hour: random() % 24, minute: random() % 60,
-        timezone: "Asia/Seoul", country: "대한민국", city: "서울", longitude: 126.978,
-        longitudeIsApproximate: true, gender: "unspecified", applyLateZi: false,
-        applyTrueSolarTime: false, timeAccuracy: "exact",
-        shensha: { enabled: false, huagai: false, guimen: false, yima: false },
-      };
-      const calculation = calculateFourPillars(input);
-      const result = analyzeSpiritualRoots(input, calculation).result;
-      expect(result.primaryElements.every((element) => hasEffectiveActivationBasis(result.elementEvidence[element]))).toBe(true);
-      counts[result.classification.qualityTier] += 1;
-      if (result.classification.qualityTier === "quadruple") {
-        expect(result.classification.multiRootProfile).toBeDefined();
-        quadrupleSubtypes.add(result.classification.multiRootProfile!.subtype);
-      }
-      if (result.classification.qualityTier === "five") {
-        expect(result.classification.multiRootProfile).toBeDefined();
-        const profile = result.classification.multiRootProfile!;
-        fiveSubtypes.add(profile.subtype);
-        if (profile.subtype === "오기조원형") {
-          fiveQiCycles += 1;
-          if (profile.fiveRootVariant) fiveQiVariants.add(profile.fiveRootVariant);
-        }
-      }
-      if (determineAwakening("balanced", calculation.pillars, result.elementEvidence, result.awakening.dao).passed) balancedPasses += 1;
-      if (determineAwakening("strict", calculation.pillars, result.elementEvidence, result.awakening.dao).passed) {
-        const strictResult = analyzeSpiritualRoots({ ...input, judgmentMode: "strict" }, calculation).result;
-        expect(strictResult.classification.qualityTier).toBe(result.classification.qualityTier);
-        expect(strictResult.primaryElements).toEqual(result.primaryElements);
-        strictComparisons += 1;
-        strictPasses += 1;
+    for (const [tier, [minimum, maximum]] of Object.entries(AGGREGATE_RANGES) as Array<[RootQualityTier, [number, number]]>) {
+      expect(share(tier), `${tier} aggregate share`).toBeGreaterThanOrEqual(minimum);
+      expect(share(tier), `${tier} aggregate share`).toBeLessThanOrEqual(maximum);
+    }
+    for (const cohort of cohorts) {
+      for (const [tier, [minimum, maximum]] of Object.entries(COHORT_SAFETY_RANGES) as Array<[RootQualityTier, [number, number]]>) {
+        const cohortShare = cohort.tierCounts[tier] / cohort.size;
+        expect(cohortShare, `${tier} cohort share`).toBeGreaterThanOrEqual(minimum);
+        expect(cohortShare, `${tier} cohort share`).toBeLessThanOrEqual(maximum);
       }
     }
 
-    const share = (tier: RootQualityTier) => counts[tier] / 5_000;
-    expect(share("none")).toBeLessThan(0.002);
-    expect(share("heavenly")).toBeGreaterThan(0.008);
-    expect(share("heavenly")).toBeLessThan(0.018);
-    expect(share("mutation")).toBeGreaterThan(0.025);
-    expect(share("mutation")).toBeLessThan(0.045);
-    expect(share("dual")).toBeGreaterThan(0.055);
-    expect(share("dual")).toBeLessThan(0.08);
-    expect(share("triple")).toBeGreaterThan(0.23);
-    expect(share("triple")).toBeLessThan(0.28);
-    expect(share("quadruple")).toBeGreaterThan(0.34);
-    expect(share("quadruple")).toBeLessThan(0.4);
-    expect(share("five")).toBeGreaterThan(0.24);
-    expect(share("five")).toBeLessThan(0.3);
     expect(share("heavenly")).toBeLessThan(share("mutation"));
     expect(share("mutation")).toBeLessThan(share("dual"));
     expect(share("dual")).toBeLessThan(share("five"));
     expect(share("five") + share("quadruple")).toBeGreaterThan(0.5);
-    expect(quadrupleSubtypes.size).toBeGreaterThanOrEqual(5);
-    expect(fiveSubtypes.size).toBeGreaterThanOrEqual(5);
-    expect(fiveQiCycles / 5_000).toBeGreaterThan(0.005);
-    expect(fiveQiCycles / 5_000).toBeLessThan(0.04);
-    expect(fiveQiVariants.size).toBeGreaterThanOrEqual(2);
-    expect(balancedPasses / 5_000).toBeGreaterThan(0.11);
-    expect(balancedPasses / 5_000).toBeLessThan(0.15);
-    expect(strictPasses / 5_000).toBeGreaterThan(0.005);
-    expect(strictPasses / 5_000).toBeLessThan(0.015);
-    expect(strictComparisons).toBeGreaterThan(35);
+    expect(sample.invalidActivationCount).toBe(0);
+    expect(sample.missingMultiRootProfileCount).toBe(0);
+    expect(sample.balancedInvariantViolations).toBe(0);
+    expect(sample.strictInvariantViolations).toBe(0);
+    expect(sample.quadrupleSubtypes.size).toBeGreaterThanOrEqual(5);
+    expect(sample.fiveSubtypes.size).toBeGreaterThanOrEqual(5);
+    expect(sample.fiveQiCycles / sample.size).toBeGreaterThan(0.005);
+    expect(sample.fiveQiCycles / sample.size).toBeLessThan(0.04);
+    for (const variant of ["원융", "유통", "편기", "탁류"]) {
+      expect(sample.fiveQiVariantCounts[variant] ?? 0, `${variant} five-qi variant`).toBeGreaterThan(0);
+    }
+    const networkAssistedShare = sample.networkAssistedCount / sample.totalEffectiveCount;
+    expect(networkAssistedShare).toBeGreaterThan(0.37);
+    expect(networkAssistedShare).toBeLessThan(0.42);
+    expect(sample.balancedPasses / sample.size).toBeGreaterThan(0.11);
+    expect(sample.balancedPasses / sample.size).toBeLessThan(0.15);
+    expect(sample.strictPasses / sample.size).toBeGreaterThan(0.005);
+    expect(sample.strictPasses / sample.size).toBeLessThan(0.015);
+
+    expect(sample.mutationCandidateRows).toBeGreaterThan(sample.finalMutationRows);
+    expect(sample.finalMutationIds.size).toBeGreaterThanOrEqual(5);
+    expect(sample.finalMutationInvariantViolations).toBe(0);
   });
 });

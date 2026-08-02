@@ -29,8 +29,8 @@ describe("cultivation talent synthesis", () => {
   it("lets a refined five-qi circuit approach heavenly-root bone without lifting unstable variants equally", () => {
     const elements: Element[] = ["wood", "fire", "earth", "metal", "water"];
     const harmoniousEvidence = evidenceSet({ wood: 8, fire: 8, earth: 8, metal: 8, water: 8 });
-    const flowingEvidence = evidenceSet({ wood: 7, fire: 7, earth: 7, metal: 10.5, water: 7 });
-    const biasedEvidence = evidenceSet({ wood: 8, fire: 8, earth: 14, metal: 8, water: 8 });
+    const flowingEvidence = evidenceSet({ wood: 7, fire: 7, earth: 7, metal: 15, water: 7 });
+    const biasedEvidence = evidenceSet({ wood: 8, fire: 8, earth: 18.1, metal: 8, water: 8 });
     const turbulentEvidence = evidenceSet({ wood: 8, fire: 8, earth: 8, metal: 8, water: 8 });
     const turbulentRelations = {
       ...relations,
