@@ -1,5 +1,5 @@
 import type { Element } from "@/types/bazi";
-import type { ClimateProfile } from "@/types/spiritualRoot";
+import type { ClimateProfile, RootEvidence } from "@/types/spiritualRoot";
 
 export interface MutationRule {
   id: string;
@@ -15,6 +15,10 @@ export interface MutationRule {
     | "rooted-generation"
     | "thermal-convergence";
   relationFailureConfidenceCap?: number;
+  scoreGapMode?: "standard" | "fusion-path";
+  fusionPaths?: MutationFusionPath[];
+  fusionPathFailureConfidenceCap?: number;
+  fusionPathBlockerLabel?: string;
   selectionGroup?: "wood-fire-motion" | "fire-metal-polarity" | "water-wood-expression";
   selectionStrategy?: "priority" | "confidence";
   conditions?: MutationCondition[];
@@ -43,6 +47,7 @@ export type MutationCondition =
     element: Element;
     branches?: string[];
     roles?: Array<"main" | "middle" | "residual">;
+    allowedClashStates?: RootEvidence["clashState"][];
     minimumStrength: number;
   })
   | (MutationConditionBase & {
@@ -74,6 +79,39 @@ export type MutationCondition =
     trailingElement: Element;
     maximumGap: number;
   });
+
+export type MutationFusionRequirement =
+  | {
+    kind: "climate-labels";
+    temperatureLabels: ClimateProfile["temperatureLabel"][];
+    moistureLabels: ClimateProfile["moistureLabel"][];
+  }
+  | {
+    kind: "score-gap";
+    elements: [Element, Element];
+    maximum: number;
+  }
+  | {
+    kind: "root-pattern";
+    element: Element;
+    minimumStrength: number;
+    allowedClashStates?: RootEvidence["clashState"][];
+  }
+  | {
+    kind: "root-strength-gap";
+    elements: [Element, Element];
+    maximum: number;
+    allowedClashStates?: RootEvidence["clashState"][];
+  };
+
+export interface MutationFusionPath {
+  id: string;
+  name: string;
+  points: number;
+  satisfiedLabel: string;
+  missingLabel: string;
+  requirements: MutationFusionRequirement[];
+}
 
 export interface MutationBonus {
   kind: "branch-pair";
@@ -159,6 +197,7 @@ export const MUTATION_RULES: MutationRule[] = [
     conditions: [
       {
         kind: "root-pattern", element: "earth", branches: ["辰", "戌", "丑", "未"], roles: ["main"],
+        allowedClashStates: ["stable", "activated"],
         minimumStrength: 0.6, points: 7, confidenceCap: 49,
         satisfiedLabel: "토기가 진·술·축·미의 저장근에 단단히 뿌리내림",
         missingLabel: "결정을 기를 토의 저장근이 부족함",
@@ -166,6 +205,7 @@ export const MUTATION_RULES: MutationRule[] = [
       },
       {
         kind: "root-pattern", element: "metal", branches: ["申", "酉"], roles: ["main"],
+        allowedClashStates: ["stable", "activated"],
         minimumStrength: 0.6, points: 7, confidenceCap: 49,
         satisfiedLabel: "금기가 신·유의 본근을 얻어 결정격자를 세움",
         missingLabel: "결정격자를 세울 금의 본근이 부족함",
@@ -179,16 +219,16 @@ export const MUTATION_RULES: MutationRule[] = [
         blockerLabel: "극단 조후가 결정의 성장과 안정성을 깨뜨림",
       },
       {
-        kind: "maximum-dynamic", maximum: 1, points: 7, confidenceCap: 64,
+        kind: "maximum-dynamic", maximum: 2, points: 7, confidenceCap: 64,
         satisfiedLabel: "합충의 동세가 낮아 결정격자가 안정됨",
         missingLabel: "충·형의 동세가 결정격자를 흔듦",
         blockerLabel: "강한 동세가 응축 중인 결정격자를 파쇄함",
       },
       {
-        kind: "maximum-score-lead", leadingElement: "earth", trailingElement: "metal", maximumGap: 3.5,
+        kind: "maximum-score-lead", leadingElement: "earth", trailingElement: "metal", maximumGap: 5.5,
         points: 4, confidenceCap: 64,
-        satisfiedLabel: "토가 금을 생하되 묻어 버릴 만큼 과다하지 않음",
-        missingLabel: "토의 편중이 금의 발현을 덮음",
+        satisfiedLabel: "토가 금보다 5.5점 넘게 앞서지 않아 토다금매를 피함",
+        missingLabel: "토가 금보다 5.5점 넘게 강하여 금의 발현을 덮음",
         blockerLabel: "토다금매로 금기가 토중에 매몰됨",
       },
       {
@@ -213,31 +253,52 @@ export const MUTATION_RULES: MutationRule[] = [
       },
     ],
     blockers: ["토다금매", "강한 화기", "강한 목기", "극단 조후", "제3 유효 영근"],
-    minimumScore: 4, maximumScoreGap: 3.5, priority: 88,
+    minimumScore: 4, maximumScoreGap: 5.5, priority: 88,
     description: "토석의 저장력이 금기를 결정격자로 응축하여 수정·옥석·금강의 안정된 기맥을 이룹니다.",
   },
   {
     id: "cloud", name: "운(雲)", sourceElements: ["fire", "water"], requiredRelations: ["수화기제의 기화·응결"],
     relationMode: "thermal-convergence", relationFailureConfidenceCap: 64,
+    scoreGapMode: "fusion-path", fusionPathFailureConfidenceCap: 64,
+    fusionPathBlockerLabel: "수화기제형과 한습응결형 어느 쪽도 완성되지 않음",
+    fusionPaths: [
+      {
+        id: "balanced-cycle", name: "수화기제형", points: 20,
+        satisfiedLabel: "수화기제형: 균형 잡힌 화수가 중화·윤습 조후에서 기화와 응결을 교대함",
+        missingLabel: "수화기제형에는 양근 0.6 이상·점수차 2.5 이하·중화 및 중화/윤습 조후가 필요함",
+        requirements: [
+          { kind: "climate-labels", temperatureLabels: ["중화"], moistureLabels: ["중화", "윤습"] },
+          { kind: "score-gap", elements: ["fire", "water"], maximum: 2.5 },
+          { kind: "root-pattern", element: "fire", minimumStrength: 0.6, allowedClashStates: ["stable", "activated", "shaken"] },
+          { kind: "root-pattern", element: "water", minimumStrength: 0.6, allowedClashStates: ["stable", "activated", "shaken"] },
+        ],
+      },
+      {
+        id: "cold-condensation", name: "한습응결형", points: 20,
+        satisfiedLabel: "한습응결형: 깊은 화근과 수근이 한랭·한습 속에서 균형 있게 응결함",
+        missingLabel: "한습응결형에는 양근 1.5 이상·근력차 0.5 이하·한랭한습 조후가 필요함",
+        requirements: [
+          { kind: "climate-labels", temperatureLabels: ["한랭"], moistureLabels: ["한습"] },
+          { kind: "root-pattern", element: "fire", minimumStrength: 1.5, allowedClashStates: ["stable", "activated", "shaken"] },
+          { kind: "root-pattern", element: "water", minimumStrength: 1.5, allowedClashStates: ["stable", "activated", "shaken"] },
+          { kind: "root-strength-gap", elements: ["fire", "water"], maximum: 0.5, allowedClashStates: ["stable", "activated", "shaken"] },
+        ],
+      },
+    ],
     conditions: [
       {
-        kind: "root-pattern", element: "fire", minimumStrength: 0.6, points: 8, confidenceCap: 49,
+        kind: "root-pattern", element: "fire", minimumStrength: 0.6,
+        allowedClashStates: ["stable", "activated", "shaken"], points: 8, confidenceCap: 49,
         satisfiedLabel: "화기가 실제 통근하여 수기를 기화할 열원을 갖춤",
         missingLabel: "기화의 열원이 될 화근이 부족함",
         blockerLabel: "화기가 무근하여 수기를 운기로 들어 올리지 못함",
       },
       {
-        kind: "root-pattern", element: "water", minimumStrength: 0.6, points: 8, confidenceCap: 49,
+        kind: "root-pattern", element: "water", minimumStrength: 0.6,
+        allowedClashStates: ["stable", "activated", "shaken"], points: 8, confidenceCap: 49,
         satisfiedLabel: "수기가 실제 통근하여 응결할 수원을 갖춤",
         missingLabel: "응결의 수원이 될 수근이 부족함",
         blockerLabel: "수기가 무근하여 지속적인 운무를 이루지 못함",
-      },
-      {
-        kind: "climate-labels", temperatureLabels: ["중화"], moistureLabels: ["중화", "윤습"],
-        points: 10, confidenceCap: 64,
-        satisfiedLabel: "한열이 중화되고 조습이 중화·윤습하여 기화와 응결이 교대함",
-        missingLabel: "한열 중화 또는 중화·윤습 조후가 부족함",
-        blockerLabel: "편고한 조후가 기화와 응결의 순환을 끊음",
       },
       {
         kind: "blocked-branch-pair", pairs: [["子", "午"], ["巳", "亥"]],
@@ -248,7 +309,7 @@ export const MUTATION_RULES: MutationRule[] = [
       },
     ],
     blockers: ["직접 수화충", "한열 편중", "조후 극단", "제3 유효 영근"],
-    minimumScore: 4, maximumScoreGap: 2.5, priority: 87,
+    minimumScore: 4, priority: 87,
     description: "수화가 기제하여 기화와 응결을 거듭하며 구름·운무·신기루의 변화무쌍한 기맥을 이룹니다.",
   },
 ];

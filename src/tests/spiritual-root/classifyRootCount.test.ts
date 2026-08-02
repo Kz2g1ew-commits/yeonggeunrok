@@ -171,7 +171,7 @@ describe("classifyRootCount", () => {
     );
     expect(result.qualityTier).toBe("dual");
     expect(result.rootCount).toBe("dual");
-    expect(result.displayName).toContain("빙영근 유력");
+    expect(result.displayName).toContain("빙 변이영근 유력");
   });
 
   it("does not collapse three effective roots even if one pair has a confirmed mutation", () => {

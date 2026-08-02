@@ -67,7 +67,17 @@ describe("spiritual-root population balance", () => {
     expect(sample.strictPasses / sample.size).toBeLessThan(0.015);
 
     expect(sample.mutationCandidateRows).toBeGreaterThan(sample.finalMutationRows);
-    expect(sample.finalMutationIds.size).toBeGreaterThanOrEqual(5);
+    expect(sample.finalMutationIds.size).toBeGreaterThanOrEqual(11);
+    expect(sample.finalMutationIds).toContain("crystal");
+    expect(sample.finalMutationIds).toContain("cloud");
+    expect((sample.finalMutationCounts.crystal ?? 0) / sample.size).toBeGreaterThan(0.001);
+    expect((sample.finalMutationCounts.crystal ?? 0) / sample.size).toBeLessThan(0.003);
+    expect(sample.finalMutationCounts.cloud ?? 0).toBeGreaterThan(0);
+    expect(sample.finalMutationCounts.cloud ?? 0).toBeLessThan(10);
+    expect(sample.mutationCandidateCounts.crystal ?? 0).toBeGreaterThan(sample.finalMutationCounts.crystal ?? 0);
+    expect(sample.mutationCandidateCounts.cloud ?? 0).toBeGreaterThan(sample.finalMutationCounts.cloud ?? 0);
+    expect(sample.confirmedSelectionGroupViolations).toBe(0);
+    expect(sample.confirmedSourcePairViolations).toBe(0);
     expect(sample.finalMutationInvariantViolations).toBe(0);
   });
 });

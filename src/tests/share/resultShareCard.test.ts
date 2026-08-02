@@ -61,7 +61,7 @@ describe("result share card privacy model", () => {
     expect(model.quality).toBe("상등 · 희귀");
     expect(model.primaryRoots).toBe("금(金) · 수(水)");
     expect(model.potentialRoots).toBe("토(土)");
-    expect(model.mutation).toBe("빙영근 · 유력 82%");
+    expect(model.mutation).toBe("빙 변이영근 · 유력 82%");
     expect(model.talent.title).toBe("천교 天驕");
     expect(model.talent.dimensions.map(({ name, score }) => [name, score])).toEqual([
       ["근골", 82], ["오성", 74], ["투골", 51], ["신혼", 63], ["기운", 48],

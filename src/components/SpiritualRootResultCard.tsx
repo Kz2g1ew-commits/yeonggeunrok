@@ -35,7 +35,7 @@ export function SpiritualRootResultCard({ result }: { result: SpiritualRootResul
       </div>
       <div className="relative mt-7 grid gap-px overflow-hidden rounded-xl border border-white/7 bg-white/7 sm:grid-cols-2 lg:grid-cols-3">
         {[
-          [Sparkles, "변이 가능성", mutation ? `${mutation.name}영근 ${mutation.status === "confirmed" ? "확정" : mutation.status === "likely" ? "유력" : "후보"} ${mutation.confidence}%` : "뚜렷한 후보 없음"],
+          [Sparkles, "변이 가능성", mutation ? `${mutation.name} 변이영근 ${mutation.status === "confirmed" ? "확정" : mutation.status === "likely" ? "유력" : "후보"} ${mutation.confidence}%` : "뚜렷한 후보 없음"],
           [Trophy, "품질 서열", `${result.classification.qualityRank}단계 · ${result.classification.qualityLabel}`],
           [ShieldCheck, "선천 기감", `${result.awakening.preHeaven.stateLabel} · ${result.awakening.passed ? "발현" : "미발현"}`],
           [Activity, "주영근", primary ? ELEMENT_META[primary].label : "미성립"],

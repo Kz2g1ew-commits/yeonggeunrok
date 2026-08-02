@@ -180,12 +180,12 @@ describe("detectMutationRoots", () => {
   });
 
   it("blocks crystal when excessive earth buries metal or conflict shatters condensation", () => {
-    const evidence = evidenceSet({ earth: 12.6, metal: 9 });
+    const evidence = evidenceSet({ earth: 14.6, metal: 9 });
     setStableRoot(evidence, "earth", "辰", "戊");
     setStableRoot(evidence, "metal", "酉", "辛");
     const crystal = detectMutationRoots(analysisContext(evidence, {
       climate: { temperature: 0, moisture: 0, temperatureLabel: "중화", moistureLabel: "중화", reasons: [] },
-      relations: { combinations: [], halfCombinations: [], archingCombinations: [], directionalCombinations: [], sixCombinations: [], clashes: ["묘·유 충"], punishments: [], harms: [], breaks: [], stemCombinations: [], dynamicCount: 2 },
+      relations: { combinations: [], halfCombinations: [], archingCombinations: [], directionalCombinations: [], sixCombinations: [], clashes: ["묘·유 충"], punishments: [], harms: ["유·술 해"], breaks: [], stemCombinations: [], dynamicCount: 3 },
     })).find((item) => item.id === "crystal")!;
 
     expect(crystal.status).not.toBe("confirmed");
@@ -209,6 +209,73 @@ describe("detectMutationRoots", () => {
     expect(cloud.name).toBe("운(雲)");
     expect(cloud.status).toBe("confirmed");
     expect(cloud.satisfiedConditions.some((item) => item.includes("기화와 응결"))).toBe(true);
+  });
+
+  it("confirms cold-condensation cloud despite a large seasonal score gap", () => {
+    const evidence = evidenceSet({ fire: 6, water: 15.2 });
+    evidence.fire.roots = ["午", "未"];
+    evidence.fire.rootStrength = 2.1;
+    evidence.fire.rootDetails = [
+      { branch: "午", stem: "丁", role: "main", strength: 1.1, clashState: "stable", damaged: false },
+      { branch: "未", stem: "丁", role: "middle", strength: 1, clashState: "stable", damaged: false },
+    ];
+    evidence.water.roots = ["亥", "辰"];
+    evidence.water.rootStrength = 2.2;
+    evidence.water.rootDetails = [
+      { branch: "亥", stem: "壬", role: "main", strength: 1.2, clashState: "stable", damaged: false },
+      { branch: "辰", stem: "癸", role: "residual", strength: 1, clashState: "stable", damaged: false },
+    ];
+    const pillars: FourPillars = {
+      year: pillar("丁", "午"), month: pillar("己", "未"),
+      day: pillar("壬", "亥"), hour: pillar("戊", "辰"),
+    };
+    const cloud = detectMutationRoots(analysisContext(evidence, {
+      pillars,
+      climate: { temperature: -1.5, moisture: 1.2, temperatureLabel: "한랭", moistureLabel: "한습", reasons: [] },
+    })).find((item) => item.id === "cloud")!;
+
+    expect(cloud.status).toBe("confirmed");
+    expect(cloud.satisfiedConditions.some((item) => item.includes("한습응결형"))).toBe(true);
+    expect(cloud.missingConditions.some((item) => item.includes("점수 차가 큼"))).toBe(false);
+  });
+
+  it("does not confirm either cloud path with weak and uneven cold roots", () => {
+    const evidence = evidenceSet({ fire: 6, water: 15.2 });
+    setStableRoot(evidence, "fire", "午", "丁", "main", 1.4);
+    setStableRoot(evidence, "water", "亥", "壬", "main", 2.1);
+    const cloud = detectMutationRoots(analysisContext(evidence, {
+      climate: { temperature: -1.5, moisture: 1.2, temperatureLabel: "한랭", moistureLabel: "한습", reasons: [] },
+    })).find((item) => item.id === "cloud")!;
+
+    expect(cloud.status).not.toBe("confirmed");
+    expect(cloud.blockers.some((item) => item.includes("어느 쪽도"))).toBe(true);
+    expect(cloud.missingConditions.some((item) => item.includes("근력차 0.5"))).toBe(true);
+    expect(cloud.missingConditions.some((item) => item.includes("점수 차가 큼"))).toBe(false);
+  });
+
+  it("does not count shattered roots toward crystal or cloud fusion gates", () => {
+    const crystalEvidence = evidenceSet({ earth: 9, metal: 9 });
+    setStableRoot(crystalEvidence, "earth", "辰", "戊");
+    setStableRoot(crystalEvidence, "metal", "酉", "辛");
+    crystalEvidence.earth.rootDetails[0].clashState = "shaken";
+    crystalEvidence.earth.rootDetails[0].damaged = true;
+    const crystal = detectMutationRoots(analysisContext(crystalEvidence, {
+      climate: { temperature: 0, moisture: 0, temperatureLabel: "중화", moistureLabel: "중화", reasons: [] },
+    })).find((item) => item.id === "crystal")!;
+
+    const cloudEvidence = evidenceSet({ fire: 9, water: 9 });
+    setStableRoot(cloudEvidence, "fire", "午", "丁");
+    setStableRoot(cloudEvidence, "water", "亥", "壬");
+    cloudEvidence.water.rootDetails[0].clashState = "damaged";
+    cloudEvidence.water.rootDetails[0].damaged = true;
+    const cloud = detectMutationRoots(analysisContext(cloudEvidence, {
+      climate: { temperature: 0, moisture: 0.4, temperatureLabel: "중화", moistureLabel: "윤습", reasons: [] },
+    })).find((item) => item.id === "cloud")!;
+
+    expect(crystal.status).not.toBe("confirmed");
+    expect(crystal.blockers.some((item) => item.includes("토의 저장근"))).toBe(true);
+    expect(cloud.status).not.toBe("confirmed");
+    expect(cloud.blockers.some((item) => item.includes("수기가 무근"))).toBe(true);
   });
 
   it("blocks cloud when fire and water meet through a direct clash", () => {
@@ -241,6 +308,6 @@ describe("detectMutationRoots", () => {
 
     expect(cloud.status).not.toBe("confirmed");
     expect(cloud.blockers.some((item) => item.includes("수기가 무근"))).toBe(true);
-    expect(cloud.blockers.some((item) => item.includes("편고한 조후"))).toBe(true);
+    expect(cloud.blockers.some((item) => item.includes("어느 쪽도"))).toBe(true);
   });
 });

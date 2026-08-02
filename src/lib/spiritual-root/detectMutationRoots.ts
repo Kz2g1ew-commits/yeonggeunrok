@@ -1,6 +1,7 @@
-import type { AnalysisContext, MutationCandidate } from "@/types/spiritualRoot";
+import type { Element } from "@/types/bazi";
+import type { AnalysisContext, MutationCandidate, RootEvidence } from "@/types/spiritualRoot";
 import { ELEMENT_META } from "@/lib/bazi/elementMeta";
-import { MUTATION_RULES, type MutationRule } from "./mutationRules";
+import { MUTATION_RULES, type MutationFusionRequirement, type MutationRule } from "./mutationRules";
 import { SPIRITUAL_ROOT_RULES } from "./spiritualRootRules";
 
 const clamp = (value: number, min = 0, max = 100) => Math.min(max, Math.max(min, value));
@@ -28,6 +29,66 @@ function hasWoodMetalClash(context: AnalysisContext): boolean {
 function hasBranchPair(context: AnalysisContext, pairs: Array<[string, string]>): boolean {
   const branches = Object.values(context.pillars).map((pillar) => pillar.branch);
   return pairs.some((pair) => pair.every((branch) => branches.includes(branch)));
+}
+
+function matchingRootStrength(
+  context: AnalysisContext,
+  element: Element,
+  options: {
+    branches?: string[];
+    roles?: Array<"main" | "middle" | "residual">;
+    allowedClashStates?: RootEvidence["clashState"][];
+  } = {},
+): number {
+  return context.evidence[element].rootDetails
+    .filter((root) =>
+      (!options.branches || options.branches.includes(root.branch)) &&
+      (!options.roles || options.roles.includes(root.role)) &&
+      (!options.allowedClashStates || options.allowedClashStates.includes(root.clashState)))
+    .reduce((sum, root) => sum + root.strength, 0);
+}
+
+function fusionRequirementSatisfied(requirement: MutationFusionRequirement, context: AnalysisContext): boolean {
+  switch (requirement.kind) {
+    case "climate-labels":
+      return requirement.temperatureLabels.includes(context.climate.temperatureLabel) &&
+        requirement.moistureLabels.includes(context.climate.moistureLabel);
+    case "score-gap":
+      return Math.abs(
+        context.evidence[requirement.elements[0]].score - context.evidence[requirement.elements[1]].score,
+      ) <= requirement.maximum;
+    case "root-pattern":
+      return matchingRootStrength(context, requirement.element, {
+        allowedClashStates: requirement.allowedClashStates,
+      }) >= requirement.minimumStrength;
+    case "root-strength-gap": {
+      const [a, b] = requirement.elements;
+      return Math.abs(
+        matchingRootStrength(context, a, { allowedClashStates: requirement.allowedClashStates }) -
+        matchingRootStrength(context, b, { allowedClashStates: requirement.allowedClashStates }),
+      ) <= requirement.maximum;
+    }
+  }
+}
+
+function evaluateFusionPaths(
+  rule: MutationRule,
+  context: AnalysisContext,
+  satisfied: string[],
+  missing: string[],
+  blockers: string[],
+): { points: number; confidenceCap: number } {
+  if (!rule.fusionPaths?.length) return { points: 0, confidenceCap: 100 };
+  const completed = rule.fusionPaths.find((path) =>
+    path.requirements.every((requirement) => fusionRequirementSatisfied(requirement, context)));
+  if (completed) {
+    satisfied.push(completed.satisfiedLabel);
+    return { points: completed.points, confidenceCap: 100 };
+  }
+
+  missing.push(...rule.fusionPaths.map((path) => path.missingLabel));
+  blockers.push(rule.fusionPathBlockerLabel ?? "대안 융합 관문이 성립하지 않음");
+  return { points: 0, confidenceCap: rule.fusionPathFailureConfidenceCap ?? 64 };
 }
 
 function relationSatisfied(rule: MutationRule, context: AnalysisContext): boolean {
@@ -71,10 +132,11 @@ function evaluateConfiguredConditions(
     let met = false;
     switch (condition.kind) {
       case "root-pattern": {
-        const roots = context.evidence[condition.element].rootDetails.filter((root) =>
-          (!condition.branches || condition.branches.includes(root.branch)) &&
-          (!condition.roles || condition.roles.includes(root.role)));
-        met = roots.reduce((sum, root) => sum + root.strength, 0) >= condition.minimumStrength;
+        met = matchingRootStrength(context, condition.element, {
+          branches: condition.branches,
+          roles: condition.roles,
+          allowedClashStates: condition.allowedClashStates,
+        }) >= condition.minimumStrength;
         break;
       }
       case "climate-window":
@@ -255,12 +317,14 @@ function evaluateRule(rule: MutationRule, context: AnalysisContext): MutationCan
 
   const [a, b] = rule.sourceElements;
   const gap = Math.abs(context.evidence[a].score - context.evidence[b].score);
-  if (gap <= (rule.maximumScoreGap ?? 4)) {
-    satisfied.push(`두 오행의 점수 차가 허용 범위 안임 (${gap.toFixed(1)}점)`);
-    score += 10;
-  } else {
-    missing.push(`두 오행의 점수 차가 큼 (${gap.toFixed(1)}점)`);
-    blockers.push("점수 편중이 커서 두 기운의 안정적인 융합이 어려움");
+  if ((rule.scoreGapMode ?? "standard") === "standard") {
+    if (gap <= (rule.maximumScoreGap ?? 4)) {
+      satisfied.push(`두 오행의 점수 차가 허용 범위 안임 (${gap.toFixed(1)}점)`);
+      score += 10;
+    } else {
+      missing.push(`두 오행의 점수 차가 큼 (${gap.toFixed(1)}점)`);
+      blockers.push("점수 편중이 커서 두 기운의 안정적인 융합이 어려움");
+    }
   }
 
   const hasRequiredRelation = relationSatisfied(rule, context);
@@ -285,6 +349,10 @@ function evaluateRule(rule: MutationRule, context: AnalysisContext): MutationCan
       satisfied.push("변이를 돕는 지지가 존재함"); score += 8;
     } else missing.push("변이를 돕는 핵심 지지가 없음");
   }
+
+  const fusionPath = evaluateFusionPaths(rule, context, satisfied, missing, blockers);
+  score += fusionPath.points;
+  confidenceCap = Math.min(confidenceCap, fusionPath.confidenceCap);
 
   const configuredConditions = evaluateConfiguredConditions(rule, context, satisfied, missing, blockers);
   score += configuredConditions.points;
