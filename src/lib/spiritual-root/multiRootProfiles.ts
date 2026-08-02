@@ -55,9 +55,9 @@ function cycleProfile(count: number, linkCount: number): { state: RootCycleState
   return { state: "broken", label: "상생 고리가 분절됨" };
 }
 
-function formationSupport(evidence: Record<Element, ElementEvidence>, relations: BranchRelations): boolean {
-  return relations.combinations.length + relations.directionalCombinations.length > 0 ||
-    ELEMENTS.some((element) => evidence[element].combinations.includes("천간합화"));
+function formationSupport(evidence: Record<Element, ElementEvidence>): boolean {
+  return ELEMENTS.some((element) => evidence[element].combinations.some((combination) =>
+    ["삼합 성국", "방합 성국", "천간합화"].includes(combination)));
 }
 
 function fourRootSubtype(
@@ -118,7 +118,7 @@ export function buildMultiRootProfile(
   const generatingLinks = actualGeneratingLinks(effective, evidence);
   const cycle = cycleProfile(effective.length, generatingLinks.length);
   const conflict = conflictProfile(relations);
-  const supportedByFormation = formationSupport(evidence, relations);
+  const supportedByFormation = formationSupport(evidence);
   const fiveRoot = effective.length === 5
     ? fiveRootProfile(scoreSpread, dominantElement, cycle.state, conflict.level)
     : undefined;

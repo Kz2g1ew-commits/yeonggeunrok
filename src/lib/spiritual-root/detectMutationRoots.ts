@@ -26,14 +26,36 @@ function hasWoodMetalClash(context: AnalysisContext): boolean {
 }
 
 function relationSatisfied(rule: MutationRule, context: AnalysisContext): boolean {
-  switch (rule.relationMode ?? "support") {
-    case "inherent":
-      return true;
+  const [source, target] = rule.sourceElements;
+  const sourceEvidence = context.evidence[source];
+  const targetEvidence = context.evidence[target];
+  const grounded = (element: typeof sourceEvidence) => element.monthCommand || element.rootStrength >= SPIRITUAL_ROOT_RULES.roots.visibleConnectionMinimum;
+  switch (rule.relationMode ?? "generating-flow") {
+    case "generating-flow":
+      return targetEvidence.supportScore > 0 || targetEvidence.contributions.some(({ label }) => label.includes(" 유통"));
+    case "balanced-polarity":
+      return grounded(sourceEvidence) && grounded(targetEvidence) && context.relations.dynamicCount <= 2;
+    case "dynamic-control":
+      return grounded(sourceEvidence) && grounded(targetEvidence) && context.relations.dynamicCount > 0;
+    case "submerged-interface":
+      return grounded(sourceEvidence) && grounded(targetEvidence) &&
+        context.climate.moisture >= SPIRITUAL_ROOT_RULES.mutationSource.moistThreshold;
     case "wood-metal-clash":
       return hasWoodMetalClash(context);
-    case "support":
-      return rule.sourceElements.some((source) => context.evidence[source].supportScore > 0);
   }
+}
+
+function mutationSourceReady(rule: MutationRule, context: AnalysisContext): boolean {
+  const sourceRules = SPIRITUAL_ROOT_RULES.mutationSource;
+  return rule.sourceElements.every((element) => {
+    const item = context.evidence[element];
+    if (!item.effective || !item.channel.complete || item.score < (rule.minimumScore ?? 4)) return false;
+    if (item.activationOrigin === "independent") return true;
+    return item.activationOrigin === "network-assisted" &&
+      item.score >= sourceRules.networkAssistedMinimumScore &&
+      item.rootStrength >= sourceRules.networkAssistedMinimumRoot &&
+      (item.monthCommand || item.visibleStems.length > 0);
+  });
 }
 
 function evaluateSpecialConditions(
@@ -43,13 +65,15 @@ function evaluateSpecialConditions(
   missing: string[],
   blockers: string[],
 ): number {
-  const { evidence, relations, season, shensha } = context;
+  const { evidence, relations, shensha, climate } = context;
   const dynamic = relations.dynamicCount > 0;
   const fireStrong = evidence.fire.effective && evidence.fire.score >= 9;
   const waterStrong = evidence.water.effective && evidence.water.score >= 9;
   const earthStrong = evidence.earth.effective && evidence.earth.score >= 10;
-  const moist = season === "winter" || evidence.water.monthCommand;
-  const dryHot = season === "summer" && evidence.fire.score >= 8;
+  const climateRules = SPIRITUAL_ROOT_RULES.mutationSource;
+  const cold = climate.temperature <= climateRules.coldThreshold;
+  const moist = climate.moisture >= climateRules.moistThreshold;
+  const dryHot = climate.temperature >= climateRules.hotThreshold && climate.moisture <= climateRules.dryThreshold;
   const hasYima = shensha.some((item) => item.id === "yima" && item.effective);
   const hasGuimen = shensha.some((item) => item.id === "guimen" && item.effective);
   const hasSwordMarker = shensha.some((item) => ["yangren", "kuigang", "jiangxing"].includes(item.id) && item.effective);
@@ -65,6 +89,7 @@ function evaluateSpecialConditions(
         "수의 계절·가중 통근 세력이 부족함",
         missing,
       );
+      points += 8 * addCondition(satisfied, cold && moist, "한습 조후가 빙기의 응결을 도움", "한습 조후가 충분하지 않음", missing);
       if (fireStrong || dryHot) blockers.push("강한 화기 또는 조열함이 금수를 제압함");
       break;
     case "lightning":
@@ -85,11 +110,11 @@ function evaluateSpecialConditions(
       if (fireStrong) blockers.push("과도한 화기가 독성을 건조시킴");
       break;
     case "lava":
-      points += 8 * addCondition(satisfied, evidence.fire.monthCommand || evidence.earth.monthCommand || dryHot, "조열한 화토 세력이 있음", "화토의 조열한 세력이 부족함", missing);
+      points += 8 * addCondition(satisfied, dryHot && (evidence.fire.monthCommand || evidence.earth.monthCommand), "조열한 월지에서 화토 세력이 이어짐", "화토를 굳히는 조열 조후가 부족함", missing);
       if (waterStrong) blockers.push("강한 수기가 용암의 열을 식힘");
       break;
     case "shadow":
-      points += 8 * addCondition(satisfied, moist && !fireStrong, "한습하고 화기가 약함", "한습 조건 또는 약한 화 조건이 부족함", missing);
+      points += 8 * addCondition(satisfied, cold && moist && !fireStrong, "한습하고 화기가 약함", "한습 조건 또는 약한 화 조건이 부족함", missing);
       if (hasGuimen) { satisfied.push("귀문관살이 영혼·그림자 성향을 보조함"); points += 5; }
       if (fireStrong) blockers.push("강한 화기가 은폐성을 해침");
       break;
@@ -145,10 +170,10 @@ function evaluateRule(rule: MutationRule, context: AnalysisContext): MutationCan
   const missing: string[] = [];
   const blockers: string[] = [];
   const effectiveElements = Object.values(context.evidence).filter((item) => item.effective).map((item) => item.element);
-  const sourceReady = rule.sourceElements.every((element) => context.evidence[element].effective && context.evidence[element].score >= (rule.minimumScore ?? 4));
+  const sourceReady = mutationSourceReady(rule, context);
   let score = sourceReady ? 40 : rule.sourceElements.filter((element) => context.evidence[element].effective).length * 15;
-  if (sourceReady) satisfied.push(`${rule.sourceElements.map((element) => ELEMENT_META[element].label).join("·")} 원재료가 모두 유효 영근`);
-  else missing.push("원재료 두 오행이 모두 유효 영근이어야 함");
+  if (sourceReady) satisfied.push(`${rule.sourceElements.map((element) => ELEMENT_META[element].label).join("·")} 원재료가 독립 또는 강한 합류 기맥으로 작동함`);
+  else missing.push("원재료 두 오행에 실제 작동 기맥이 필요함");
 
   const [a, b] = rule.sourceElements;
   const gap = Math.abs(context.evidence[a].score - context.evidence[b].score);
@@ -190,6 +215,9 @@ function evaluateRule(rule: MutationRule, context: AnalysisContext): MutationCan
   let confidence = clamp(Math.round(score));
   if (!sourceReady) confidence = Math.min(confidence, 49);
   if (thirdRoots.length > 0) confidence = Math.min(confidence, 69);
+  const hasDecisiveBlocker = blockers.some((blocker) =>
+    SPIRITUAL_ROOT_RULES.mutationSource.decisiveBlockerPatterns.some((pattern) => blocker.includes(pattern)));
+  if (hasDecisiveBlocker) confidence = Math.min(confidence, 64);
   if (blockers.length >= 2) confidence = Math.min(confidence, 49);
   const statusRules = SPIRITUAL_ROOT_RULES.mutationStatus;
   const status: MutationCandidate["status"] = confidence >= statusRules.confirmed ? "confirmed"

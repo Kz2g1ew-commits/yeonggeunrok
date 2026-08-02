@@ -45,6 +45,8 @@ export function RuleBreakdown({ data }: { data: StoredAnalysis }) {
           <div className="surface-soft p-4 text-sm leading-7 text-[#aab9bf]">
             <strong className="block text-[#e2d4ae]">시간·절기 기준</strong>
             <p>{calculation.solarTermBasis}</p>
+            <p>원국 조후 {analysis.result.climate.temperatureLabel}·{analysis.result.climate.moistureLabel} · 한열 {signed(analysis.result.climate.temperature)} · 조습 {signed(analysis.result.climate.moisture)}</p>
+            <p className="text-xs text-[#81969e]">{analysis.result.climate.reasons.join(" · ")}</p>
             <p>표준 자오선 {calculation.correction.standardMeridian.toFixed(2)}° · 경도 보정 {signed(calculation.correction.longitudeCorrectionMinutes.toFixed(2))}분 · 균시차 {signed(calculation.correction.equationOfTimeMinutes.toFixed(2))}분 · 총 {signed(calculation.correction.totalCorrectionMinutes.toFixed(2))}분</p>
             <ul className="mt-2 list-disc pl-5">{calculation.calculationNotes.map((note) => <li key={note}>{note}</li>)}</ul>
           </div>
@@ -53,7 +55,7 @@ export function RuleBreakdown({ data }: { data: StoredAnalysis }) {
             <div className="mt-3 grid gap-3 md:grid-cols-2">
               {ELEMENTS.map((element) => { const item = analysis.result.elementEvidence[element]; return <details key={element} className="surface-soft p-4">
                 <summary className="flex cursor-pointer list-none items-center justify-between"><strong style={{ color: ELEMENT_META[element].color }}>{ELEMENT_META[element].label} {ELEMENT_META[element].hanja}</strong><span className="font-bold">{item.score.toFixed(1)}점 · {item.effective ? "최종 유효" : item.structuralEligible ? "구조 유효·미선택" : item.potential ? "잠재" : "미성립"}</span></summary>
-                <div className="mt-3 border-t border-white/6 pt-3 text-xs leading-6 text-[#84989f]"><p>원국 구성 {item.presenceScore.toFixed(1)}/240 ({item.presenceRatio.toFixed(1)}%) · 기초 활성 {item.baseScore.toFixed(1)}점 · 가중 통근 {item.rootStrength.toFixed(1)}</p><p>천문 {item.channel.heaven.score.toFixed(1)} · 지근 {item.channel.earth.score.toFixed(1)} · 인맥 {item.channel.human.score.toFixed(1)} · 보존성 {(item.channel.integrity * 100).toFixed(0)}% · 삼관 완성도 {item.channel.completion.toFixed(1)}</p><p>{item.effective ? item.eligibilityReasons.join(" · ") : item.potential ? [...item.eligibilityReasons, ...item.potentialReasons].join(" · ") : "삼관 미통과"}</p></div>
+                <div className="mt-3 border-t border-white/6 pt-3 text-xs leading-6 text-[#84989f]"><p>원국 구성 {item.presenceScore.toFixed(1)}/240 ({item.presenceRatio.toFixed(1)}%) · 기초 활성 {item.baseScore.toFixed(1)}점 · 가중 통근 {item.rootStrength.toFixed(1)}</p><p>천문 {item.channel.heaven.score.toFixed(1)} · 지근 {item.channel.earth.score.toFixed(1)} · 인맥 {item.channel.human.score.toFixed(1)} · 보존성 {(item.channel.integrity * 100).toFixed(0)}% · 삼관 완성도 {item.channel.completion.toFixed(1)}</p><p>개방 방식 {item.activationOrigin === "independent" ? "독립근" : item.activationOrigin === "network-assisted" ? "합류근" : "미개방"}</p><p>{item.effective ? item.eligibilityReasons.join(" · ") : item.potential ? [...item.eligibilityReasons, ...item.potentialReasons].join(" · ") : "삼관 미통과"}</p></div>
                 <ul className="mt-2 grid gap-1.5 text-xs text-[#aab9bf]">{item.contributions.map((part, index) => <li key={`${part.label}-${index}`} className="flex justify-between gap-3"><span>{part.label}</span><b className={part.value < 0 ? "text-[#e39188]" : "text-[#79c9b0]"}>{signed(part.value)}</b></li>)}</ul>
               </details>; })}
             </div>

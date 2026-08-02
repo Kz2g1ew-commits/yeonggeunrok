@@ -4,6 +4,7 @@ import { analyzeRelations } from "@/lib/bazi/relations";
 import { detectShensha } from "@/lib/bazi/shensha";
 import { ELEMENT_META } from "@/lib/bazi/elementMeta";
 import { seasonFromMonthBranch } from "@/lib/calendar/solarTerms";
+import { calculateClimateProfile } from "@/lib/bazi/monthlyQi";
 import { calculateElementScores } from "./calculateElementScores";
 import { determineEffectiveRoots } from "./determineEffectiveRoots";
 import { classifyRootCount } from "./classifyRootCount";
@@ -39,6 +40,7 @@ function distinct<T>(items: T[]): T[] {
 export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillarsCalculation): AnalysisBundle {
   const relations = analyzeRelations(calculation.pillars);
   const rawEvidence = calculateElementScores(calculation.pillars);
+  const climate = calculateClimateProfile(calculation.pillars, rawEvidence);
   const dao = calculateDaoAffinity(calculation.pillars, rawEvidence, relations);
   const awakening = determineAwakening(input.judgmentMode, calculation.pillars, rawEvidence, dao);
   const shensha = detectShensha(calculation.pillars, input.shensha);
@@ -48,6 +50,7 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
     relations,
     shensha,
     season: seasonFromMonthBranch(calculation.pillars.month.branch),
+    climate,
   });
   // 발현 관문과 무관한 선천 기맥 구조를 먼저 보존한다. 균형·엄격 관문은
   // 실제 영근 개방만 막을 뿐, 근골의 선천 잠재치까지 지우지 않는다.
@@ -144,6 +147,7 @@ export function analyzeSpiritualRoots(input: BirthInput, calculation: FourPillar
       confidence: confidence.confidence,
       confidenceLabel: confidence.label,
       confidenceBreakdown: confidence.breakdown,
+      climate,
       elementEvidence: resolvedEvidence,
       strengths: distinct(strengths),
       weaknesses: distinct(weaknesses),

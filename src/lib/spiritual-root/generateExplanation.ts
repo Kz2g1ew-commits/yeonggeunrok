@@ -10,9 +10,9 @@ export function generateExplanation(evidence: Record<Element, ElementEvidence>):
       const item = evidence[element];
       const label = ELEMENT_META[element].label;
       const facts: string[] = [];
-      if (item.selectedRoot) facts.push(item.channel.complete
-        ? "천문·지근·인맥의 삼관을 모두 통과하고"
-        : "완성 기맥망의 공동 유통으로 약한 관문을 보완하고");
+      if (item.selectedRoot) facts.push(item.activationOrigin === "network-assisted"
+        ? "완성 기맥망의 공동 유통으로 약한 관문을 보완하고"
+        : "천문·지근·인맥의 삼관을 독립적으로 통과하고");
       if (item.monthCommand) facts.push("월령을 얻고");
       if (item.visibleStems.length) facts.push(`천간 ${item.visibleStems.length}곳에 투출하며`);
       if (item.rootStrength > 0) facts.push(`${item.roots.map(branchKorean).join("·")}의 가중 통근이 ${item.rootStrength.toFixed(1)}이고`);
