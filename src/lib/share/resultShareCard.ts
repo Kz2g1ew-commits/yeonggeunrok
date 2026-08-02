@@ -64,7 +64,7 @@ function mutationSummary(result: SpiritualRootResult): string {
     likely: "유력",
     possible: "가능성",
   }[candidate.status as Exclude<typeof candidate.status, "rejected">];
-  return `${candidate.name}영근 · ${statusLabel} ${candidate.confidence}%`;
+  return `${candidate.name} 변이영근 · ${statusLabel} ${candidate.confidence}%`;
 }
 
 export function buildResultShareCardModel(result: SpiritualRootResult): ResultShareCardModel {

@@ -4,6 +4,7 @@ import { ELEMENTS } from "@/lib/bazi/elementMeta";
 import { calculateFourPillars } from "@/lib/calendar/calculateFourPillars";
 import { analyzeSpiritualRoots } from "@/lib/spiritual-root/analyzeSpiritualRoots";
 import { determineAwakening } from "@/lib/spiritual-root/determineAwakening";
+import { MUTATION_RULES } from "@/lib/spiritual-root/mutationRules";
 import { hasEffectiveActivationBasis } from "@/lib/spiritual-root/rootActivationEligibility";
 
 export const ROOT_TIERS: RootQualityTier[] = [
@@ -24,6 +25,11 @@ export interface PopulationSample {
   mutationCandidateRows: number;
   finalMutationRows: number;
   finalMutationIds: Set<string>;
+  mutationCandidateCounts: Record<string, number>;
+  confirmedMutationCounts: Record<string, number>;
+  finalMutationCounts: Record<string, number>;
+  confirmedSelectionGroupViolations: number;
+  confirmedSourcePairViolations: number;
   quadrupleSubtypes: Set<string>;
   fiveSubtypes: Set<string>;
   fiveQiCycles: number;
@@ -63,6 +69,11 @@ export function runPopulationCohort(initialSeed: number, size: number): Populati
     mutationCandidateRows: 0,
     finalMutationRows: 0,
     finalMutationIds: new Set<string>(),
+    mutationCandidateCounts: {},
+    confirmedMutationCounts: {},
+    finalMutationCounts: {},
+    confirmedSelectionGroupViolations: 0,
+    confirmedSourcePairViolations: 0,
     quadrupleSubtypes: new Set<string>(),
     fiveSubtypes: new Set<string>(),
     fiveQiCycles: 0,
@@ -113,10 +124,27 @@ export function runPopulationCohort(initialSeed: number, size: number): Populati
     if (activeCandidates.length > 0) {
       sample.mutationCandidateRows += 1;
     }
+    activeCandidates.forEach((candidate) => {
+      sample.mutationCandidateCounts[candidate.id] = (sample.mutationCandidateCounts[candidate.id] ?? 0) + 1;
+    });
+    const confirmedCandidates = result.mutations.filter((candidate) => candidate.status === "confirmed");
+    confirmedCandidates.forEach((candidate) => {
+      sample.confirmedMutationCounts[candidate.id] = (sample.confirmedMutationCounts[candidate.id] ?? 0) + 1;
+    });
+    const confirmedGroups = confirmedCandidates
+      .map((candidate) => MUTATION_RULES.find((rule) => rule.id === candidate.id)?.selectionGroup)
+      .filter((group): group is NonNullable<typeof group> => Boolean(group));
+    sample.confirmedSelectionGroupViolations += confirmedGroups.length - new Set(confirmedGroups).size;
+    const confirmedSourcePairs = confirmedCandidates
+      .map((candidate) => [...candidate.sourceElements].sort().join("-"));
+    sample.confirmedSourcePairViolations += confirmedSourcePairs.length - new Set(confirmedSourcePairs).size;
     if (result.classification.qualityTier === "mutation") {
       sample.finalMutationRows += 1;
       const selected = result.mutations.find((candidate) => candidate.status === "confirmed");
-      if (selected) sample.finalMutationIds.add(selected.id);
+      if (selected) {
+        sample.finalMutationIds.add(selected.id);
+        sample.finalMutationCounts[selected.id] = (sample.finalMutationCounts[selected.id] ?? 0) + 1;
+      }
       if (!selected || result.primaryElements.length !== 2 || !sameElements(selected.sourceElements, result.primaryElements)) {
         sample.finalMutationInvariantViolations += 1;
       }
@@ -158,10 +186,21 @@ export function mergePopulationSamples(samples: PopulationSample[]): PopulationS
     merged.strictInvariantViolations += sample.strictInvariantViolations;
     merged.mutationCandidateRows += sample.mutationCandidateRows;
     merged.finalMutationRows += sample.finalMutationRows;
+    merged.confirmedSelectionGroupViolations += sample.confirmedSelectionGroupViolations;
+    merged.confirmedSourcePairViolations += sample.confirmedSourcePairViolations;
     merged.fiveQiCycles += sample.fiveQiCycles;
     merged.balancedPasses += sample.balancedPasses;
     merged.strictPasses += sample.strictPasses;
     sample.finalMutationIds.forEach((id) => merged.finalMutationIds.add(id));
+    for (const [id, count] of Object.entries(sample.mutationCandidateCounts)) {
+      merged.mutationCandidateCounts[id] = (merged.mutationCandidateCounts[id] ?? 0) + count;
+    }
+    for (const [id, count] of Object.entries(sample.confirmedMutationCounts)) {
+      merged.confirmedMutationCounts[id] = (merged.confirmedMutationCounts[id] ?? 0) + count;
+    }
+    for (const [id, count] of Object.entries(sample.finalMutationCounts)) {
+      merged.finalMutationCounts[id] = (merged.finalMutationCounts[id] ?? 0) + count;
+    }
     sample.quadrupleSubtypes.forEach((subtype) => merged.quadrupleSubtypes.add(subtype));
     sample.fiveSubtypes.forEach((subtype) => merged.fiveSubtypes.add(subtype));
     Object.entries(sample.fiveQiVariantCounts).forEach(([variant, count]) => {

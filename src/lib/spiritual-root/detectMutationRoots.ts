@@ -1,6 +1,7 @@
-import type { AnalysisContext, MutationCandidate } from "@/types/spiritualRoot";
+import type { Element } from "@/types/bazi";
+import type { AnalysisContext, MutationCandidate, RootEvidence } from "@/types/spiritualRoot";
 import { ELEMENT_META } from "@/lib/bazi/elementMeta";
-import { MUTATION_RULES, type MutationRule } from "./mutationRules";
+import { MUTATION_RULES, type MutationFusionRequirement, type MutationRule } from "./mutationRules";
 import { SPIRITUAL_ROOT_RULES } from "./spiritualRootRules";
 
 const clamp = (value: number, min = 0, max = 100) => Math.min(max, Math.max(min, value));
@@ -25,6 +26,71 @@ function hasWoodMetalClash(context: AnalysisContext): boolean {
   ] as const).some(([wood, metal]) => branches.includes(wood) && branches.includes(metal));
 }
 
+function hasBranchPair(context: AnalysisContext, pairs: Array<[string, string]>): boolean {
+  const branches = Object.values(context.pillars).map((pillar) => pillar.branch);
+  return pairs.some((pair) => pair.every((branch) => branches.includes(branch)));
+}
+
+function matchingRootStrength(
+  context: AnalysisContext,
+  element: Element,
+  options: {
+    branches?: string[];
+    roles?: Array<"main" | "middle" | "residual">;
+    allowedClashStates?: RootEvidence["clashState"][];
+  } = {},
+): number {
+  return context.evidence[element].rootDetails
+    .filter((root) =>
+      (!options.branches || options.branches.includes(root.branch)) &&
+      (!options.roles || options.roles.includes(root.role)) &&
+      (!options.allowedClashStates || options.allowedClashStates.includes(root.clashState)))
+    .reduce((sum, root) => sum + root.strength, 0);
+}
+
+function fusionRequirementSatisfied(requirement: MutationFusionRequirement, context: AnalysisContext): boolean {
+  switch (requirement.kind) {
+    case "climate-labels":
+      return requirement.temperatureLabels.includes(context.climate.temperatureLabel) &&
+        requirement.moistureLabels.includes(context.climate.moistureLabel);
+    case "score-gap":
+      return Math.abs(
+        context.evidence[requirement.elements[0]].score - context.evidence[requirement.elements[1]].score,
+      ) <= requirement.maximum;
+    case "root-pattern":
+      return matchingRootStrength(context, requirement.element, {
+        allowedClashStates: requirement.allowedClashStates,
+      }) >= requirement.minimumStrength;
+    case "root-strength-gap": {
+      const [a, b] = requirement.elements;
+      return Math.abs(
+        matchingRootStrength(context, a, { allowedClashStates: requirement.allowedClashStates }) -
+        matchingRootStrength(context, b, { allowedClashStates: requirement.allowedClashStates }),
+      ) <= requirement.maximum;
+    }
+  }
+}
+
+function evaluateFusionPaths(
+  rule: MutationRule,
+  context: AnalysisContext,
+  satisfied: string[],
+  missing: string[],
+  blockers: string[],
+): { points: number; confidenceCap: number } {
+  if (!rule.fusionPaths?.length) return { points: 0, confidenceCap: 100 };
+  const completed = rule.fusionPaths.find((path) =>
+    path.requirements.every((requirement) => fusionRequirementSatisfied(requirement, context)));
+  if (completed) {
+    satisfied.push(completed.satisfiedLabel);
+    return { points: completed.points, confidenceCap: 100 };
+  }
+
+  missing.push(...rule.fusionPaths.map((path) => path.missingLabel));
+  blockers.push(rule.fusionPathBlockerLabel ?? "대안 융합 관문이 성립하지 않음");
+  return { points: 0, confidenceCap: rule.fusionPathFailureConfidenceCap ?? 64 };
+}
+
 function relationSatisfied(rule: MutationRule, context: AnalysisContext): boolean {
   const [source, target] = rule.sourceElements;
   const sourceEvidence = context.evidence[source];
@@ -42,7 +108,80 @@ function relationSatisfied(rule: MutationRule, context: AnalysisContext): boolea
         context.climate.moisture >= SPIRITUAL_ROOT_RULES.mutationSource.moistThreshold;
     case "wood-metal-clash":
       return hasWoodMetalClash(context);
+    case "rooted-generation":
+      return grounded(sourceEvidence) && grounded(targetEvidence) &&
+        (targetEvidence.supportScore > 0 ||
+          targetEvidence.contributions.some(({ label }) =>
+            label.includes(`${ELEMENT_META[source].label}생${ELEMENT_META[target].label} 유통`)));
+    case "thermal-convergence":
+      return grounded(sourceEvidence) && grounded(targetEvidence);
   }
+}
+
+function evaluateConfiguredConditions(
+  rule: MutationRule,
+  context: AnalysisContext,
+  satisfied: string[],
+  missing: string[],
+  blockers: string[],
+): { points: number; confidenceCap: number } {
+  let points = 0;
+  let confidenceCap = 100;
+
+  for (const condition of rule.conditions ?? []) {
+    let met = false;
+    switch (condition.kind) {
+      case "root-pattern": {
+        met = matchingRootStrength(context, condition.element, {
+          branches: condition.branches,
+          roles: condition.roles,
+          allowedClashStates: condition.allowedClashStates,
+        }) >= condition.minimumStrength;
+        break;
+      }
+      case "climate-window":
+        met = context.climate.temperature >= condition.temperature[0] &&
+          context.climate.temperature <= condition.temperature[1] &&
+          context.climate.moisture >= condition.moisture[0] &&
+          context.climate.moisture <= condition.moisture[1];
+        break;
+      case "climate-labels":
+        met = condition.temperatureLabels.includes(context.climate.temperatureLabel) &&
+          condition.moistureLabels.includes(context.climate.moistureLabel);
+        break;
+      case "maximum-dynamic":
+        met = context.relations.dynamicCount <= condition.maximum;
+        break;
+      case "blocked-branch-pair":
+        met = !hasBranchPair(context, condition.pairs);
+        break;
+      case "maximum-element-score":
+        met = context.evidence[condition.element].score < condition.maximum;
+        break;
+      case "maximum-score-lead":
+        met = context.evidence[condition.leadingElement].score -
+          context.evidence[condition.trailingElement].score <= condition.maximumGap;
+        break;
+    }
+
+    if (met) {
+      satisfied.push(condition.satisfiedLabel);
+      points += condition.points;
+    } else {
+      missing.push(condition.missingLabel);
+      blockers.push(condition.blockerLabel);
+      confidenceCap = Math.min(confidenceCap, condition.confidenceCap);
+    }
+  }
+
+  for (const bonus of rule.bonuses ?? []) {
+    if (bonus.kind === "branch-pair" && hasBranchPair(context, bonus.pairs)) {
+      satisfied.push(bonus.label);
+      points += bonus.points;
+    }
+  }
+
+  return { points, confidenceCap };
 }
 
 function mutationSourceReady(rule: MutationRule, context: AnalysisContext): boolean {
@@ -171,23 +310,32 @@ function evaluateRule(rule: MutationRule, context: AnalysisContext): MutationCan
   const blockers: string[] = [];
   const effectiveElements = Object.values(context.evidence).filter((item) => item.effective).map((item) => item.element);
   const sourceReady = mutationSourceReady(rule, context);
+  let confidenceCap = 100;
   let score = sourceReady ? 40 : rule.sourceElements.filter((element) => context.evidence[element].effective).length * 15;
   if (sourceReady) satisfied.push(`${rule.sourceElements.map((element) => ELEMENT_META[element].label).join("·")} 원재료가 독립 또는 강한 합류 기맥으로 작동함`);
   else missing.push("원재료 두 오행에 실제 작동 기맥이 필요함");
 
   const [a, b] = rule.sourceElements;
   const gap = Math.abs(context.evidence[a].score - context.evidence[b].score);
-  if (gap <= (rule.maximumScoreGap ?? 4)) {
-    satisfied.push(`두 오행의 점수 차가 허용 범위 안임 (${gap.toFixed(1)}점)`);
-    score += 10;
-  } else {
-    missing.push(`두 오행의 점수 차가 큼 (${gap.toFixed(1)}점)`);
-    blockers.push("점수 편중이 커서 두 기운의 안정적인 융합이 어려움");
+  if ((rule.scoreGapMode ?? "standard") === "standard") {
+    if (gap <= (rule.maximumScoreGap ?? 4)) {
+      satisfied.push(`두 오행의 점수 차가 허용 범위 안임 (${gap.toFixed(1)}점)`);
+      score += 10;
+    } else {
+      missing.push(`두 오행의 점수 차가 큼 (${gap.toFixed(1)}점)`);
+      blockers.push("점수 편중이 커서 두 기운의 안정적인 융합이 어려움");
+    }
   }
 
   const hasRequiredRelation = relationSatisfied(rule, context);
   if (hasRequiredRelation) { satisfied.push(`${rule.requiredRelations[0]} 구조를 확인함`); score += 15; }
-  else missing.push(`${rule.requiredRelations[0]} 구조가 약함`);
+  else {
+    missing.push(`${rule.requiredRelations[0]} 구조가 약함`);
+    if (rule.relationFailureConfidenceCap !== undefined) {
+      blockers.push(`${rule.requiredRelations[0]}의 필수 흐름이 성립하지 않음`);
+      confidenceCap = Math.min(confidenceCap, rule.relationFailureConfidenceCap);
+    }
+  }
 
   if (rule.preferredSeasons?.includes(context.season)) {
     satisfied.push("월령이 변이 방향을 지지함"); score += 12;
@@ -202,6 +350,13 @@ function evaluateRule(rule: MutationRule, context: AnalysisContext): MutationCan
     } else missing.push("변이를 돕는 핵심 지지가 없음");
   }
 
+  const fusionPath = evaluateFusionPaths(rule, context, satisfied, missing, blockers);
+  score += fusionPath.points;
+  confidenceCap = Math.min(confidenceCap, fusionPath.confidenceCap);
+
+  const configuredConditions = evaluateConfiguredConditions(rule, context, satisfied, missing, blockers);
+  score += configuredConditions.points;
+  confidenceCap = Math.min(confidenceCap, configuredConditions.confidenceCap);
   score += evaluateSpecialConditions(rule, context, satisfied, missing, blockers);
   const thirdRoots = effectiveElements.filter((element) => !rule.sourceElements.includes(element));
   if (thirdRoots.length === 0) {
@@ -213,6 +368,7 @@ function evaluateRule(rule: MutationRule, context: AnalysisContext): MutationCan
 
   score -= blockers.length * 12;
   let confidence = clamp(Math.round(score));
+  confidence = Math.min(confidence, confidenceCap);
   if (!sourceReady) confidence = Math.min(confidence, 49);
   if (thirdRoots.length > 0) confidence = Math.min(confidence, 69);
   const hasDecisiveBlocker = blockers.some((blocker) =>
@@ -232,8 +388,58 @@ function evaluateRule(rule: MutationRule, context: AnalysisContext): MutationCan
   };
 }
 
+interface EvaluatedMutation {
+  rule: MutationRule;
+  candidate: MutationCandidate;
+}
+
+function statusFromConfidence(confidence: number): MutationCandidate["status"] {
+  const statusRules = SPIRITUAL_ROOT_RULES.mutationStatus;
+  return confidence >= statusRules.confirmed ? "confirmed"
+    : confidence >= statusRules.likely ? "likely"
+      : confidence >= statusRules.possible ? "possible" : "rejected";
+}
+
+function enforceSelectionGroups(entries: EvaluatedMutation[]): EvaluatedMutation[] {
+  const grouped = new Map<NonNullable<MutationRule["selectionGroup"]>, EvaluatedMutation[]>();
+  for (const entry of entries) {
+    if (!entry.rule.selectionGroup || entry.candidate.status !== "confirmed") continue;
+    const group = grouped.get(entry.rule.selectionGroup) ?? [];
+    group.push(entry);
+    grouped.set(entry.rule.selectionGroup, group);
+  }
+
+  for (const group of grouped.values()) {
+    if (group.length < 2) continue;
+    const strategy = group[0].rule.selectionStrategy ?? "priority";
+    const [winner, ...alternatives] = group.sort((a, b) => strategy === "confidence"
+      ? b.candidate.confidence - a.candidate.confidence ||
+        b.candidate.score - a.candidate.score ||
+        b.rule.priority - a.rule.priority
+      : b.rule.priority - a.rule.priority ||
+        b.candidate.confidence - a.candidate.confidence ||
+        b.candidate.score - a.candidate.score);
+    for (const alternative of alternatives) {
+      const confidence = Math.min(
+        alternative.candidate.confidence,
+        SPIRITUAL_ROOT_RULES.mutationStatus.confirmed - 1,
+      );
+      alternative.candidate = {
+        ...alternative.candidate,
+        confidence,
+        status: statusFromConfidence(confidence),
+        blockers: [
+          ...alternative.candidate.blockers,
+          `동일 원재료에서는 ${winner.candidate.name} 계열의 성립도가 더 높음`,
+        ],
+      };
+    }
+  }
+  return entries;
+}
+
 export function detectMutationRoots(context: AnalysisContext): MutationCandidate[] {
-  return MUTATION_RULES.map((rule) => ({ rule, candidate: evaluateRule(rule, context) }))
+  return enforceSelectionGroups(MUTATION_RULES.map((rule) => ({ rule, candidate: evaluateRule(rule, context) })))
     .sort((a, b) => {
       const statusDelta = MUTATION_STATUS_RANK[b.candidate.status] - MUTATION_STATUS_RANK[a.candidate.status];
       if (statusDelta !== 0) return statusDelta;

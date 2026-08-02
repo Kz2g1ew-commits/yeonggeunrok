@@ -115,7 +115,7 @@ export function classifyRootCount(
       };
     }
     const relationship = dualRelationship(ordered, evidence);
-    const mutationSuffix = activeMutation?.status === "likely" ? ` · ${activeMutation.name}영근 유력` : "";
+    const mutationSuffix = activeMutation?.status === "likely" ? ` · ${activeMutation.name} 변이영근 유력` : "";
     return {
       ...base, displayName: `${labelElements(ordered)} 이영근 — ${relationship}${mutationSuffix}`, relationship,
       cultivationSpeed: "빠름", adaptability: "두 속성 연계 공법에 유리",
