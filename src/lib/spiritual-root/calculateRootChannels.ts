@@ -73,10 +73,11 @@ export function calculateRootChannels(
       item.score <= SPIRITUAL_ROOT_RULES.structure.seasonalNetworkDeepWeakMaximum;
     const seasonallySuppressed = item.seasonalStrength < 0 && dominantSeason &&
       (controlledSuppression || buriedDeepSuppression);
-    const collectiveFlow = hasTrace && hasEarthTrace && item.presenceScore > 0 &&
+    const collectiveNetworkEligible = hasTrace && hasEarthTrace && item.presenceScore > 0 &&
       !seasonallySuppressed &&
-      // 일반 잠재근은 자체 점수로, 저점 실근은 세 개 이상의 잠재 역치 기맥이
-      // 망을 지탱할 때만 합류한다.
+      // 유연 판정의 합류 자격이다. 이는 실제 생조 유통 하나만을 뜻하지 않는다.
+      // 일반 잠재근은 자체 활성량으로, 저점 실근은 세 개 이상의 잠재 역치 기맥이
+      // 원국 전체의 기세를 지탱할 때만 공동 지맥에 합류한다.
       (item.score >= SPIRITUAL_ROOT_RULES.structure.potentialScore ||
         (collectiveAnchorCount >= rules.mixedNetworkMinimum && hasEffectiveActivationBasis(item) &&
           item.rootStrength >= SPIRITUAL_ROOT_RULES.structure.collectiveWeakRootMinimum)) &&
@@ -114,10 +115,10 @@ export function calculateRootChannels(
       heavenScore += 1.25;
       heavenReasons.push("강한 내부 뿌리가 천문 가까이 솟음 +1.25");
     }
-    if (collectiveFlow && heavenScore < rules.heavenMinimum) {
+    if (collectiveNetworkEligible && heavenScore < rules.heavenMinimum) {
       const value = rounded(rules.heavenMinimum - heavenScore);
       heavenScore += value;
-      heavenReasons.push(`비극단 명식의 전체 유통이 천문을 간접 개방함 +${value}`);
+      heavenReasons.push(`비극단 원국 구조의 공동 기세가 천문을 간접 개방함 +${value}`);
       networkAssisted = true;
     }
 
@@ -135,10 +136,10 @@ export function calculateRootChannels(
       earthScore = Math.max(0, earthScore - 0.75);
       earthReasons.push("모든 뿌리가 충손되어 지근이 약화됨 -0.75");
     }
-    if (collectiveFlow && earthScore < rules.earthMinimum) {
+    if (collectiveNetworkEligible && earthScore < rules.earthMinimum) {
       const value = rounded(rules.earthMinimum - earthScore);
       earthScore += value;
-      earthReasons.push(`전체 유통이 미약한 지근을 공동 지맥에 연결함 +${value}`);
+      earthReasons.push(`원국 구조의 공동 기세가 미약한 지근을 지맥에 연결함 +${value}`);
       networkAssisted = true;
     }
 
@@ -161,10 +162,10 @@ export function calculateRootChannels(
       humanScore += 0.5;
       humanReasons.push("투간과 통근이 직접 연결됨 +0.5");
     }
-    if (collectiveFlow && humanScore < rules.humanMinimum) {
+    if (collectiveNetworkEligible && humanScore < rules.humanMinimum) {
       const value = rounded(rules.humanMinimum - humanScore);
       humanScore += value;
-      humanReasons.push(`전체 유통이 일간과의 간접 인맥을 이음 +${value}`);
+      humanReasons.push(`원국 구조의 공동 기세가 일간과의 간접 수용로를 이음 +${value}`);
       networkAssisted = true;
     }
 
@@ -183,7 +184,7 @@ export function calculateRootChannels(
     const earthPassed = earthScore >= rules.earthMinimum;
     const humanPassed = humanScore >= rules.humanMinimum;
     const integrityPassed = integrity >= rules.integrityMinimum;
-    const activationPassed = item.score >= rules.activationMinimum || collectiveFlow;
+    const activationPassed = item.score >= rules.activationMinimum || collectiveNetworkEligible;
     if (activationPassed && item.score < rules.activationMinimum) networkAssisted = true;
     const state = channelState(heavenPassed, earthPassed, humanPassed, integrityPassed, activationPassed);
     const complete = state === "complete";

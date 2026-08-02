@@ -85,11 +85,11 @@ function fiveRootProfile(
   if (cycleState === "complete") {
     const variant: FiveRootVariant = conflictLevel === "turbulent"
       ? "탁류"
-      : spread >= rules.multiRootProfiles.dominantSpread
-        ? "편기"
-        : spread <= rules.thresholds.fiveBalanceSpread && conflictLevel === "stable"
-          ? "원융"
-          : "유통";
+      : spread <= rules.multiRootProfiles.fiveQiHarmoniousSpreadMaximum && conflictLevel === "stable"
+        ? "원융"
+        : spread <= rules.multiRootProfiles.fiveQiFlowingSpreadMaximum
+          ? "유통"
+          : "편기";
     return { subtype: "오기조원형", variant };
   }
   if (spread <= rules.thresholds.fiveBalanceSpread && conflictLevel !== "turbulent") {

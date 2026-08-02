@@ -137,6 +137,10 @@ export const SPIRITUAL_ROOT_RULES = {
   },
   multiRootProfiles: {
     dominantSpread: 5,
+    // 오기조원은 유효 오행만 비교하는 일반 균형값보다 자연 편차가 크므로
+    // 완전 상생환 전용 경계를 둔다. 충극 격동은 편차보다 먼저 탁류로 판정한다.
+    fiveQiHarmoniousSpreadMaximum: 7,
+    fiveQiFlowingSpreadMaximum: 10,
     mixedConflictMinimum: 2,
     turbulentConflictMinimum: 4,
     fourStrongFlowMinimum: 3,

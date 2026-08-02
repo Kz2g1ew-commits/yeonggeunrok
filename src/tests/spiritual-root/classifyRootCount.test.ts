@@ -83,7 +83,7 @@ describe("classifyRootCount", () => {
 
   it("keeps a strongly biased complete cycle as a biased five-qi convergence", () => {
     const elements: Element[] = ["wood", "fire", "earth", "metal", "water"];
-    const result = classifyRootCount(elements, [], evidenceSet({ wood: 8, fire: 8, earth: 14, metal: 8, water: 8 }), relations);
+    const result = classifyRootCount(elements, [], evidenceSet({ wood: 8, fire: 8, earth: 18.1, metal: 8, water: 8 }), relations);
     expect(result.displayName).toBe("오기조원영근 — 오기조원형·편기");
     expect(result.qualityRank).toBe(4);
     expect(result.qualityLabel).toBe("오기조원 중등형");
@@ -91,10 +91,32 @@ describe("classifyRootCount", () => {
 
   it("places a stable flowing cycle between harmonious and biased five-qi roots", () => {
     const elements: Element[] = ["wood", "fire", "earth", "metal", "water"];
-    const result = classifyRootCount(elements, [], evidenceSet({ wood: 7, fire: 7, earth: 7, metal: 10.5, water: 7 }), relations);
+    const result = classifyRootCount(elements, [], evidenceSet({ wood: 7, fire: 7, earth: 7, metal: 15, water: 7 }), relations);
     expect(result.displayName).toBe("오기조원영근 — 오기조원형·유통");
     expect(result.qualityRank).toBe(3);
     expect(result.qualityLabel).toBe("오기조원 상등형");
+  });
+
+  it("uses dedicated five-qi convergence boundaries instead of ordinary multi-root balance", () => {
+    const elements: Element[] = ["wood", "fire", "earth", "metal", "water"];
+    const mixed = { ...relations, clashes: ["충1"], harms: ["해1"], dynamicCount: 2 };
+    const turbulent = {
+      ...relations,
+      clashes: ["충1", "충2"], punishments: ["형1"], harms: ["해1"], dynamicCount: 4,
+    };
+    const classifySpread = (spread: number, activeRelations = relations) => classifyRootCount(
+      elements,
+      [],
+      evidenceSet({ wood: 8, fire: 8, earth: 8 + spread, metal: 8, water: 8 }),
+      activeRelations,
+    ).multiRootProfile?.fiveRootVariant;
+
+    expect(classifySpread(7)).toBe("원융");
+    expect(classifySpread(7, mixed)).toBe("유통");
+    expect(classifySpread(7.1)).toBe("유통");
+    expect(classifySpread(10)).toBe("유통");
+    expect(classifySpread(10.1)).toBe("편기");
+    expect(classifySpread(6, turbulent)).toBe("탁류");
   });
 
   it("does not grant five-qi convergence when one generating link is inactive", () => {
@@ -133,5 +155,38 @@ describe("classifyRootCount", () => {
     expect(result.qualityTier).toBe("mutation");
     expect(result.qualityRank).toBe(2);
     expect(result.rootCount).toBe("single");
+  });
+
+  it("keeps likely fusion as a dual-root candidate instead of a final mutation", () => {
+    const mutation: MutationCandidate = {
+      id: "ice", name: "빙", sourceElements: ["metal", "water"], score: 72, confidence: 72,
+      status: "likely", satisfiedConditions: [], missingConditions: [], blockers: [], description: "test",
+    };
+    const result = classifyRootCount(
+      ["metal", "water"],
+      [],
+      evidenceSet({ metal: 9, water: 9 }),
+      relations,
+      mutation,
+    );
+    expect(result.qualityTier).toBe("dual");
+    expect(result.rootCount).toBe("dual");
+    expect(result.displayName).toContain("빙영근 유력");
+  });
+
+  it("does not collapse three effective roots even if one pair has a confirmed mutation", () => {
+    const mutation: MutationCandidate = {
+      id: "ice", name: "빙", sourceElements: ["metal", "water"], score: 90, confidence: 90,
+      status: "confirmed", satisfiedConditions: [], missingConditions: [], blockers: [], description: "test",
+    };
+    const result = classifyRootCount(
+      ["earth", "metal", "water"],
+      [],
+      evidenceSet({ earth: 8, metal: 9, water: 9 }),
+      relations,
+      mutation,
+    );
+    expect(result.qualityTier).toBe("triple");
+    expect(result.rootCount).toBe("triple");
   });
 });
