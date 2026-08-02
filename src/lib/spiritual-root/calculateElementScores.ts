@@ -5,13 +5,15 @@ import { HIDDEN_STEMS } from "@/lib/bazi/hiddenStems";
 import { STEMS, stemKorean } from "@/lib/bazi/stems";
 import {
   CLASH_PAIRS,
+  DIRECTIONAL_GROUPS,
   SIX_COMBINATIONS,
   STEM_COMBINATIONS,
+  THREE_HARMONIES,
   completedGroupElements,
 } from "@/lib/bazi/relations";
 import { CONTROLS, ELEMENT_META, ELEMENTS, GENERATES, controllerOf, generatorOf } from "@/lib/bazi/elementMeta";
-import { seasonFromMonthBranch } from "@/lib/calendar/solarTerms";
-import { SEASON_DOMINANT, SPIRITUAL_ROOT_RULES } from "./spiritualRootRules";
+import { monthlyQiForBranch, seasonalPhaseLabel } from "@/lib/bazi/monthlyQi";
+import { SPIRITUAL_ROOT_RULES } from "./spiritualRootRules";
 import { calculateRootChannels } from "./calculateRootChannels";
 
 const rules = SPIRITUAL_ROOT_RULES;
@@ -45,6 +47,14 @@ interface StemCombinationEvaluation {
   state: "candidate" | "bound" | "transformed";
 }
 
+type ClashState = RootEvidence["clashState"];
+
+interface FormationEvaluation {
+  element: Element;
+  kind: "삼합" | "방합";
+  state: "gathered" | "transformed";
+}
+
 function rounded(value: number): number {
   return Math.round(value * 10) / 10;
 }
@@ -67,8 +77,67 @@ function emptyRootChannel(): RootChannelEvidence {
   };
 }
 
-function branchIsClashed(branch: string, branches: string[]): boolean {
-  return CLASH_PAIRS.some((pair) => pair.includes(branch) && pair.every((member) => branches.includes(member)));
+function evaluateBranchClashes(pillars: FourPillars): Record<string, ClashState> {
+  const clashRules = rules.roots.clash;
+  const branches = PILLAR_KEYS.map((key) => pillars[key].branch);
+  const monthQi = monthlyQiForBranch(pillars.month.branch);
+  const states: Record<string, ClashState> = Object.fromEntries([...new Set(branches)].map((branch) => [branch, "stable"]));
+  const priority: Record<ClashState, number> = { stable: 0, activated: 1, shaken: 2, damaged: 3, uprooted: 4 };
+
+  const branchVigor = (branch: string): number => {
+    const seats = PILLAR_KEYS.filter((key) => pillars[key].branch === branch);
+    const branchElement = pillars[seats[0]].branchElement;
+    const seatPower = seats.reduce((sum, key) => sum + rules.roots.positionMultiplier[key], 0);
+    const visibleEcho = PILLAR_KEYS.filter((key) => pillars[key].stemElement === branchElement).length * clashRules.visibleEchoWeight;
+    const seasonalPower = monthQi.strength[branchElement] * clashRules.seasonalWeight;
+    const monthSeat = seats.includes("month") ? clashRules.monthSeatBonus : 0;
+    return seatPower + visibleEcho + seasonalPower + monthSeat;
+  };
+  const setState = (branch: string, state: ClashState) => {
+    if (priority[state] > priority[states[branch]]) states[branch] = state;
+  };
+
+  for (const pair of CLASH_PAIRS) {
+    if (!pair.every((branch) => branches.includes(branch))) continue;
+    const [left, right] = pair;
+    const difference = branchVigor(left) - branchVigor(right);
+    if (Math.abs(difference) <= clashRules.activationAdvantage) {
+      setState(left, "shaken");
+      setState(right, "shaken");
+      continue;
+    }
+    const winner = difference > 0 ? left : right;
+    const loser = difference > 0 ? right : left;
+    setState(winner, "activated");
+    setState(loser, Math.abs(difference) >= clashRules.decisiveAdvantage ? "uprooted" : "damaged");
+  }
+  return states;
+}
+
+function clashStrengthMultiplier(state: ClashState): number {
+  const clash = rules.roots.clash;
+  if (state === "activated") return clash.activatedMultiplier;
+  if (state === "shaken") return clash.shakenMultiplier;
+  if (state === "damaged") return clash.damagedMultiplier;
+  if (state === "uprooted") return clash.uprootedMultiplier;
+  return 1;
+}
+
+function clashStateLabel(state: ClashState): string {
+  return { stable: "안정", activated: "충발", shaken: "충동", damaged: "충손", uprooted: "발근" }[state];
+}
+
+function evaluateFormations(pillars: FourPillars, clashes: Record<string, ClashState>): FormationEvaluation[] {
+  const branches = PILLAR_KEYS.map((key) => pillars[key].branch);
+  const monthQi = monthlyQiForBranch(pillars.month.branch);
+  const evaluate = (kind: FormationEvaluation["kind"], groupRules: typeof THREE_HARMONIES): FormationEvaluation[] =>
+    groupRules.flatMap((group) => {
+      if (!group.members.every((branch) => branches.includes(branch))) return [];
+      const seasonSupports = monthQi.strength[group.element] >= rules.structure.formationSeasonalMinimum;
+      const disrupted = group.members.some((branch) => ["damaged", "uprooted"].includes(clashes[branch]));
+      return [{ element: group.element, kind, state: seasonSupports && !disrupted ? "transformed" : "gathered" }];
+    });
+  return [...evaluate("삼합", THREE_HARMONIES), ...evaluate("방합", DIRECTIONAL_GROUPS)];
 }
 
 function adjacentStemPair(stems: string[], pair: readonly string[]): boolean {
@@ -101,15 +170,14 @@ function evaluateStemCombinations(
   pillars: FourPillars,
   stems: string[],
   monthElement: Element,
-  groups: ReturnType<typeof completedGroupElements>,
+  transformedFormationElements: Element[],
   profiles: Record<Element, BaseProfile>,
 ): StemCombinationEvaluation[] {
   return STEM_COMBINATIONS.flatMap((rule): StemCombinationEvaluation[] => {
     if (!rule.stems.every((stem) => stems.includes(stem))) return [];
     const adjacent = adjacentStemPair(stems, rule.stems);
     const includesDayStem = rule.stems.includes(pillars.day.stem);
-    const targetSupported = monthElement === rule.element ||
-      groups.full.includes(rule.element) || groups.directional.includes(rule.element);
+    const targetSupported = monthElement === rule.element || transformedFormationElements.includes(rule.element);
     const sourceElements = [...new Set(rule.stems.map((stem) => STEMS[stem].element))];
     const resistingSources = sourceElements.filter((element) => element !== rule.element);
     const rootedResistance = resistingSources.length
@@ -141,8 +209,11 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
   const pillarValues = PILLAR_KEYS.map((key) => pillars[key]);
   const branches = pillarValues.map((pillar) => pillar.branch);
   const stems = pillarValues.map((pillar) => pillar.stem);
-  const season = seasonFromMonthBranch(pillars.month.branch);
   const groups = completedGroupElements(pillars);
+  const monthQi = monthlyQiForBranch(pillars.month.branch);
+  const branchClashes = evaluateBranchClashes(pillars);
+  const formations = evaluateFormations(pillars, branchClashes);
+  const transformedFormationElements = formations.filter((item) => item.state === "transformed").map((item) => item.element);
   const monthElement = pillars.month.branchElement;
   const presence = calculatePresence(pillars);
 
@@ -155,12 +226,14 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
         .filter((hidden) => hidden.element === element)
         .map((hidden): RootEvidence => {
           const baseStrength = rules.roots.roleStrength[hidden.role] * rules.roots.positionMultiplier[key];
-          const damaged = branchIsClashed(branch, branches);
+          const clashState = branchClashes[branch] ?? "stable";
+          const damaged = clashState === "damaged" || clashState === "uprooted";
           return {
             branch,
             stem: hidden.stem,
             role: hidden.role,
-            strength: rounded(baseStrength * (damaged ? rules.roots.clashMultiplier : 1)),
+            strength: rounded(baseStrength * clashStrengthMultiplier(clashState)),
+            clashState,
             damaged,
           };
         });
@@ -168,14 +241,9 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
     const roots = [...new Set(rootDetails.map((root) => root.branch))];
     const rootStrength = rounded(rootDetails.reduce((sum, root) => sum + root.strength, 0));
     const hiddenStems = rootDetails.map((root) =>
-      `${branchKorean(root.branch)}중 ${stemKorean(root.stem)}(${root.role}${root.damaged ? "·충손" : ""})`);
+      `${branchKorean(root.branch)}중 ${stemKorean(root.stem)}(${root.role}${root.clashState !== "stable" ? `·${clashStateLabel(root.clashState)}` : ""})`);
     const monthCommand = pillars.month.branchElement === element;
-    const seasonDominant = SEASON_DOMINANT[season];
-    const seasonalPhase = element === seasonDominant ? { label: "왕(旺)", value: rules.scores.seasonalProsperous }
-      : element === GENERATES[seasonDominant] ? { label: "상(相)", value: rules.scores.seasonalAssistant }
-        : element === generatorOf(seasonDominant) ? { label: "휴(休)", value: 0 }
-          : element === controllerOf(seasonDominant) ? { label: "수(囚)", value: rules.scores.seasonalImprisoned }
-            : { label: "사(死)", value: rules.scores.seasonalDead };
+    const seasonalPhase = { label: seasonalPhaseLabel(monthQi.strength[element]), value: monthQi.strength[element] };
 
     if (pillars.day.stemElement === element) contributions.push(contribution("일간과 같은 오행", rules.scores.dayMaster));
     if (monthCommand) {
@@ -201,15 +269,21 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
       }
     });
 
-    const fullCount = groups.full.filter((value) => value === element).length;
-    const directionCount = groups.directional.filter((value) => value === element).length;
+    const fullFormations = formations.filter((item) => item.element === element && item.kind === "삼합");
+    const directionalFormations = formations.filter((item) => item.element === element && item.kind === "방합");
+    const fullCount = fullFormations.length;
+    const directionCount = directionalFormations.length;
+    const fullTransformed = fullFormations.filter((item) => item.state === "transformed").length;
+    const directionTransformed = directionalFormations.filter((item) => item.state === "transformed").length;
     const halfCount = groups.half.filter((value) => value === element).length;
     const archingCount = groups.arching.filter((value) => value === element).length;
     const sixCount = SIX_COMBINATIONS.filter((rule) =>
       rule.element === element && rule.branches.every((branch) => branches.includes(branch)) &&
       (monthElement === element || GENERATES[monthElement] === element)).length;
-    if (fullCount) contributions.push(contribution("삼합 완성", rules.scores.fullHarmony * fullCount));
-    if (directionCount) contributions.push(contribution("방합 완성", rules.scores.directionalHarmony * directionCount));
+    if (fullCount) contributions.push(contribution("삼합 삼지 결집", rules.structure.formationGatheringScore * fullCount));
+    if (fullTransformed) contributions.push(contribution("월령 지지로 삼합 성국", rules.structure.formationTransformationScore * fullTransformed));
+    if (directionCount) contributions.push(contribution("방합 삼지 결집", rules.structure.formationGatheringScore * directionCount));
+    if (directionTransformed) contributions.push(contribution("월령 지지로 방합 성국", rules.structure.formationTransformationScore * directionTransformed));
     if (halfCount) contributions.push(contribution("왕지를 포함한 반합", rules.scores.halfHarmony * halfCount));
     if (archingCount) contributions.push(contribution("왕지가 빠진 공합 후보", rules.scores.archingHarmony * archingCount));
     if (sixCount) contributions.push(contribution("월령이 돕는 지지 육합", rules.scores.sixHarmony * sixCount));
@@ -222,14 +296,14 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
     }
 
     const combinations = [
-      ...(fullCount ? ["삼합"] : []),
-      ...(directionCount ? ["방합"] : []),
+      ...(fullCount ? [fullTransformed ? "삼합 성국" : "삼합 결집"] : []),
+      ...(directionCount ? [directionTransformed ? "방합 성국" : "방합 결집"] : []),
       ...(halfCount ? ["반합"] : []),
       ...(archingCount ? ["공합 후보"] : []),
       ...(sixCount ? ["육합"] : []),
     ];
-    const clashes = rootDetails.filter((root) => root.damaged)
-      .map((root) => `${branchKorean(root.branch)} ${root.role}근 충손`);
+    const clashes = rootDetails.filter((root) => root.clashState !== "stable")
+      .map((root) => `${branchKorean(root.branch)} ${root.role}근 ${clashStateLabel(root.clashState)}`);
     const baseScore = rounded(contributions.reduce((sum, item) => sum + item.value, 0));
 
     return [element, {
@@ -247,14 +321,14 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
       clashes,
       seasonalStrength: (monthCommand ? rules.scores.monthBranchMain + rules.scores.monthCommandBonus : 0) + seasonalPhase.value,
       baseScore,
-      fullFormation: fullCount > 0,
-      directionalFormation: directionCount > 0,
+      fullFormation: fullTransformed > 0,
+      directionalFormation: directionTransformed > 0,
       combinationPenalty: 0,
     } satisfies BaseProfile];
   })) as Record<Element, BaseProfile>;
 
   const stemCombinationEvaluations = evaluateStemCombinations(
-    pillars, stems, monthElement, groups, rawProfiles,
+    pillars, stems, monthElement, transformedFormationElements, rawProfiles,
   );
   const profiles = Object.fromEntries(ELEMENTS.map((element) => {
     const profile = rawProfiles[element];
@@ -401,6 +475,7 @@ export function calculateElementScores(pillars: FourPillars): Record<Element, El
       contributions,
       monthCommand: profile.monthCommand,
       structuralEligible,
+      activationOrigin: "none",
       eligibilityReasons,
       potentialReasons,
       selectedRoot: false,

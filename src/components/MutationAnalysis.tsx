@@ -11,7 +11,7 @@ export function MutationAnalysis({ candidates }: { candidates: MutationCandidate
   return (
     <section className="surface p-5 sm:p-7">
       <span className="eyebrow">Mutation roots</span><h2 className="section-title mt-2">변이영근 분석</h2>
-      <p className="muted mt-2 text-sm">유효한 두 기맥의 생극·융합과 계절의 지지, 방해 기운을 함께 살핍니다.</p>
+      <p className="muted mt-2 text-sm">독립근 또는 충분히 강한 합류근 사이의 실제 생극 유통과 한열·조습, 방해 기운을 함께 살핍니다.</p>
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         {items.map((candidate) => <article key={candidate.id} className="surface-soft overflow-hidden p-4">
           <div className="flex items-start justify-between gap-3"><div><div className="flex items-center gap-2"><h3 className="display-serif text-xl text-[#eee2c5]">{candidate.name}영근</h3><span className="rounded-full bg-[#d8b66a]/10 px-2 py-1 text-[10px] font-extrabold text-[#dfc270]">{statusLabel[candidate.status]}</span></div><div className="mt-2 flex gap-1.5">{candidate.sourceElements.map((element) => <ElementBadge key={element} element={element} compact />)}</div></div><strong className="display-serif text-2xl text-[#efd48d]">{candidate.confidence}<small className="text-xs">%</small></strong></div>

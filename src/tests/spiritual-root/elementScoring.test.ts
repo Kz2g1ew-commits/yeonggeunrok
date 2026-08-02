@@ -32,13 +32,14 @@ describe("structural element scoring", () => {
     expect(evidence.water.channel.state).toBe("sealed");
     expect(evidence.metal.channel.state).toBe("hidden");
     expect(evidence.wood.channel.state).toBe("dormant");
+    expect(evidence.fire.activationOrigin).toBe("independent");
   });
 
   it("does not promote channels that fail the three-gate structure", () => {
     const evidence = evidenceSet({ fire: 12, earth: 9, water: 1, wood: 0.5, metal: 1 });
     evidence.water.visibleStems = ["壬"];
     evidence.water.rootStrength = 0.7;
-    evidence.water.rootDetails = [{ branch: "辰", stem: "癸", role: "residual", strength: 0.7, damaged: false }];
+    evidence.water.rootDetails = [{ branch: "辰", stem: "癸", role: "residual", strength: 0.7, clashState: "stable", damaged: false }];
     evidence.water.channel = {
       ...evidence.water.channel,
       heaven: { score: 3, passed: true, reasons: ["테스트용 천문"] },
@@ -65,7 +66,7 @@ describe("structural element scoring", () => {
       raw[element].presenceScore = 10;
       raw[element].visibleStems = ["trace"];
       raw[element].rootStrength = 0.5;
-      raw[element].rootDetails = [{ branch: "trace", stem: "trace", role: "residual", strength: 0.5, damaged: false }];
+      raw[element].rootDetails = [{ branch: "trace", stem: "trace", role: "residual", strength: 0.5, clashState: "stable", damaged: false }];
     }
 
     const evidence = calculateRootChannels(hotFireEarthChart, raw);
@@ -74,6 +75,8 @@ describe("structural element scoring", () => {
     expect(evidence.wood.channel.complete).toBe(true);
     expect(evidence.metal.channel.complete).toBe(false);
     expect(evidence.water.channel.complete).toBe(true);
+    expect(evidence.wood.activationOrigin).toBe("network-assisted");
+    expect(evidence.water.activationOrigin).toBe("network-assisted");
     expect(roots.effective).toEqual(["fire", "earth", "wood", "water"]);
     expect(roots.effective.every((element) => hasEffectiveActivationBasis(evidence[element]))).toBe(true);
     expect(classifyRootCount(roots.effective, roots.potential, roots.evidence, analyzeRelations(hotFireEarthChart)).rootCount).toBe("quadruple");
@@ -84,7 +87,7 @@ describe("structural element scoring", () => {
     raw.metal.presenceScore = 10;
     raw.metal.visibleStems = ["trace"];
     raw.metal.rootStrength = 0.5;
-    raw.metal.rootDetails = [{ branch: "trace", stem: "trace", role: "residual", strength: 0.5, damaged: false }];
+    raw.metal.rootDetails = [{ branch: "trace", stem: "trace", role: "residual", strength: 0.5, clashState: "stable", damaged: false }];
 
     const evidence = calculateRootChannels(hotFireEarthChart, raw);
     const roots = determineEffectiveRoots(evidence, true);
@@ -115,6 +118,13 @@ describe("structural element scoring", () => {
   it("does not erase a strong second complete channel", () => {
     const roots = determineEffectiveRoots(evidenceSet({ fire: 16, earth: 10 }), true);
     expect(roots.effective).toEqual(["fire", "earth"]);
+  });
+
+  it("marks a carried potential channel as network-assisted", () => {
+    const evidence = evidenceSet({ wood: 10, fire: 9, earth: 8, metal: 2 }, ["metal"]);
+    const roots = determineEffectiveRoots(evidence, true);
+    expect(roots.effective).toContain("metal");
+    expect(roots.evidence.metal.activationOrigin).toBe("network-assisted");
   });
 
   it("condenses only a dominant primary and weak but connected secondary into a heavenly root", () => {
@@ -173,5 +183,28 @@ describe("structural element scoring", () => {
     });
     expect(evidence.fire.combinations).toContain("천간합화");
     expect(evidence.water.contributions.some((item) => item.label.includes("완전 합화"))).toBe(true);
+  });
+
+  it("resolves a clash by relative vigor instead of damaging both roots equally", () => {
+    const evidence = calculateElementScores({
+      year: pillar("甲", "寅"), month: pillar("庚", "申"),
+      day: pillar("戊", "戌"), hour: pillar("庚", "申"),
+    });
+    expect(evidence.wood.rootDetails.find((root) => root.branch === "寅")?.clashState).toBe("uprooted");
+    expect(evidence.metal.rootDetails.filter((root) => root.branch === "申").every((root) => root.clashState === "activated")).toBe(true);
+  });
+
+  it("distinguishes a gathered harmony from a season-supported transformed formation", () => {
+    const gathered = calculateElementScores({
+      year: pillar("庚", "申"), month: pillar("丙", "午"),
+      day: pillar("壬", "子"), hour: pillar("戊", "辰"),
+    });
+    const transformed = calculateElementScores({
+      year: pillar("庚", "申"), month: pillar("戊", "子"),
+      day: pillar("壬", "辰"), hour: pillar("己", "丑"),
+    });
+    expect(gathered.water.combinations).toContain("삼합 결집");
+    expect(gathered.water.combinations).not.toContain("삼합 성국");
+    expect(transformed.water.combinations).toContain("삼합 성국");
   });
 });

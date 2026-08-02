@@ -64,7 +64,7 @@ export function analyzeRelations(pillars: FourPillars): BranchRelations {
   for (const rule of THREE_HARMONIES) {
     const count = rule.members.filter((branch) => branches.includes(branch)).length;
     if (count === 3) {
-      combinations.push(`${rule.members.map(branchKorean).join("·")} 삼합 ${ELEMENT_META[rule.element].label}국`);
+      combinations.push(`${rule.members.map(branchKorean).join("·")} 삼합 ${ELEMENT_META[rule.element].label}국 결집`);
     } else if (count === 2) {
       const present = rule.members.filter((branch) => branches.includes(branch));
       if (present.includes(rule.members[1])) {
@@ -77,7 +77,7 @@ export function analyzeRelations(pillars: FourPillars): BranchRelations {
 
   for (const rule of DIRECTIONAL_GROUPS) {
     if (rule.members.every((branch) => branches.includes(branch))) {
-      directionalCombinations.push(`${rule.members.map(branchKorean).join("·")} 방합 ${ELEMENT_META[rule.element].label}국`);
+      directionalCombinations.push(`${rule.members.map(branchKorean).join("·")} 방합 ${ELEMENT_META[rule.element].label}국 결집`);
     }
   }
 

@@ -37,7 +37,8 @@ export function calculateDaoAffinity(
     evidence[element].contributions.some((item) => item.label.includes("실질 통관"))).length;
   const transformedStemCount = ELEMENTS.filter((element) =>
     evidence[element].combinations.includes("천간합화")).length;
-  const fullFormations = relations.combinations.length + relations.directionalCombinations.length;
+  const fullFormations = ELEMENTS.filter((element) =>
+    evidence[element].combinations.includes("삼합 성국") || evidence[element].combinations.includes("방합 성국")).length;
   const conflictCount = relations.clashes.length + relations.punishments.length + relations.harms.length + relations.breaks.length;
   const rootedDay = day.rootStrength >= SPIRITUAL_ROOT_RULES.roots.dayMasterMinimum;
   const rescued = rootedDay && (day.supportScore > 0 || generator.structuralEligible);
@@ -51,7 +52,7 @@ export function calculateDaoAffinity(
   add("natural", "투간통근", Math.min(rootedVisible, 5) * natural.visibleAndRooted, `${rootedVisible}개 오행이 천간과 지지를 함께 잇습니다.`);
   add("natural", "상생유통", Math.min(generatingLinks, 5) * natural.generatingLink, `${generatingLinks}개의 상생 고리가 이어집니다.`);
   if (generatingLinks === 5) add("natural", "오행순환", natural.completeCycle, "목화토금수의 상생 고리가 완성됩니다.");
-  add("natural", "합국", Math.min(fullFormations, 2) * natural.fullFormation, `삼합·방합 ${fullFormations}건이 기세를 모읍니다.`);
+  add("natural", "합국", Math.min(fullFormations, 2) * natural.fullFormation, `월령과 충손 조건을 통과한 삼합·방합 성국 ${fullFormations}건이 기세를 모읍니다.`);
   add("natural", "반합", Math.min(relations.halfCombinations.length, 2) * natural.halfFormation, `반합 ${relations.halfCombinations.length}건이 흐름을 보조합니다.`);
   add("natural", "천간합화", Math.min(transformedStemCount, 2) * natural.stemCombination, `인접성과 월령 조건을 갖춘 천간합화 ${transformedStemCount}건이 결속을 만듭니다.`);
   add("natural", "통관", Math.min(mediationCount, 2) * natural.mediation, `${mediationCount}개 오행이 상극 사이를 생으로 이어 줍니다.`);
@@ -68,7 +69,7 @@ export function calculateDaoAffinity(
   if (dominantGap >= 8) add("defiant", "독기돌파", defiant.dominantGap, `최강 오행이 차순위보다 ${dominantGap.toFixed(1)}점 앞서 독자 기맥을 만듭니다.`);
   add("defiant", "동세", Math.min(relations.dynamicCount, 6) * defiant.dynamicStructure, `충형파해의 동적 지수 ${relations.dynamicCount}가 기맥을 격동시킵니다.`);
   if (conflictCount > 0 && rescued) add("defiant", "충중유구", defiant.rescuedConflict, "충극 속에서도 통근과 생조가 남아 끊긴 기맥을 다시 잇습니다.");
-  add("defiant", "화국전세", Math.min(fullFormations, 2) * defiant.formation, `합국 ${fullFormations}건이 기존 계절 기세를 전환합니다.`);
+  add("defiant", "화국전세", Math.min(fullFormations, 2) * defiant.formation, `실제 성국 ${fullFormations}건이 기존 계절 기세를 전환합니다.`);
   if (hostileSeason && day.score >= 10) add("defiant", "역세득세", defiant.strengthAgainstSeason, "계절적으로 극쇠하지만 일간 오행이 높은 실점수를 확보했습니다.");
   if (day.controlPenalty < 0 && rootedDay) add("defiant", "극중유근", defiant.controlledButRooted, "강한 극을 받으면서도 일간의 유효 뿌리가 남아 있습니다.");
   if (!rootedDay) add("defiant", "무근", defiant.rootlessPenalty, "역천의 기반이 될 가중 통근이 부족합니다.");

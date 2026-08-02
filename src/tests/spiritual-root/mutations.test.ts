@@ -92,4 +92,26 @@ describe("detectMutationRoots", () => {
     expect(sword.status).not.toBe("confirmed");
     expect(sword.missingConditions.some((reason) => reason.includes("절단"))).toBe(true);
   });
+
+  it("does not use a weak network-assisted channel as mutation material", () => {
+    const evidence = evidenceSet({ metal: 8, water: 5 });
+    evidence.water.activationOrigin = "network-assisted";
+    const ice = detectMutationRoots(analysisContext(evidence, {
+      season: "winter",
+      climate: { temperature: -1, moisture: 1, temperatureLabel: "냉량", moistureLabel: "한습", reasons: [] },
+    })).find((item) => item.id === "ice")!;
+    expect(ice.status).not.toBe("confirmed");
+    expect(ice.missingConditions.some((reason) => reason.includes("실제 작동 기맥"))).toBe(true);
+  });
+
+  it("rejects ice confirmation when the whole chart is hot and dry", () => {
+    const evidence = evidenceSet({ metal: 9, water: 9 });
+    evidence.water.monthCommand = true;
+    const ice = detectMutationRoots(analysisContext(evidence, {
+      season: "winter",
+      climate: { temperature: 1.2, moisture: -0.6, temperatureLabel: "온난", moistureLabel: "편조", reasons: [] },
+    })).find((item) => item.id === "ice")!;
+    expect(ice.status).not.toBe("confirmed");
+    expect(ice.blockers.some((blocker) => blocker.includes("조열"))).toBe(true);
+  });
 });

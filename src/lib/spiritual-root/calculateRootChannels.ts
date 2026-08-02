@@ -58,17 +58,28 @@ export function calculateRootChannels(
     const heavenReasons: string[] = [];
     const earthReasons: string[] = [];
     const humanReasons: string[] = [];
-    const hasFullFormation = item.combinations.includes("삼합") || item.combinations.includes("방합");
+    const hasFullFormation = item.combinations.includes("삼합 성국") || item.combinations.includes("방합 성국");
     const hasTransformedStem = item.combinations.includes("천간합화");
     const hasFlow = item.contributions.some(({ label }) => label.includes(" 유통"));
     const hasMediation = item.contributions.some(({ label }) => label.includes("실질 통관"));
     const hasTrace = item.visibleStems.length > 0 || item.rootStrength > 0 || item.monthCommand || item.combinations.length > 0;
     const hasEarthTrace = item.rootStrength > 0 || item.monthCommand || hasFullFormation;
     const dominantGap = maximumScore - item.score;
+    const dominantSeason = maximumScore >= SPIRITUAL_ROOT_RULES.structure.seasonalNetworkDominantMinimum;
+    const controlledSuppression = item.controlPenalty < 0 &&
+      item.score <= SPIRITUAL_ROOT_RULES.structure.seasonalNetworkControlledWeakMaximum;
+    const buriedDeepSuppression = item.visibleStems.length === 0 &&
+      item.seasonalStrength <= SPIRITUAL_ROOT_RULES.structure.seasonalNetworkDeepPhaseMaximum &&
+      item.score <= SPIRITUAL_ROOT_RULES.structure.seasonalNetworkDeepWeakMaximum;
+    const seasonallySuppressed = item.seasonalStrength < 0 && dominantSeason &&
+      (controlledSuppression || buriedDeepSuppression);
     const collectiveFlow = hasTrace && hasEarthTrace && item.presenceScore > 0 &&
-      // 저점 실근은 세 개 이상의 잠재 역치 기맥이 망을 지탱할 때만 합류한다.
+      !seasonallySuppressed &&
+      // 일반 잠재근은 자체 점수로, 저점 실근은 세 개 이상의 잠재 역치 기맥이
+      // 망을 지탱할 때만 합류한다.
       (item.score >= SPIRITUAL_ROOT_RULES.structure.potentialScore ||
-        (collectiveAnchorCount >= rules.mixedNetworkMinimum && hasEffectiveActivationBasis(item))) &&
+        (collectiveAnchorCount >= rules.mixedNetworkMinimum && hasEffectiveActivationBasis(item) &&
+          item.rootStrength >= SPIRITUAL_ROOT_RULES.structure.collectiveWeakRootMinimum)) &&
       dominantGap < SPIRITUAL_ROOT_RULES.structure.collectiveMaximumSpread &&
       (item.score >= rules.activationMinimum ||
         scoreSpread <= SPIRITUAL_ROOT_RULES.structure.collectiveBuriedMaximumSpread ||
@@ -76,6 +87,7 @@ export function calculateRootChannels(
           dominantGap < SPIRITUAL_ROOT_RULES.structure.collectiveModerateGap &&
           !(scoreSpread > SPIRITUAL_ROOT_RULES.structure.collectiveHostileSpread && item.seasonalStrength < 0)));
 
+    let networkAssisted = false;
     let heavenScore = 0;
     if (item.visibleStems.length > 0) {
       const value = Math.min(5.5, 2.5 + Math.max(0, item.visibleStems.length - 1));
@@ -106,6 +118,7 @@ export function calculateRootChannels(
       const value = rounded(rules.heavenMinimum - heavenScore);
       heavenScore += value;
       heavenReasons.push(`비극단 명식의 전체 유통이 천문을 간접 개방함 +${value}`);
+      networkAssisted = true;
     }
 
     let earthScore = Math.min(6, item.rootStrength * 2.5);
@@ -126,6 +139,7 @@ export function calculateRootChannels(
       const value = rounded(rules.earthMinimum - earthScore);
       earthScore += value;
       earthReasons.push(`전체 유통이 미약한 지근을 공동 지맥에 연결함 +${value}`);
+      networkAssisted = true;
     }
 
     const relation = humanRelationScore(element, dayElement);
@@ -151,6 +165,7 @@ export function calculateRootChannels(
       const value = rounded(rules.humanMinimum - humanScore);
       humanScore += value;
       humanReasons.push(`전체 유통이 일간과의 간접 인맥을 이음 +${value}`);
+      networkAssisted = true;
     }
 
     let integrity = 1;
@@ -169,6 +184,7 @@ export function calculateRootChannels(
     const humanPassed = humanScore >= rules.humanMinimum;
     const integrityPassed = integrity >= rules.integrityMinimum;
     const activationPassed = item.score >= rules.activationMinimum || collectiveFlow;
+    if (activationPassed && item.score < rules.activationMinimum) networkAssisted = true;
     const state = channelState(heavenPassed, earthPassed, humanPassed, integrityPassed, activationPassed);
     const complete = state === "complete";
     const potential = !complete && state !== "dormant";
@@ -203,6 +219,7 @@ export function calculateRootChannels(
     return [element, {
       ...item,
       structuralEligible: complete,
+      activationOrigin: complete ? (networkAssisted ? "network-assisted" : "independent") : "none",
       eligibilityReasons: complete ? reasons : [],
       potentialReasons: potential ? reasons : [],
       channel,

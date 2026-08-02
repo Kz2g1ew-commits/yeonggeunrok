@@ -63,6 +63,7 @@ export function determineEffectiveRoots(
       potential: isPotential,
       selectedRoot: isEffective,
       structuralEligible: rawEvidence[element].structuralEligible || isCarried,
+      activationOrigin: isCarried ? "network-assisted" : rawEvidence[element].activationOrigin,
       eligibilityReasons: isPrimary
         ? [...eligibilityReasons, "주근의 강도·부근 상한·순도 격차를 모두 충족하여 천영근으로 응축됨"]
         : eligibilityReasons,

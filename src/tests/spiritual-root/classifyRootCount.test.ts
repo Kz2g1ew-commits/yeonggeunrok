@@ -31,8 +31,9 @@ describe("classifyRootCount", () => {
 
   it("keeps a balanced formation-supported complete cycle within five-qi convergence", () => {
     const elements: Element[] = ["wood", "fire", "earth", "metal", "water"];
-    const supported = { ...relations, combinations: ["삼합"] };
-    const result = classifyRootCount(elements, [], evidenceSet({ wood: 8, fire: 8, earth: 7.5, metal: 7, water: 8 }), supported);
+    const evidence = evidenceSet({ wood: 8, fire: 8, earth: 7.5, metal: 7, water: 8 });
+    evidence.water.combinations = ["삼합 성국"];
+    const result = classifyRootCount(elements, [], evidence, relations);
     expect(result.displayName).toBe("오기조원영근 — 오기조원형·원융");
     expect(result.multiRootProfile?.generatingLinks).toHaveLength(5);
     expect(result.multiRootProfile?.formationSupport).toBe(true);
